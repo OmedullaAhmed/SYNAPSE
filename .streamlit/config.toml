@@ -1,7 +1,8 @@
-# Synapse theme, styled for Manyavar · Mohey. Colors match .github/assets and the website.
+# StockFlow AI theme, customized for Manyavar (palette from manyavar.com).
+# Streamlit Community Cloud reads this file (repo root); keep it identical to stock_mover/.streamlit/config.toml.
 [theme]
 base = "light"
-primaryColor = "#8b1a2b"
-backgroundColor = "#fdf9f3"
-secondaryBackgroundColor = "#f6ecdc"
-textColor = "#2b1a12"
+primaryColor = "#E04E1C"
+backgroundColor = "#FFFBF2"
+secondaryBackgroundColor = "#FFF3DD"
+textColor = "#222222"
