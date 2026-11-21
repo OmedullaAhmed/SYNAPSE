@@ -1,4 +1,4 @@
-"""Stock Mover app: upload a data pack, get the day's stock moves explained in plain language.
+"""StockFlow AI app (customized for Manyavar): upload a data pack, get the day's stock moves explained in plain language.
 
 Start:  streamlit run app.py   (or double-click "Start Stock Mover.bat")
 """
@@ -23,71 +23,101 @@ from insights import inr
 
 ASSETS = Path(__file__).parent / "assets"
 _icon = ASSETS / "icon.png"
-st.set_page_config(page_title="Stock Mover · Synapse", page_icon=str(_icon) if _icon.exists() else "📦", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="StockFlow AI · Manyavar", page_icon=str(_icon) if _icon.exists() else "📦", layout="wide", initial_sidebar_state="collapsed")
 
-# ----------------------------------------------------------------------------- look & feel (desktop + phone)
+# ----------------------------------------------------------------------------- look & feel (Manyavar brand: desktop + phone)
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
-:root{--syn-deep:#4a0e1c;--syn-maroon:#8b1a2b;--syn-maroon-d:#6b1421;--syn-gold:#e8a317;--syn-gold-l:#f0c060;--syn-saffron:#e07020;--syn-crimson:#d1495b}
-h1,h2,h3,.syn-serif{font-variant-numeric:lining-nums;font-family:'Cormorant Garamond',Georgia,serif!important;font-weight:700!important;letter-spacing:.005em}
-h1{color:var(--syn-maroon)} h2,h3{color:var(--syn-deep)}
-@media (prefers-color-scheme:dark){h1{color:var(--syn-gold-l)} h2,h3{color:#f3e3d3}}
-.stButton>button,.stDownloadButton>button{border-radius:999px!important;letter-spacing:.02em}
-.stButton>button[kind="primary"],.stDownloadButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"]{background:linear-gradient(135deg,#8b1a2b,#6b1421)!important;border:1px solid var(--syn-gold)!important;color:#fdf6ea!important;box-shadow:0 2px 10px rgba(139,26,43,.18)}
-.stButton>button[kind="primary"]:hover,.stDownloadButton>button[kind="primary"]:hover{background:linear-gradient(135deg,#6b1421,#4a0e1c)!important;color:var(--syn-gold-l)!important}
-.stButton>button:hover,.stDownloadButton>button:hover{border-color:var(--syn-gold)!important;color:var(--syn-maroon)}
-.stButton>button[kind="primary"]:disabled{opacity:.4;cursor:not-allowed}
-.stTabs [aria-selected="true"]{color:var(--syn-maroon)!important;font-weight:600}
-.stTabs [data-baseweb="tab-highlight"]{background:linear-gradient(90deg,var(--syn-gold),var(--syn-saffron))!important}
-[data-testid="stFileUploaderDropzone"]{border:1.5px dashed rgba(232,163,23,.7)!important;background:rgba(232,163,23,.05)!important}
-[data-testid="stExpander"] details{border-color:rgba(232,163,23,.35)!important}
-.syn-top{display:flex;align-items:center;gap:.6rem;margin:0 0 1.1rem;font-size:1rem}
-.syn-top .nm{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:1.35rem;color:var(--syn-maroon)}
-.syn-top .sep{color:var(--syn-gold)}.syn-top .prod{opacity:.75;font-weight:600}
-.syn-top .for{margin-left:auto;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#8a6a4f}
-.syn-top .for b{color:var(--syn-saffron)}
-@media (prefers-color-scheme:dark){.syn-top .nm{color:var(--syn-gold-l)}}
-.syn-hero{position:relative;overflow:hidden;background:radial-gradient(120% 140% at 100% 0%,#7a1a2c 0%,#4a0e1c 45%,#2e0811 100%);color:#fdf6ea;border-radius:20px;padding:2.2rem 2.2rem 1.7rem;margin:0 0 1.4rem;border:1px solid rgba(240,192,96,.45);box-shadow:inset 0 0 0 6px rgba(74,14,28,1),inset 0 0 0 7px rgba(240,192,96,.35)}
-.syn-hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:repeating-radial-gradient(circle,rgba(240,192,96,.16) 0 2px,transparent 2px 14px);pointer-events:none}
-.syn-hero .eb{color:var(--syn-gold-l);font-size:.74rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin:0 0 .5rem}
-.syn-hero h1{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:2.9rem!important;line-height:1.05;margin:0 0 .7rem!important;padding:0!important;background:linear-gradient(90deg,#f8d77a,#f0a010 55%,#e07020);-webkit-background-clip:text;background-clip:text;color:transparent!important}
-.syn-hero p{color:#f3e3d3;font-size:1.02rem;line-height:1.65;margin:0 0 .4rem;max-width:760px;position:relative;z-index:1}
-.syn-hero b{color:#fff}
-.syn-orn{display:flex;align-items:center;gap:.6rem;margin-top:1.1rem;color:var(--syn-gold-l);max-width:320px}
-.syn-orn:before,.syn-orn:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(240,192,96,.8),transparent)}
-@media (max-width:640px){.syn-hero{padding:1.4rem 1.2rem 1.2rem}.syn-hero h1{font-size:2rem!important}.syn-top .for{display:none}}
-.block-container{padding-top:3.6rem;padding-bottom:5rem;max-width:1180px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin:.3rem 0 1rem}
-.kpi{border:1px solid rgba(128,128,128,.25);border-radius:14px;padding:.75rem .9rem;background:rgba(127,127,127,.06)}
-.kpi .l{font-size:.78rem;opacity:.75;text-transform:uppercase;letter-spacing:.03em}
-.kpi .v{font-size:1.5rem;font-weight:700;line-height:1.25;margin:.1rem 0}
-.kpi .s{font-size:.78rem;opacity:.72}
-.ins{border-left:5px solid var(--c);padding:.6rem .85rem;margin:.5rem 0;border-radius:8px;background:rgba(127,127,127,.06);line-height:1.45}
-.pill{display:inline-block;padding:.1rem .55rem;border-radius:999px;font-size:.75rem;font-weight:600;color:#fff}
-.stTabs [data-baseweb="tab-list"]{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;gap:.2rem}
-.stTabs [data-baseweb="tab"]{white-space:nowrap;padding:0 .55rem}
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Rufina:wght@400;700&display=swap');
+:root{--mv-orange:#E04E1C;--mv-orange-d:#C9431A;--mv-ember:#E95827;--mv-brown:#511D00;--mv-maroon:#66142E;--mv-gold:#D4A017;
+      --mv-cream:#FFFBF2;--mv-cream-2:#FFF3DD;--mv-sand:#E1CEAC;--mv-ink:#222222;--mv-grey:#626262}
+html,body,.stApp,.stMarkdown,.stMarkdown p,.stMarkdown li,.stCaption,button,input,textarea,label,[data-testid="stWidgetLabel"] p{font-family:'Figtree',sans-serif}
+[data-testid="stIconMaterial"],.material-symbols-rounded{font-family:'Material Symbols Rounded'!important}
+h1,h2,h3,h4,.mv-serif,h1 *,h2 *,h3 *,h4 *{font-family:'Rufina',Georgia,serif!important;font-weight:700!important;letter-spacing:0;font-variant-numeric:lining-nums}
+h2,h3,h4{color:var(--mv-ink)}
+h1 .num{font-family:'Figtree',sans-serif!important;font-weight:600!important;color:var(--mv-orange)}
+h1{color:var(--mv-brown)!important}
+/* buttons: solid ember like manyavar.com, lightly squared, spaced capitals */
+.stButton>button,.stDownloadButton>button,.stFormSubmitButton>button{border-radius:4px!important;text-transform:uppercase;letter-spacing:.07em;font-weight:600!important;font-size:.82rem!important;border:1px solid var(--mv-orange)!important;color:var(--mv-orange)!important;background:#fff!important}
+.stButton>button p,.stDownloadButton>button p,.stFormSubmitButton>button p{font-weight:600!important;font-size:.82rem!important}
+.stButton>button:hover,.stDownloadButton>button:hover,.stFormSubmitButton>button:hover{background:var(--mv-cream-2)!important}
+.stButton>button[kind="primary"],.stDownloadButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"]{background:var(--mv-orange)!important;color:#fff!important;box-shadow:0 2px 8px rgba(224,78,28,.22)}
+.stButton>button[kind="primary"]:hover,.stDownloadButton>button[kind="primary"]:hover,.stFormSubmitButton>button[kind="primary"]:hover{background:var(--mv-orange-d)!important;border-color:var(--mv-orange-d)!important}
+.stButton>button:disabled{opacity:.45;cursor:not-allowed}
+/* tabs */
+.stTabs [data-baseweb="tab-list"]{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;gap:.1rem;border-bottom:1px solid var(--mv-sand)}
+.stTabs [data-baseweb="tab"]{white-space:nowrap;padding:0 .7rem}
+.stTabs [data-baseweb="tab"] p{text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;font-weight:600;color:var(--mv-grey)}
+.stTabs [aria-selected="true"] p{color:var(--mv-orange)!important}
+.stTabs [data-baseweb="tab-highlight"]{background:var(--mv-orange)!important;height:3px}
+/* inputs and panels */
+[data-testid="stFileUploaderDropzone"]{border:1.5px dashed var(--mv-sand)!important;background:#fff!important}
+[data-testid="stExpander"] details{border-color:var(--mv-sand)!important;background:#fff;border-radius:6px}
+[data-testid="stVerticalBlockBorderWrapper"]{border-color:var(--mv-sand)!important}
+/* utility strip + header, like the top of manyavar.com */
+.mv-strip{position:relative;left:50%;right:50%;margin:-1rem -50vw 0;width:100vw;background:var(--mv-brown);color:#FCF9F5;text-align:center;
+          font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;padding:.45rem .5rem;font-weight:500}
+.mv-strip b{color:#F5C46B;font-weight:600}
+.mv-head{display:flex;align-items:center;gap:.75rem;padding:1rem 0 .9rem;margin:0 0 1.2rem;border-bottom:1px solid var(--mv-sand)}
+.mv-head .nm{font-family:'Rufina',Georgia,serif;font-weight:700;font-size:1.55rem;color:var(--mv-brown);line-height:1}
+.mv-head .nm span{color:var(--mv-orange)}
+.mv-head .tag{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mv-grey);margin-top:.25rem}
+.mv-head .for{margin-left:auto;display:flex;align-items:center;gap:.55rem;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mv-grey)}
+.mv-head .for img{height:38px;width:auto}
+/* hero: serif headline on a warm, festive panel */
+.mv-hero{position:relative;overflow:hidden;border-radius:6px;padding:2.6rem 2.4rem 2.1rem;margin:0 0 1.5rem;color:#FCF9F5;
+         background:radial-gradient(130% 160% at 100% 0%,#8A2A12 0%,#66142E 42%,#3A0B14 100%);border:1px solid rgba(212,160,23,.5)}
+.mv-hero:before{content:"";position:absolute;inset:8px;border:1px solid rgba(245,196,107,.35);border-radius:3px;pointer-events:none}
+.mv-hero:after{content:"";position:absolute;right:-70px;top:-70px;width:300px;height:300px;border-radius:50%;
+               background:repeating-radial-gradient(circle,rgba(245,196,107,.18) 0 2px,transparent 2px 15px);pointer-events:none}
+.mv-hero .eb{color:#F5C46B;font-size:.72rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;margin:0 0 .6rem}
+.mv-hero h1{font-family:'Rufina',Georgia,serif!important;font-size:3rem!important;line-height:1.08;margin:0 0 .8rem!important;padding:0!important;color:#FFFBF2!important}
+.mv-hero p{color:#F6E7D6;font-size:1.03rem;line-height:1.65;margin:0;max-width:760px;position:relative;z-index:1}
+.mv-hero b{color:#fff}
+.mv-orn{display:flex;align-items:center;gap:.6rem;margin-top:1.2rem;color:#F5C46B;max-width:300px}
+.mv-orn:before,.mv-orn:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(245,196,107,.85),transparent)}
+/* cards */
+.block-container{padding-top:3.2rem;padding-bottom:5rem;max-width:1180px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.7rem;margin:.4rem 0 1.1rem}
+.kpi{border:1px solid var(--mv-sand);border-top:3px solid var(--mv-orange);border-radius:6px;padding:.85rem 1rem;background:#fff}
+.kpi .l{font-size:.7rem;color:var(--mv-grey);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+.kpi .v{font-family:'Figtree',sans-serif;font-size:1.65rem;font-weight:700;line-height:1.2;margin:.2rem 0;color:var(--mv-brown);font-variant-numeric:lining-nums tabular-nums}
+.kpi .s{font-size:.78rem;color:var(--mv-grey)}
+.ins{border:1px solid var(--mv-sand);border-left:4px solid var(--c);padding:.7rem .95rem;margin:.55rem 0;border-radius:6px;background:#fff;line-height:1.5;color:var(--mv-ink)}
+.ins b{color:var(--mv-brown)}
+.pill{display:inline-block;padding:.12rem .6rem;border-radius:3px;font-size:.72rem;font-weight:600;color:#fff;letter-spacing:.04em}
+[data-testid="stChatMessage"]{background:#fff;border:1px solid var(--mv-sand);border-radius:6px}
 @media (max-width:640px){
-  .block-container{padding-left:.65rem;padding-right:.65rem;padding-top:3.4rem}
-  h1{font-size:1.4rem!important} h2{font-size:1.15rem!important} h3{font-size:1.02rem!important}
+  .block-container{padding-left:.7rem;padding-right:.7rem;padding-top:2.8rem}
+  h1{font-size:1.5rem!important} h2{font-size:1.2rem!important} h3{font-size:1.05rem!important}
+  .mv-strip{font-size:.6rem;letter-spacing:.1em;white-space:nowrap}.mv-lg{display:none}
+  .block-container{padding-top:3.6rem!important}
+  .mv-head{flex-wrap:wrap;gap:.5rem}.mv-head .nm{font-size:1.3rem}.mv-head .for{margin-left:0;width:100%}.mv-head .for img{height:30px}
+  .mv-hero{padding:1.6rem 1.3rem 1.4rem}.mv-hero h1{font-size:2rem!important}
   .kpis{grid-template-columns:1fr 1fr;gap:.45rem}
-  .kpi{padding:.55rem .65rem}
-  .kpi .v{font-size:1.12rem}
-  .kpi .s{font-size:.7rem}
+  .kpi{padding:.6rem .7rem}.kpi .v{font-size:1.2rem}.kpi .s{font-size:.7rem}
 }
 </style>""", unsafe_allow_html=True)
 
-_logo = ASSETS / "logo.svg"
-LOGO_SVG = (f'<img src="data:image/svg+xml;base64,{base64.b64encode(_logo.read_bytes()).decode()}" '
-            'width="30" height="30" alt="">') if _logo.exists() else ""
+
+def _data_uri(p, mime):
+    return f"data:{mime};base64,{base64.b64encode(p.read_bytes()).decode()}" if p.exists() else ""
+
+
+LOGO = _data_uri(ASSETS / "logo.svg", "image/svg+xml")
+MANYAVAR = _data_uri(ASSETS / "manyavar.png", "image/png")
 
 
 def brand_bar():
-    st.markdown(f'<div class="syn-top">{LOGO_SVG}<span class="nm">Synapse</span><span class="sep">✦</span>'
-                f'<span class="prod">Stock Mover</span><span class="for">Prepared for <b>Manyavar · Mohey</b></span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="mv-strip">StockFlow AI · <b>customized for Manyavar</b>'
+                '<span class="mv-lg"> · right stock · right store · right size</span></div>', unsafe_allow_html=True)
+    partner = (f'<div class="for">customized for<img src="{MANYAVAR}" alt="Manyavar"></div>' if MANYAVAR else "")
+    st.markdown(f'<div class="mv-head"><img src="{LOGO}" width="44" height="44" alt="">'
+                f'<div><div class="nm">StockFlow <span>AI</span></div><div class="tag">Daily stock planning</div></div>'
+                f'{partner}</div>', unsafe_allow_html=True)
 
 
-TYPE_COLORS = {sm.T_WH: "#8b1a2b", sm.T_S2S: "#e8a317", sm.T_DISP: "#6d3a7d", sm.T_AGE: "#e07020", sm.T_PULL: "#d1495b"}
+TYPE_COLORS = {sm.T_WH: "#E04E1C", sm.T_S2S: "#D4A017", sm.T_DISP: "#511D00", sm.T_AGE: "#A0522D", sm.T_PULL: "#66142E"}
 TYPE_PLAIN = {
     sm.T_WH: ("Send from warehouse", "Stores that will run out soon get stock from the warehouse. When there isn't enough "
                                      "for everyone, the store that will run out first is served first."),
@@ -137,7 +167,8 @@ EXAMPLES = ["What are the key insights today?", "Which stores need the most stoc
 
 
 def style(fig, h=320, legend=True):
-    fig.update_layout(height=h, margin=dict(l=4, r=4, t=44, b=4), font=dict(size=12), title_font_size=14,
+    fig.update_layout(height=h, margin=dict(l=4, r=4, t=44, b=4), font=dict(size=12, family="Figtree, sans-serif", color="#222222"), title_font=dict(size=15, family="Rufina, Georgia, serif", color="#511D00"),
+                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                       legend=dict(orientation="h", yanchor="top", y=-0.18, x=0, title="") if legend else None,
                       showlegend=legend)
     return fig
@@ -153,7 +184,7 @@ def kpi_cards(items):
         for l, v, s in items) + "</div>", unsafe_allow_html=True)
 
 
-def insight(text, color="#8b1a2b"):
+def insight(text, color="#E04E1C"):
     html = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
     st.markdown(f'<div class="ins" style="--c:{color}">{html}</div>', unsafe_allow_html=True)
 
@@ -201,7 +232,7 @@ def data_panel(expanded):
         st.dataframe(pd.DataFrame([(t, ", ".join(c)) for t, c in sm.REQUIRED.items()], columns=["table", "columns"]),
                      hide_index=True, use_container_width=True)
     c1, c2 = st.columns(2)
-    go_btn = c1.button("▶️ Run Stock Mover", type="primary", disabled=not ups, use_container_width=True)
+    go_btn = c1.button("▶️ Run StockFlow AI", type="primary", disabled=not ups, use_container_width=True)
     sample = c2.button("✨ Try the sample data", type="primary", use_container_width=True, disabled=not sm.DEFAULT_DATA.exists())
     if go_btn or sample:
         tmp = Path(tempfile.mkdtemp(prefix="stockmover_in_"))
@@ -220,7 +251,7 @@ def data_panel(expanded):
             st.session_state.chat = []
             st.rerun()
         except sm.DataError as e:
-            st.error("**The data isn't quite what Stock Mover needs.** Please fix:\n\n" + "\n".join(f"- {p}" for p in str(e).splitlines()))
+            st.error("**The data isn't quite what StockFlow AI needs.** Please fix:\n\n" + "\n".join(f"- {p}" for p in str(e).splitlines()))
         except Exception as e:  # noqa: BLE001
             st.error(f"Something went wrong while planning: {e}")
         finally:
@@ -230,12 +261,12 @@ def data_panel(expanded):
 if "R" not in st.session_state:
     brand_bar()
     st.markdown(
-        '<div class="syn-hero"><p class="eb">Right stock · Right store · Right size</p>'
+        '<div class="mv-hero"><p class="eb">StockFlow AI for Manyavar · Right stock · Right store · Right size</p>'
         '<h1>Stock in the right store, every morning.</h1>'
         '<p>Every day, some stock is in the <b>wrong place</b>: one store runs out of a size customers want, while '
-        'another has the same size sitting unsold. Stock Mover finds those problems and writes a '
+        'another has the same size sitting unsold. StockFlow AI finds those problems and writes a '
         '<b>ready-to-approve list</b>: 🚚 send from the warehouse · 🔁 move between stores · ↩️ bring back to the warehouse.</p>'
-        '<div class="syn-orn">✦</div></div>',
+        '<div class="mv-orn">✦</div></div>',
         unsafe_allow_html=True)
     data_panel(True)
     st.stop()
@@ -248,7 +279,7 @@ mv["kind"] = mv.type.map(lambda t: TYPE_PLAIN[t][0])
 L = ins.leadership(R)
 
 brand_bar()
-st.title(f"Stock plan · {pl.run:%a %d %b %Y}")
+st.markdown(f'<h1>Stock plan <span class="num">· {pl.run:%a %d %b %Y}</span></h1>', unsafe_allow_html=True)
 st.caption(f"{st.session_state.label} · stock as of {P['today']:%d %b %Y} · {len(stores)} stores + {WH}")
 with st.expander("📂 Load new data or change settings"):
     data_panel(False)
@@ -266,7 +297,7 @@ with T[0]:
         st.markdown(f"- {d}")
     city = L["city"].reset_index(names="city").melt("city", var_name="", value_name="₹ lakh")
     plot(px.bar(city, x="city", y="₹ lakh", color="", barmode="group", title="Impact by city (₹ lakh at MRP)",
-                color_discrete_sequence=["#8b1a2b", "#e07020"]), 300)
+                color_discrete_sequence=["#E04E1C", "#A0522D"]), 300)
     passed = int((val.status == "PASS").sum())
     r = fb.ratings()
     rate = f" · team rating {r.stars.mean():.1f}★ from {len(r)} reviews" if not r.empty else ""
@@ -314,8 +345,8 @@ with T[1]:
     if len(f):
         city_of = lambda x: x if x == WH else stores.city[x]
         cc = f.assign(fc=f.from_id.map(city_of), tc=f.to_id.map(city_of)).groupby(["fc", "tc"]).qty.sum().reset_index()
-        dot = ["digraph{rankdir=LR;bgcolor=transparent;node[shape=box style=\"rounded,filled\" fillcolor=\"#fdf6ea\" fontname=Helvetica];",
-               f'"{WH}"[fillcolor="#8b1a2b" fontcolor=white label="Warehouse\\n{WH}"];']
+        dot = ["digraph{rankdir=LR;bgcolor=transparent;node[shape=box style=\"rounded,filled\" fillcolor=\"#FFF3DD\" fontname=Helvetica];",
+               f'"{WH}"[fillcolor="#E04E1C" fontcolor=white label="Warehouse\\n{WH}"];']
         for r in cc.itertuples():
             lab = f"{r.qty} within city" if r.fc == r.tc else f"{r.qty}"
             dot.append(f'"{r.fc}"->"{r.tc}"[label="{lab}" fontsize=10 penwidth={1 + min(r.qty / cc.qty.max() * 6, 6):.1f}];')
@@ -325,7 +356,7 @@ with T[1]:
             src, dst = sorted(set(agg.from_id)), sorted(set(agg.to_id))
             ix = {("f", s): i for i, s in enumerate(src)} | {("t", d): len(src) + i for i, d in enumerate(dst)}
             rgba = lambda h: f"rgba({int(h[1:3], 16)},{int(h[3:5], 16)},{int(h[5:7], 16)},0.55)"
-            fig = go.Figure(go.Sankey(node=dict(label=src + dst, pad=10, thickness=12, color="#8a6a4f"),
+            fig = go.Figure(go.Sankey(node=dict(label=src + dst, pad=10, thickness=12, color="#8C6E54"),
                                       link=dict(source=[ix[("f", s)] for s in agg.from_id], target=[ix[("t", d)] for d in agg.to_id],
                                                 value=agg.qty, color=[rgba(TYPE_COLORS[t]) for t in agg.type])))
             plot(fig, max(420, 20 * (len(src) + len(dst))), legend=False)
@@ -356,14 +387,14 @@ with T[2]:
                 d = pd.DataFrame({"item": rows.location_id + " " + rows.sku_id, "Stock file": rows.on_hand,
                                   "Weekly count": rows.closing_on_hand.fillna(0)}).melt("item", var_name="record", value_name="pieces")
                 fig = px.bar(d, x="item", y="pieces", color="record", barmode="group", title="The two records side by side",
-                             color_discrete_sequence=["#d1495b", "#8b1a2b"])
+                             color_discrete_sequence=["#66142E", "#E04E1C"])
             elif kind == "Hidden stockout":
                 hs = ins.hidden_stockouts(R)
                 d = hs.groupby("store_id").agg(sizes=("sku_id", "size"), lakh=("at_risk", "sum")).reset_index()
                 d["lakh"] = d.lakh / 1e5
                 fig = px.bar(d.sort_values("lakh"), x="lakh", y="store_id", orientation="h", text="sizes",
                              title="Sales at risk next 30 days (₹ L) · label = sizes missing", labels={"lakh": "₹ lakh", "store_id": ""},
-                             color_discrete_sequence=["#d1495b"])
+                             color_discrete_sequence=["#66142E"])
             elif kind == "Under-stocked store":
                 s = grp.store.iloc[0]
                 w = weekly[weekly.store_id.isin(stores.index)].groupby(["week", "store_id"]).days_in_stock.mean().reset_index()
@@ -371,7 +402,7 @@ with T[2]:
                 d = w.groupby(["week", "who"]).days_in_stock.mean().reset_index()
                 fig = px.line(d, x="week", y="days_in_stock", color="who", markers=True,
                               title=f"Days a week a size is on the shelf (7 = always)", labels={"days_in_stock": "days", "week": ""},
-                              color_discrete_map={s: "#d1495b", "other stores": "#c9bba8"})
+                              color_discrete_map={s: "#66142E", "other stores": "#E1CEAC"})
                 fig.update_yaxes(range=[0, 7])
             elif kind == "Warehouse shortfall":
                 need = g.groupby("dcat").need.sum()
@@ -379,13 +410,13 @@ with T[2]:
                 d = pd.DataFrame({"Stores need": need, "Warehouse has": whc}).fillna(0).reset_index(names="category") \
                     .melt("category", var_name="", value_name="pieces")
                 fig = px.bar(d, x="category", y="pieces", color="", barmode="group", title="Stores need vs warehouse has",
-                             color_discrete_sequence=["#d1495b", "#8b1a2b"])
+                             color_discrete_sequence=["#66142E", "#E04E1C"])
             elif kind == "New launch":
                 stys = grp.sku.tolist()
                 s = sales[sales.sku_id.map(pl.it.style_id).isin(stys) & (sales.date > P["today"] - pd.Timedelta(days=70))]
                 d = s.groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum().reset_index()
                 fig = px.bar(d, x="date", y="qty", title=f"{', '.join(stys)}: weekly sales since launch",
-                             labels={"qty": "pieces sold", "date": ""}, color_discrete_sequence=["#8b1a2b"])
+                             labels={"qty": "pieces sold", "date": ""}, color_discrete_sequence=["#E04E1C"])
             elif kind == "New store":
                 s = sales[sales.store_id.isin(grp.store)]
                 d = s.groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum().reset_index()
@@ -404,7 +435,7 @@ with T[2]:
                             labels=["<1 mo", "1–3 mo", f"3 mo–{R['cfg']['age_days']}d", f"{R['cfg']['age_days']}d–1 yr", ">1 yr"])
         d = sn.groupby("band", observed=False).oh.sum().reset_index()
         plot(px.bar(d, x="band", y="oh", title="How long stock has been in stores", labels={"oh": "pieces", "band": ""},
-                    color_discrete_sequence=["#e07020"]), 280, legend=False)
+                    color_discrete_sequence=["#A0522D"]), 280, legend=False)
 
 # ---- Stores
 with T[3]:
@@ -422,16 +453,16 @@ with T[3]:
     cat["minimum"] = [P["md"].get((stores.tier[s], c_), 0) for c_ in cat.index]
     d = cat.reset_index(names="category").melt("category", ["now", "after"], var_name="", value_name="pieces")
     fig = px.bar(d, x="category", y="pieces", color="", barmode="group", title="Stock by category vs minimum display",
-                 color_discrete_sequence=["#c9bba8", "#8b1a2b"])
+                 color_discrete_sequence=["#E1CEAC", "#E04E1C"])
     fig.add_scatter(x=cat.index, y=cat.minimum, mode="markers", name="minimum",
-                    marker=dict(symbol="line-ew", size=26, line=dict(width=3, color="#d1495b")))
+                    marker=dict(symbol="line-ew", size=26, line=dict(width=3, color="#66142E")))
     plot(fig, 320)
     cov = (gs.pos / gs.fd30).where(gs.fd30 > 0.01)
     band = pd.cut(cov, [-1, 7, 14, 30, 60, 1e9], labels=["<1 wk", "1–2 wk", "2–4 wk", "1–2 mo", "2+ mo"])
     d = band.value_counts().reindex(band.cat.categories).reset_index()
     d.columns = ["lasts", "sizes"]
     plot(px.bar(d, x="lasts", y="sizes", color="lasts", title="How long each size's stock lasts (before plan)",
-                color_discrete_sequence=["#d1495b", "#e07020", "#e8a317", "#8b1a2b", "#8a6a4f"]), 280, legend=False)
+                color_discrete_sequence=["#66142E", "#A0522D", "#D4A017", "#E04E1C", "#8C6E54"]), 280, legend=False)
     for title, df in (("⬇️ Coming in", inn), ("⬆️ Going out", out)):
         with st.expander(f"{title} · {len(df)} lines, {int(df.qty.sum())} pieces"):
             st.dataframe(df[["priority", "kind", "from_id", "to_id", "style_name", "size", "qty", "reason"]],
@@ -541,7 +572,7 @@ with T[6]:
             d = ch.value_counts().reset_index()
             d.columns = ["request", "votes"]
             plot(px.bar(d, x="votes", y="request", orientation="h", title="Most requested changes",
-                        color_discrete_sequence=["#8a6a4f"]), 80 + 34 * len(d), legend=False)
+                        color_discrete_sequence=["#8C6E54"]), 80 + 34 * len(d), legend=False)
         notes = r[r.comment.fillna("") != ""].tail(8)[::-1]
         for n in notes.itertuples():
             st.markdown(f"> {'★' * int(n.stars)} {n.comment}  \n> <small>{n.name or 'anonymous'} · {n.rated_at}</small>",
@@ -567,7 +598,7 @@ with T[6]:
 
 # ---- Method
 with T[7]:
-    st.markdown("#### How Stock Mover decides")
+    st.markdown("#### How StockFlow AI decides")
     st.graphviz_chart("""
 digraph{rankdir=TB;bgcolor=transparent;node[shape=box style="rounded,filled" fontname=Helvetica fillcolor="#fdf6ea"];
 data[label="Your data: sales · stock · deliveries · calendar · rules" fillcolor="#f3ebe0"];
@@ -577,7 +608,7 @@ season[label="3. Season: weddings & festivals lift demand"];
 need[label="4. Who needs what: stock + on the way vs demand"];
 plan[label="5. Plan: warehouse→store · store→store · old stock · back to WH" fillcolor="#fbeedd"];
 check[label="6. Re-check every rule" fillcolor="#fff3cd"];
-out[label="Ready-to-approve list + problems explained" fillcolor="#8b1a2b" fontcolor=white];
+out[label="Ready-to-approve list + problems explained" fillcolor="#E04E1C" fontcolor=white];
 data->clean->speed->need; season->need; need->plan->check->out;}""", use_container_width=True)
     st.markdown("""
 - **Selling speed (velocity):** pieces of a size a store sells per day, counting **only days it was on the shelf**. 4 sold in 10 days in stock = 0.4/day, even if it was missing for weeks. That's how hidden stockouts are caught.

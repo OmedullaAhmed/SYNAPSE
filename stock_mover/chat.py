@@ -43,7 +43,7 @@ def claude_available(api_key=None):
     return _anthropic() is not None and bool(api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
 
 
-RULES = f"""You are the Stock Mover assistant for Manyavar's store, merchandising and leadership teams.
+RULES = f"""You are the StockFlow AI assistant for Manyavar's store, merchandising and leadership teams.
 You answer questions using ONLY the stock plan report provided below (the plan, its moves, the problems found,
 rule checks, store figures, selling speeds and stock levels).
 

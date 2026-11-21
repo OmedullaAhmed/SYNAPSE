@@ -775,7 +775,7 @@ def write(out_dir, pl, mv, ex, val, alerts):
     vel = vel.round(3)
     xl = out_dir / f"stock_mover_{run:%Y-%m-%d}.xlsx"
     with pd.ExcelWriter(xl, engine="openpyxl") as w:
-        head = pd.DataFrame({"Stock Mover": [
+        head = pd.DataFrame({"StockFlow AI · Manyavar": [
             f"Plan for {run:%a %d %b %Y} (stock as of close {pl.P['today']:%d %b %Y})",
             f"{len(mv)} moves, {int(mv.qty.sum())} units, Rs {mv.value_mrp.sum() / 1e5:.1f} lakh at MRP",
             f"Rule checks: {(val.status == 'PASS').sum()} of {len(val)} passed",
