@@ -1,0 +1,15 @@
+:root {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: #1a1a1a;
+  background: #fafafa;
+}
+@media (prefers-color-scheme: dark) {
+  :root { color: #f0f0f0; background: #121212; }
+}
+body { margin: 0; }
+.container { max-width: 720px; margin: 0 auto; padding: 4rem 1rem; text-align: center; }
+h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+button {
+  padding: 0.6rem 1.2rem; font-size: 1rem; border-radius: 8px;
+  border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer;
+}
