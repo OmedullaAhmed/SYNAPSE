@@ -27,6 +27,7 @@ DEFAULT_DATA = next((p for p in (HERE / "data" / "csv", HERE.parent / "manyavar-
 CFG = dict(
     cover_days=28,          # selling days a delivery should cover after it lands
     donor_min_cover=30,     # rule: giving store keeps >= 30 days cover of the style
+    donor_margin=1.1,       # plan to 33 days so the rule holds under any reasonable velocity definition
     shrink_days=28,         # in-stock days of evidence before a store's own velocity outweighs the prior
     week_decay=0.85,        # weight of each older week (half-life ~4 weeks)
     age_days=120,           # stock older than this is "ageing"
@@ -235,6 +236,8 @@ def velocity(D, P, sales):
 
     grid = pd.MultiIndex.from_product([stores.index, items.index], names=["store_id", "sku_id"]).to_frame(index=False)
     g = grid.merge(g, how="left").fillna({"ws": 0, "wd": 0, "ev": 0, "sold12": 0})
+    s28 = s[s.date > today - pd.Timedelta(days=28)].groupby(["store_id", "sku_id"]).qty.sum().rename("sold28").reset_index()
+    g = g.merge(s28, how="left").fillna({"sold28": 0})
     chain = g.groupby("sku_id").agg(ws=("ws", "sum"), wd=("wd", "sum"))
     chain_rate = (chain.ws / chain.wd).where(chain.wd > 0)
     # never in stock anywhere in the window: fall back to the last 12 months of sales
@@ -259,7 +262,7 @@ def velocity(D, P, sales):
     # not yet launched -> no demand
     launch = pd.to_datetime(g.sku_id.map(items.launch_date), errors="coerce")
     g.loc[launch > today, "v"] = 0
-    return g[["store_id", "sku_id", "v", "ws", "wd", "ev", "sold12", "chain_rate", "m"]], f
+    return g[["store_id", "sku_id", "v", "ws", "wd", "ev", "sold12", "sold28", "chain_rate", "m"]], f
 
 
 # ----------------------------------------------------------------------------- 3. season
@@ -348,6 +351,8 @@ class Planner:
         self.g = g.set_index(["store_id", "sku_id"])
         self.sty_pos = g.groupby(["store_id", "style"]).pos.sum().to_dict()
         self.sty_fd30 = g.groupby(["store_id", "style"]).fd30.sum().to_dict()
+        # for the giving-store rule use the faster of the forecast and the last 28 days of actual sales
+        self.sty_give = (g.groupby(["store_id", "style"]).sold28.sum() / 28).to_dict()
         self.cat_pos = g.groupby(["store_id", "dcat"]).pos.sum().to_dict()
         self.inc, self.out = defaultdict(int), defaultdict(int)
         self.sty_out, self.cat_in, self.cat_out = defaultdict(int), defaultdict(int), defaultdict(int)
@@ -382,18 +387,26 @@ class Planner:
         fd = self.g.at[(s, k), col]
         return self.cur(s, k) / fd if fd > 1e-9 else float("inf")
 
-    def give_cap(self, d, k):
-        """Units store d may give away of SKU k without breaking any donor rule."""
+    def give_cap(self, d, k, aged=False):
+        """Units store d may give away of SKU k without breaking any donor rule.
+
+        For ageing stock the size itself keeps only its rounded 30-day demand (a size that has barely sold here
+        does not hold back a 'just in case' piece); the business rules - flagship top-20, 30 days of style cover,
+        minimum display per category - always apply.
+        """
         st = self.st.loc[d]
         row = self.g.loc[(d, k)]
         if st.tier == "S++" and row["style"] in self.P["prot"].get(d, set()):
             return 0
         if self.inc[(d, k)] > 0:
             return 0
-        g1 = int(row.oh) - self.out[(d, k)] - math.ceil(row.fd30 * CFG["donor_min_cover"] - 1e-9)
-        sfd = self.sty_fd30[(d, row["style"])]
+        need30 = row.fd30 * CFG["donor_min_cover"]
+        keep = math.floor(need30 + 0.5) if aged else math.ceil(need30 - 1e-9)
+        g1 = int(row.oh) - self.out[(d, k)] - keep
+        sfd = max(self.sty_fd30[(d, row["style"])], self.sty_give.get((d, row["style"]), 0))
         spos = self.sty_pos[(d, row["style"])] - self.sty_out[(d, row["style"])]
-        g2 = math.floor(spos - CFG["donor_min_cover"] * sfd + 1e-9) if sfd > 1e-9 else 10**9
+        # 10% safety margin over the 30-day rule, so the giver still has 30+ days under a plain recent-sales average
+        g2 = math.floor(spos - CFG["donor_min_cover"] * CFG["donor_margin"] * sfd + 1e-9) if sfd > 1e-9 else 10**9
         minimum = self.P["md"].get((st.tier, row["dcat"]), 0)
         g3 = self.cat_pos[(d, row["dcat"])] + self.cat_in[(d, row["dcat"])] - self.cat_out[(d, row["dcat"])] - minimum
         return max(0, min(g1, g2, g3))
@@ -563,7 +576,7 @@ class Planner:
             cov = self.cover(s, k)
             if cov <= CFG["age_cover"]:
                 continue
-            spare = self.give_cap(s, k)
+            spare = self.give_cap(s, k, aged=True)
             if spare <= 0:
                 continue
             recips = []
@@ -571,13 +584,13 @@ class Planner:
                 if r == s or self.out[(r, k)] > 0:
                     continue
                 rr = g.loc[(r, k)]
-                if rr.fd < 0.05:   # must sell at least ~1.5 units a month to be worth the move
+                if rr.fd < 0.033:   # must sell at least ~1 piece a month to be worth the move
                     continue
                 want = math.ceil(rr.fd * CFG["sell_within"]) - self.cur(r, k)
                 if want > 0:
                     recips.append((-rr.fd, self.lead(s, r), r, want))
             for _, L, r, want in sorted(recips):
-                q = min(spare, want, self.room[r], self.give_cap(s, k))
+                q = min(spare, want, self.room[r], self.give_cap(s, k, aged=True))
                 if q <= 0:
                     continue
                 rr = g.loc[(r, k)]
@@ -585,6 +598,8 @@ class Planner:
                          f"Held {int(a.age)} days at {s}, which sells {a.fd30:.2f}/day ({days(cov)} of stock); "
                          f"{r} sells {rr.fd:.2f}/day and will clear it within {CFG['sell_within']} days.", "Low")
                 spare -= q
+            if a["style"] in getattr(self, "hot", set()):
+                continue  # a sold-out hit is never sent back to the warehouse as slow stock
             if spare > 0 and self.cover(s, k) > CFG["pullback_cover"]:
                 chain = g.xs(k, level="sku_id")
                 # dead only if it sat on shelves (84+ store-days in stock) and still nobody bought it
@@ -674,8 +689,58 @@ def validate(moves, pl):
 
 
 # ----------------------------------------------------------------------------- 6. findings + write
+def sold_out_hits(D, P, sales, weekly):
+    """Styles that sold well but whose sales collapsed because the shelves ran empty (not because demand faded).
+
+    A style qualifies when (1) it sold >= 40 pieces in its best recent month, (2) its share of chain sales over the
+    last 60 days is at most 35% of its share in that best month, and (3) in the last 4 weeks the stores that sold it
+    had it on the shelf less than 45% of the days.
+    """
+    today, it = P["today"], P["items"]
+    s = sales[sales.date > today - pd.Timedelta(days=270)].copy()
+    if s.empty:
+        return pd.DataFrame()
+    s["style"] = s.sku_id.map(it.style_id)
+    s["m"] = s.date.dt.to_period("M")
+    by = s.groupby(["style", "m"]).qty.sum().unstack(fill_value=0)
+    share = by / s.groupby("m").qty.sum()
+    rec = s[s.date > today - pd.Timedelta(days=60)]
+    rshare = rec.groupby("style").qty.sum() / max(rec.qty.sum(), 1)
+    carried = set(zip(s.store_id, s.sku_id))
+    w = weekly[weekly.week > today - pd.Timedelta(days=28)]
+    w = w[[k in carried for k in zip(w.store_id, w.sku_id)]]
+    instock = (w.groupby(w.sku_id.map(it.style_id)).days.mean() / 7)
+    snap = P["snap"]
+    stock = snap.groupby(snap.sku_id.map(it.style_id)).oh.sum() + snap.groupby(snap.sku_id.map(it.style_id)).in_transit.sum()
+    inb = D["warehouse_inbound"]
+    inbound = inb.groupby(inb.sku_id.map(it.style_id)).qty.sum()
+    last_m = (today.to_period("M"))
+    rows = []
+    for sty in by.index:
+        peak_m = by.loc[sty].idxmax()
+        peak = int(by.loc[sty].max())
+        if peak < 40 or share.loc[sty, peak_m] <= 0:
+            continue
+        ratio = rshare.get(sty, 0) / share.loc[sty, peak_m]
+        on_shelf = instock.get(sty, 1.0)
+        if ratio <= 0.35 and on_shelf < 0.45:
+            rows.append(dict(style=sty, name=it[it.style_id == sty].style_name.iloc[0], peak=peak, peak_m=peak_m,
+                             now=int(by.loc[sty].get(last_m, 0)), on_shelf=on_shelf, stock=int(stock.get(sty, 0)),
+                             inbound=int(inbound.get(sty, 0))))
+    return pd.DataFrame(rows)
+
+
 def findings(D, P, pl, vel_weekly):
     issue, g, it, st = P["issue"], pl.g, pl.it, pl.st
+    for r in getattr(pl, "hits", pd.DataFrame()).itertuples():
+        supply = f"{r.inbound} on order" if r.inbound else "nothing on order"
+        stranded = r.stock >= 0.3 * r.peak
+        issue("Sold-out hit", "", r.style,
+              f"{r.name}: sold {r.peak} in {r.peak_m:%b %Y} but only {r.now} in {P['today']:%b} because the stores that sell it "
+              f"had empty shelves {1 - r.on_shelf:.0%} of the time; {r.stock} pieces left chain-wide, {supply}",
+              ("Not a slow seller: its stock sits in stores that don't sell it, so the plan moves it to stores that do "
+               "and never pulls it back" if stranded else
+               "Not a slow seller: re-order now; the plan never pulls it back as dead stock"), "High")
     # hidden stockouts: zero sales because zero stock
     recent = vel_weekly[vel_weekly.week > P["today"] - pd.Timedelta(days=28)].groupby(["store_id", "sku_id"]).days.sum()
     hs = g[(g.oh == 0) & (g.fd30 >= 0.05)].copy()
@@ -748,6 +813,40 @@ def am_alerts(P, mv, ex):
     return pd.DataFrame(rows)
 
 
+ROUTINE_LABEL = {T_WH: "All other warehouse sends (not urgent)", T_S2S: "Moves between stores (not urgent)",
+                 T_DISP: "Minimum-display top-ups", T_AGE: "Old stock to stores where it sells",
+                 T_PULL: "Slow stock back to the warehouse"}
+
+
+def approval_pack(mv, st):
+    """The ten-minute approval: ~40 decisions instead of every line.
+
+    Step 1: urgent refills, one decision per receiving store.  Step 2: each move over Rs 1 lakh on its own.
+    Step 3: everything else, one decision per kind of move.  'move_ids' links each decision to its lines.
+    """
+    rows = []
+    big = mv[mv.approval != ""]
+    urgent = mv[(mv.priority == "High") & (mv.approval == "") & mv.to_id.isin(st.index)]
+    for s, g in sorted(urgent.groupby("to_id"), key=lambda x: -x[1].value_mrp.sum()):
+        rows.append(dict(step="1 · Urgent refills", decision=f"Refill {s} ({st.city[s]})", pieces=int(g.qty.sum()),
+                         value_mrp=int(g.value_mrp.sum()), lines=len(g),
+                         detail=f"{g.sku_id.nunique()} sizes run out before a normal delivery; from "
+                                f"{', '.join(sorted(g.from_id.unique()))}; arrives by {g.arrives.max():%d %b}",
+                         move_ids=",".join(g.move_id)))
+    for r in big.sort_values("value_mrp", ascending=False).itertuples():
+        rows.append(dict(step="2 · Sign-off: over ₹1 lakh", decision=f"{r.from_id} → {r.to_id}: {r.qty} × {r.style_name} ({r.size})",
+                         pieces=int(r.qty), value_mrp=int(r.value_mrp), lines=1, detail=r.reason, move_ids=r.move_id))
+    rest = mv.drop(index=urgent.index.union(big.index))
+    for t in [T_WH, T_S2S, T_DISP, T_AGE, T_PULL]:
+        g = rest[rest.type == t]
+        if len(g):
+            rows.append(dict(step="3 · Routine", decision=ROUTINE_LABEL[t], pieces=int(g.qty.sum()), value_mrp=int(g.value_mrp.sum()),
+                             lines=len(g), detail=f"{g.from_id.nunique()} senders → {g.to_id.nunique()} receivers; "
+                                                  f"{int((g.qty == 1).sum())} single-piece lines; every line has its reason on 'Moves'",
+                             move_ids=",".join(g.move_id)))
+    return pd.DataFrame(rows, columns=["step", "decision", "pieces", "value_mrp", "lines", "detail", "move_ids"])
+
+
 def write(out_dir, pl, mv, ex, val, alerts):
     out_dir.mkdir(parents=True, exist_ok=True)
     run = pl.run
@@ -780,9 +879,12 @@ def write(out_dir, pl, mv, ex, val, alerts):
             f"{len(mv)} moves, {int(mv.qty.sum())} units, Rs {mv.value_mrp.sum() / 1e5:.1f} lakh at MRP",
             f"Rule checks: {(val.status == 'PASS').sum()} of {len(val)} passed",
             f"Data issues found: {len(ex)} (see 'Data issues')",
-            "Approve by route on 'Routes'; every SKU line with its one-line reason is on 'Moves'."]})
+            "Start on 'Approve first': about 40 decisions cover every move. 'Routes' and 'Moves' hold the detail."]})
         head.to_excel(w, sheet_name="Summary", index=False)
         summ.to_excel(w, sheet_name="Summary", index=False, startrow=8)
+        pack = approval_pack(mv, pl.st).drop(columns="move_ids")
+        pack.insert(0, "approve (Y/N)", "Y")
+        pack.to_excel(w, sheet_name="Approve first", index=False)
         routes.to_excel(w, sheet_name="Routes", index=False)
         view.to_excel(w, sheet_name="Moves", index=False)
         ex.to_excel(w, sheet_name="Data issues", index=False)
@@ -810,6 +912,8 @@ def run(source, out_dir=None):
     vel, weekly = velocity(D, P, sales)
     season = Season(D, P, sales)
     pl = Planner(D, P, vel, season)
+    pl.hits = sold_out_hits(D, P, sales, weekly)
+    pl.hot = set(pl.hits["style"]) if len(pl.hits) else set()
     cols = ["type", "from_id", "to_id", "sku_id", "qty", "dispatch", "arrives", "priority", "reason"]
     mv = pd.DataFrame(pl.plan(), columns=cols)
     it = P["items"]

@@ -47,7 +47,8 @@ def leadership(R):
         ("Sales protected", inr(into.value_mrp.sum()), f"{int(into.qty.sum()):,} pieces to stores about to run short"),
         ("Hidden lost sales found", inr(hs.at_risk.sum()), f"{len(hs)} sizes out of stock for 4+ weeks"),
         ("Old stock put to work", inr(old.value_mrp.sum()), f"{int(old.qty.sum())} pieces older than {sm.CFG['age_days']} days"),
-        ("Decisions needed", str(len(big) + int((ex.issue.isin(['Warehouse shortfall', 'Dead style', 'Stock records disagree'])).sum())),
+        ("Decisions needed", str(len(big) + int((ex.issue.isin(['Warehouse shortfall', 'Dead style', 'Stock records disagree'])).sum())
+                                 + int((ex.issue == "Sold-out hit").any())),
          f"{len(big)} big moves to sign off"),
     ]
     ins = []
@@ -63,6 +64,11 @@ def leadership(R):
     for r in short.itertuples():
         ins.append(("#e8a317", f"**Not enough {r.sku} for wedding season.** {r.detail}. Stores will share what's there, "
                                "and the buying team should speed up supplier deliveries."))
+    hits0 = ex[ex.issue == "Sold-out hit"]
+    if len(hits0):
+        names = ", ".join(hits0.sku.head(4)) + ("…" if len(hits0) > 4 else "")
+        ins.append(("#D4A017", f"**{len(hits0)} best-sellers ran out; they aren't slow.** {names} sold strongly, then sales vanished "
+                               "because shelves were empty. They're flagged for re-order and never pulled back as dead stock."))
     nl = ex[ex.issue == "New launch"]
     sales = R["sales"]
     for r in nl.itertuples():
@@ -88,6 +94,10 @@ def leadership(R):
         decisions.append(f"Approve **{len(big)} moves worth over ₹1 lakh each** ({inr(big.value_mrp.sum())} in total). See the Approve tab.")
     for r in short.itertuples():
         decisions.append(f"Buying: speed up **{r.sku}** supply. Stores need far more than the warehouse holds.")
+    hits = ex[ex.issue == "Sold-out hit"]
+    reorder = hits[hits.action.str.contains("re-order now")]
+    if len(reorder):
+        decisions.append(f"Buying: re-order the sold-out hits **{', '.join(reorder.sku)}**. They ran out; they aren't slow.")
     for r in ex[ex.issue == "Dead style"].itertuples():
         decisions.append(f"Buying: stop re-ordering **{r.sku}**. It hasn't sold in two years.")
     for r in bad.itertuples():

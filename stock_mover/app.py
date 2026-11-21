@@ -142,6 +142,10 @@ ISSUE_PLAIN = {
     "Warehouse shortfall": ("Not enough stock in the warehouse", "Stores need more than the warehouse holds as wedding season starts.",
                             "Shared by who runs out first, plus safe moves between stores."),
     "Dead style": ("A design that never sells", "It ties up money and shelf space.", "Pulled back. Buying should stop re-ordering it."),
+    "Sold-out hit": ("Best-sellers that ran out, not slow sellers",
+                     "Sales fell because the shelves were empty, not because customers stopped wanting it. "
+                     "Treating it as slow would throw away the wedding-season demand.",
+                     "Flagged for re-order (or moved to the stores that sell it) and never pulled back as dead stock."),
     "New launch": ("A new design with little history", "Few sales so far doesn't mean slow; it's just new.",
                    "Selling speed measured only on days it was on the shelf."),
     "New store": ("A store that just opened", "Too little history to know what it will sell.",
@@ -371,7 +375,7 @@ with T[1]:
 with T[2]:
     st.markdown("Problems found in the data: **what they mean**, **why they matter**, and **what we did**.")
     weekly, sales = R["weekly"], R["sales"]
-    order = ["Stock records disagree", "Negative stock", "Under-stocked store", "Hidden stockout", "Warehouse shortfall",
+    order = ["Stock records disagree", "Negative stock", "Under-stocked store", "Sold-out hit", "Hidden stockout", "Warehouse shortfall",
              "Over capacity", "Dead style", "Below minimum display after plan", "New launch", "New store", "Lead time missing"]
     for kind in sorted(ex.issue.unique(), key=lambda k: order.index(k) if k in order else 99):
         grp = ex[ex.issue == kind]
@@ -417,6 +421,14 @@ with T[2]:
                 d = s.groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum().reset_index()
                 fig = px.bar(d, x="date", y="qty", title=f"{', '.join(stys)}: weekly sales since launch",
                              labels={"qty": "pieces sold", "date": ""}, color_discrete_sequence=["#E04E1C"])
+            elif kind == "Sold-out hit":
+                stys = grp.sku.tolist()
+                s = sales[sales.sku_id.map(pl.it.style_id).isin(stys) & (sales.date > P["today"] - pd.Timedelta(days=270))]
+                d = s.groupby([s.date.dt.to_period("M").dt.to_timestamp(), s.sku_id.map(pl.it.style_id)]).qty.sum().reset_index()
+                d.columns = ["month", "style", "pieces sold"]
+                fig = px.line(d, x="month", y="pieces sold", color="style", markers=True,
+                              title="Monthly sales: strong, then gone when the shelves emptied", labels={"month": ""},
+                              color_discrete_sequence=["#E04E1C", "#66142E", "#D4A017", "#511D00", "#A0522D", "#8C6E54", "#C9431A", "#E1CEAC"])
             elif kind == "New store":
                 s = sales[sales.store_id.isin(grp.store)]
                 d = s.groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum().reset_index()
@@ -470,21 +482,27 @@ with T[3]:
 
 # ---- Approve
 with T[4]:
-    st.markdown("Approve by **trip** (from → to). Untick what you don't want, then download. 💰 = contains a move over ₹1 lakh.")
-    routes = (mv.groupby(["type", "from_id", "to_id"])
-              .agg(pieces=("qty", "sum"), value=("value_mrp", "sum"), urgent=("priority", lambda x: int((x == "High").sum())),
-                   big=("approval", lambda x: (x != "").any())).reset_index().sort_values(["urgent", "value"], ascending=False))
-    routes.insert(0, "ok", True)
-    routes["trip"] = routes.big.map({True: "💰 ", False: ""}) + routes.from_id + " → " + routes.to_id
-    routes["kind"] = routes.type.map(lambda t: TYPE_PLAIN[t][0])
-    routes["value"] = routes.value.map(inr)
-    ed = st.data_editor(routes[["ok", "trip", "pieces", "value", "urgent", "kind", "type", "from_id", "to_id"]], hide_index=True,
-                        use_container_width=True, height=420, disabled=["trip", "pieces", "value", "urgent", "kind"],
-                        column_config={"type": None, "from_id": None, "to_id": None, "ok": st.column_config.CheckboxColumn("✓", width="small"),
-                                       "urgent": st.column_config.NumberColumn("urgent", width="small")})
-    ok = ed[ed.ok][["type", "from_id", "to_id"]]
-    approved = mv.merge(ok, on=["type", "from_id", "to_id"])
-    st.success(f"Approved {len(ok)} of {len(ed)} trips · {int(approved.qty.sum()):,} pieces · {inr(approved.value_mrp.sum())}")
+    pack = sm.approval_pack(mv, stores)
+    st.markdown(f"#### The ten-minute approval\n**{len(pack)} decisions** cover all **{len(mv):,} moves**. "
+                "Everything starts approved: untick what you don't want, then download the approved list.")
+    approved_ids = set()
+    step_help = {"1 · Urgent refills": "Stores that will run out before a normal delivery. One decision per store.",
+                 "2 · Sign-off: over ₹1 lakh": "Each move worth over ₹1 lakh at MRP needs a person's sign-off.",
+                 "3 · Routine": "Everything else, one decision per kind of move."}
+    for step, grp in pack.groupby("step", sort=True):
+        st.markdown(f"**Step {step}** · {len(grp)} decisions · {int(grp.pieces.sum()):,} pieces · {inr(grp.value_mrp.sum())}  \n"
+                    f"<small>{step_help.get(step, '')}</small>", unsafe_allow_html=True)
+        view = grp.assign(ok=True, value=grp.value_mrp.map(inr))[["ok", "decision", "pieces", "value", "lines", "detail", "move_ids"]]
+        ed = st.data_editor(view, hide_index=True, use_container_width=True, key=f"pack_{step}",
+                            disabled=["decision", "pieces", "value", "lines", "detail"],
+                            height=min(420, 38 + 35 * len(view)),
+                            column_config={"move_ids": None, "ok": st.column_config.CheckboxColumn("✓", width="small"),
+                                           "lines": st.column_config.NumberColumn("lines", width="small"),
+                                           "detail": st.column_config.TextColumn("why", width="large")})
+        for ids in ed[ed.ok].move_ids:
+            approved_ids.update(ids.split(","))
+    approved = mv[mv.move_id.isin(approved_ids)]
+    st.success(f"Approved {len(approved):,} of {len(mv):,} moves · {int(approved.qty.sum()):,} pieces · {inr(approved.value_mrp.sum())}")
     cols = ["move_id", "priority", "approval", "type", "from_id", "to_id", "style_name", "size", "sku_id", "qty", "value_mrp",
             "dispatch", "arrives", "reason"]
     csv = approved[cols].assign(dispatch=approved.dispatch.dt.strftime("%Y-%m-%d"),
@@ -493,6 +511,24 @@ with T[4]:
     with st.expander("Every line with its reason"):
         st.dataframe(mv[["priority", "kind", "from_id", "to_id", "style_name", "size", "qty", "value_mrp", "reason"]],
                      hide_index=True, use_container_width=True, height=460)
+    with st.expander("Prefer to approve trip by trip?"):
+        routes = (mv.groupby(["type", "from_id", "to_id"])
+                  .agg(pieces=("qty", "sum"), value=("value_mrp", "sum"), urgent=("priority", lambda x: int((x == "High").sum())),
+                       big=("approval", lambda x: (x != "").any())).reset_index().sort_values(["urgent", "value"], ascending=False))
+        routes.insert(0, "ok", True)
+        routes["trip"] = routes.big.map({True: "💰 ", False: ""}) + routes.from_id + " → " + routes.to_id
+        routes["kind"] = routes.type.map(lambda t: TYPE_PLAIN[t][0])
+        routes["value"] = routes.value.map(inr)
+        ed = st.data_editor(routes[["ok", "trip", "pieces", "value", "urgent", "kind", "type", "from_id", "to_id"]], hide_index=True,
+                            use_container_width=True, height=420, disabled=["trip", "pieces", "value", "urgent", "kind"], key="trips",
+                            column_config={"type": None, "from_id": None, "to_id": None, "ok": st.column_config.CheckboxColumn("✓", width="small"),
+                                           "urgent": st.column_config.NumberColumn("urgent", width="small")})
+        trip_ok = mv.merge(ed[ed.ok][["type", "from_id", "to_id"]], on=["type", "from_id", "to_id"])
+        st.caption(f"Approved {int(ed.ok.sum())} of {len(ed)} trips · {int(trip_ok.qty.sum()):,} pieces · {inr(trip_ok.value_mrp.sum())}")
+        st.download_button("⬇️ Download trip-approved moves (CSV)",
+                           trip_ok[cols].assign(dispatch=trip_ok.dispatch.dt.strftime("%Y-%m-%d"),
+                                                arrives=trip_ok.arrives.dt.strftime("%Y-%m-%d")).to_csv(index=False).encode(),
+                           file_name=f"approved_moves_by_trip_{pl.run:%Y-%m-%d}.csv", key="dl_trips")
 
 # ---- Ask (chatbot)
 with T[5]:
