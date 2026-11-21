@@ -736,7 +736,7 @@ def findings(D, P, pl, vel_weekly):
         supply = f"{r.inbound} on order" if r.inbound else "nothing on order"
         stranded = r.stock >= 0.3 * r.peak
         issue("Sold-out hit", "", r.style,
-              f"{r.name}: sold {r.peak} in {r.peak_m:%b %Y} but only {r.now} in {P['today']:%b} because the stores that sell it "
+              f"{r.name}: sold {r.peak} in {r.peak_m.strftime('%b %Y')} but only {r.now} in {P['today']:%b} because the stores that sell it "
               f"had empty shelves {1 - r.on_shelf:.0%} of the time; {r.stock} pieces left chain-wide, {supply}",
               ("Not a slow seller: its stock sits in stores that don't sell it, so the plan moves it to stores that do "
                "and never pulls it back" if stranded else
