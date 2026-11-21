@@ -3,6 +3,8 @@
 Daily ready-to-approve list of stock moves for the 20 Manyavar stores and warehouse WH-KOL
 (Vedant Fashions AI Hackathon, case study B).
 
+**Live app:** https://synapse-stock-mover.streamlit.app (Streamlit Community Cloud; press "Try the sample data")
+
 ## Setup
 
 ```powershell

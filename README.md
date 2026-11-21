@@ -2,6 +2,10 @@
 
 ## Stock Mover: Manyavar AI Hackathon, case study B
 
+### 🔗 Live app: https://synapse-stock-mover.streamlit.app
+Open it and press **Try the sample data**. A plan takes about 30 seconds. If the page shows a "wake up" button,
+click it and wait about 30 seconds while the free server starts.
+
 **[stock_mover/](stock_mover/)** finds stock in the wrong place every day and writes a ready-to-approve list:
 what to send from the warehouse, what to move between stores, and what to pull back. Every move comes with a
 one-line reason, and every business rule is re-checked on the final plan.
