@@ -1,0 +1,10 @@
+# generated each run
+output/
+feedback/
+*.log
+# local copy of the Anthropic SDK (Windows long-path workaround), installed by the launcher
+_lib/
+__pycache__/
+*.pyc
+.claude/
+.env
