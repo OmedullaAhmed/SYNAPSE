@@ -2,6 +2,7 @@
 
 Start:  streamlit run app.py   (or double-click "Start Stock Mover.bat")
 """
+import base64
 import io
 import re
 import shutil
@@ -20,12 +21,32 @@ import insights as ins
 import stock_mover as sm
 from insights import inr
 
-st.set_page_config(page_title="Stock Mover", page_icon="📦", layout="wide", initial_sidebar_state="collapsed")
+ASSETS = Path(__file__).parent / "assets"
+_icon = ASSETS / "icon.png"
+st.set_page_config(page_title="Stock Mover · Synapse", page_icon=str(_icon) if _icon.exists() else "📦", layout="wide", initial_sidebar_state="collapsed")
 
 # ----------------------------------------------------------------------------- look & feel (desktop + phone)
 st.markdown("""
 <style>
-.block-container{padding-top:1.4rem;padding-bottom:5rem;max-width:1180px}
+:root{--syn-deep:#264653;--syn-teal:#2a9d8f;--syn-teal-d:#238478;--syn-gold:#e9c46a;--syn-sand:#f4a261;--syn-coral:#e76f51}
+.stButton>button[kind="primary"],.stDownloadButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"]{background:var(--syn-teal)!important;border-color:var(--syn-teal)!important;color:#fff!important}
+.stButton>button[kind="primary"]:hover,.stDownloadButton>button[kind="primary"]:hover{background:var(--syn-teal-d)!important;border-color:var(--syn-teal-d)!important}
+.stButton>button:hover,.stDownloadButton>button:hover{border-color:var(--syn-teal)!important;color:var(--syn-teal)}
+.stButton>button[kind="primary"]:hover{color:#fff!important}
+.stButton>button[kind="primary"]:disabled{opacity:.45;cursor:not-allowed}
+.stTabs [aria-selected="true"]{color:var(--syn-teal)!important}
+.stTabs [data-baseweb="tab-highlight"]{background-color:var(--syn-teal)!important}
+[data-testid="stFileUploaderDropzone"]{border:1.5px dashed rgba(42,157,143,.55)!important}
+.syn-top{display:flex;align-items:center;gap:.55rem;margin:0 0 1.1rem;font-weight:700;font-size:1rem;letter-spacing:.01em}
+.syn-top .sep{opacity:.35;font-weight:400}.syn-top .prod{opacity:.75;font-weight:600}
+.syn-hero{background:linear-gradient(135deg,#264653,#1b323b);color:#f1faee;border-radius:18px;padding:2rem 2rem 1.6rem;margin:0 0 1.4rem}
+.syn-hero .eb{color:#7fd1c4;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin:0 0 .5rem}
+.syn-hero h1{color:#f1faee!important;font-size:2.4rem!important;line-height:1.1;margin:0 0 .6rem!important;padding:0!important}
+.syn-hero p{color:#cfe3e2;font-size:1.02rem;line-height:1.6;margin:0 0 .4rem;max-width:760px}
+.syn-hero b{color:#fff}
+.syn-bar{display:flex;gap:6px;margin-top:1.1rem}.syn-bar span{height:4px;border-radius:2px}
+@media (max-width:640px){.syn-hero{padding:1.3rem 1.1rem 1.1rem}.syn-hero h1{font-size:1.6rem!important}}
+.block-container{padding-top:3.6rem;padding-bottom:5rem;max-width:1180px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin:.3rem 0 1rem}
 .kpi{border:1px solid rgba(128,128,128,.25);border-radius:14px;padding:.75rem .9rem;background:rgba(127,127,127,.06)}
 .kpi .l{font-size:.78rem;opacity:.75;text-transform:uppercase;letter-spacing:.03em}
@@ -36,7 +57,7 @@ st.markdown("""
 .stTabs [data-baseweb="tab-list"]{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;gap:.2rem}
 .stTabs [data-baseweb="tab"]{white-space:nowrap;padding:0 .55rem}
 @media (max-width:640px){
-  .block-container{padding-left:.65rem;padding-right:.65rem;padding-top:.8rem}
+  .block-container{padding-left:.65rem;padding-right:.65rem;padding-top:3.4rem}
   h1{font-size:1.4rem!important} h2{font-size:1.15rem!important} h3{font-size:1.02rem!important}
   .kpis{grid-template-columns:1fr 1fr;gap:.45rem}
   .kpi{padding:.55rem .65rem}
@@ -44,6 +65,16 @@ st.markdown("""
   .kpi .s{font-size:.7rem}
 }
 </style>""", unsafe_allow_html=True)
+
+_logo = ASSETS / "logo.svg"
+LOGO_SVG = (f'<img src="data:image/svg+xml;base64,{base64.b64encode(_logo.read_bytes()).decode()}" '
+            'width="30" height="30" alt="">') if _logo.exists() else ""
+
+
+def brand_bar():
+    st.markdown(f'<div class="syn-top">{LOGO_SVG}<span>Synapse</span><span class="sep">/</span>'
+                f'<span class="prod">Stock Mover</span></div>', unsafe_allow_html=True)
+
 
 TYPE_COLORS = {sm.T_WH: "#2a9d8f", sm.T_S2S: "#e9c46a", sm.T_DISP: "#9b5de5", sm.T_AGE: "#f4a261", sm.T_PULL: "#e76f51"}
 TYPE_PLAIN = {
@@ -160,7 +191,7 @@ def data_panel(expanded):
                      hide_index=True, use_container_width=True)
     c1, c2 = st.columns(2)
     go_btn = c1.button("▶️ Run Stock Mover", type="primary", disabled=not ups, use_container_width=True)
-    sample = c2.button("Try the sample data", use_container_width=True, disabled=not sm.DEFAULT_DATA.exists())
+    sample = c2.button("✨ Try the sample data", type="primary", use_container_width=True, disabled=not sm.DEFAULT_DATA.exists())
     if go_btn or sample:
         tmp = Path(tempfile.mkdtemp(prefix="stockmover_in_"))
         try:
@@ -186,11 +217,16 @@ def data_panel(expanded):
 
 
 if "R" not in st.session_state:
-    st.title("📦 Stock Mover")
-    st.markdown("**Right stock. Right store. Right size.**")
-    st.markdown("Every day, some stock is in the **wrong place**: one store runs out of a size customers want, while "
-                "another has the same size sitting unsold. Stock Mover finds those problems and writes a **ready-to-approve list**: "
-                "🚚 send from the warehouse · 🔁 move between stores · ↩️ bring back to the warehouse.")
+    brand_bar()
+    st.markdown(
+        '<div class="syn-hero"><p class="eb">Right stock · Right store · Right size</p>'
+        '<h1>Stock in the right store, every morning.</h1>'
+        '<p>Every day, some stock is in the <b>wrong place</b>: one store runs out of a size customers want, while '
+        'another has the same size sitting unsold. Stock Mover finds those problems and writes a '
+        '<b>ready-to-approve list</b>: 🚚 send from the warehouse · 🔁 move between stores · ↩️ bring back to the warehouse.</p>'
+        '<div class="syn-bar"><span style="width:56px;background:#2a9d8f"></span><span style="width:24px;background:#e9c46a">'
+        '</span><span style="width:16px;background:#f4a261"></span><span style="width:10px;background:#e76f51"></span></div></div>',
+        unsafe_allow_html=True)
     data_panel(True)
     st.stop()
 
@@ -201,6 +237,7 @@ P, g, stores, WH = R["P"], pl.g, pl.st, R["warehouse"]
 mv["kind"] = mv.type.map(lambda t: TYPE_PLAIN[t][0])
 L = ins.leadership(R)
 
+brand_bar()
 st.title(f"Stock plan · {pl.run:%a %d %b %Y}")
 st.caption(f"{st.session_state.label} · stock as of {P['today']:%d %b %Y} · {len(stores)} stores + {WH}")
 with st.expander("📂 Load new data or change settings"):
