@@ -39,9 +39,21 @@ while the free server starts.
 
 | Sample run (2026-11-01) | |
 |---|---|
-| Moves planned | **1,166** |
+| Moves planned | **1,288** (2,710 pieces, ₹2.17 Cr at MRP) |
+| Decisions to approve them all | **39** |
 | Business rules passed | **11 of 11** |
-| Data issues found | **26** |
+| Data issues found | **34**, including 8 sold-out best-sellers |
+
+## Pitch materials
+
+Everything for the presentation is in [`pitch/`](pitch/):
+
+- **Pitch video:** [`StockFlowAI_pitch.mp4`](pitch/StockFlowAI_pitch.mp4), 2 minutes, with voice-over and captions
+- **App tour deck:** [`StockFlowAI_app_tour.pptx`](pitch/StockFlowAI_app_tour.pptx), one slide per tab, plus [speaker notes](pitch/StockFlowAI_app_tour_speaker_notes.docx)
+- **Owners' deck:** [`StockFlowAI_owners_deck.pptx`](pitch/StockFlowAI_owners_deck.pptx), with speaker notes in PowerPoint
+
+To check the plan yourself, `python stock_mover/tests/audit.py` re-checks every rule from the raw data,
+independently of the app.
 
 ## Quick start
 
@@ -62,7 +74,9 @@ SYNAPSE/
 │   ├── app.py            the web app
 │   ├── stock_mover.py    the planning engine, also runs from the command line
 │   ├── data/             sample data pack and briefs
-│   └── sample_output/    a finished plan (Excel and CSV)
+│   ├── sample_output/    a finished plan (Excel and CSV)
+│   └── tests/audit.py    independent audit against the hackathon brief
+├── pitch/                pitch video, decks, speaker notes and the scripts that built them
 ├── src/                  Synapse website (React, TypeScript, Vite)
 └── .github/assets/       logo and banner
 ```
