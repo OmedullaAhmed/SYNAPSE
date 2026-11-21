@@ -1,39 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Synapse: connecting data to decisions">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Synapse Stock Mover, prepared for Manyavar and Mohey">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#264653"/>
-      <stop offset="1" stop-color="#1b323b"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="1" cy="0" r="1.3"><stop offset="0" stop-color="#7a1a2c"/><stop offset=".5" stop-color="#4a0e1c"/><stop offset="1" stop-color="#2e0811"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f8d77a"/><stop offset=".55" stop-color="#f0a010"/><stop offset="1" stop-color="#e07020"/></linearGradient>
+    <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="8" cy="8" r="1.2" fill="#f0c060" opacity=".18"/></pattern>
   </defs>
-  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640"  fill="url(#bg)"/>
+  <rect x="12" y="12" width="1256" height="616" rx="16" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity=".55"/>
+  <circle cx="1180" cy="180" r="210" fill="url(#dots)"/>
   <g transform="translate(0 160)">
-  <g fill="none" stroke="#2a9d8f" stroke-width="2" opacity=".35">
-    <path d="M820 250 C 900 250, 900 90, 980 90 S 1080 200, 1160 150"/>
-    <path d="M860 60 C 940 60, 960 180, 1040 200 S 1140 90, 1220 80"/>
-    <path d="M760 140 C 840 140, 880 210, 960 230"/>
-  </g>
-  <g>
-    <circle cx="820" cy="250" r="8" fill="#e9c46a"/>
-    <circle cx="980" cy="90" r="10" fill="#f4a261"/>
-    <circle cx="1160" cy="150" r="12" fill="#e76f51"/>
-    <circle cx="860" cy="60" r="6" fill="#2a9d8f"/>
-    <circle cx="1040" cy="200" r="7" fill="#2a9d8f"/>
-    <circle cx="1220" cy="80" r="6" fill="#e9c46a"/>
-    <circle cx="760" cy="140" r="5" fill="#f4a261"/>
-    <circle cx="960" cy="230" r="6" fill="#e76f51"/>
-  </g>
-  <g transform="translate(80 96)">
-    <rect width="72" height="72" rx="17" fill="#2a9d8f" opacity=".18"/>
-    <path d="M21 48 C 30 48, 30 24, 39 24 S 48 39, 52 30" fill="none" stroke="#2a9d8f" stroke-width="4.5" stroke-linecap="round"/>
-    <circle cx="21" cy="48" r="7" fill="#e9c46a"/>
-    <circle cx="39" cy="24" r="5" fill="#f4a261"/>
-    <circle cx="52" cy="30" r="7" fill="#e76f51"/>
-  </g>
-  <text x="176" y="150" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="#f1faee" letter-spacing="-1">Synapse</text>
-  <text x="178" y="190" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="24" fill="#a8dadc">Connecting retail data to everyday decisions</text>
-  <rect x="80" y="232" width="56" height="4" rx="2" fill="#2a9d8f"/>
-  <rect x="142" y="232" width="24" height="4" rx="2" fill="#e9c46a"/>
-  <rect x="172" y="232" width="16" height="4" rx="2" fill="#f4a261"/>
-  <rect x="194" y="232" width="10" height="4" rx="2" fill="#e76f51"/>
+    <g fill="none" stroke="url(#gold)" stroke-width="2" opacity=".5">
+      <path d="M820 250 C 900 250, 900 90, 980 90 S 1080 200, 1160 150"/>
+      <path d="M860 60 C 940 60, 960 180, 1040 200 S 1140 90, 1220 80"/>
+      <path d="M760 140 C 840 140, 880 210, 960 230"/>
+    </g>
+    <circle cx="820" cy="250" r="8" fill="#f8d77a"/><circle cx="980" cy="90" r="10" fill="#f0a010"/>
+    <circle cx="1160" cy="150" r="12" fill="#e07020"/><circle cx="860" cy="60" r="6" fill="#fdf6ea"/>
+    <circle cx="1040" cy="200" r="7" fill="#f0c060"/><circle cx="1220" cy="80" r="6" fill="#f8d77a"/>
+    <circle cx="760" cy="140" r="5" fill="#e07020"/><circle cx="960" cy="230" r="6" fill="#fdf6ea"/>
+    <text x="84" y="92" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4" fill="#f0c060">PREPARED FOR MANYAVAR · MOHEY</text>
+    <text x="80" y="170" font-family="'Cormorant Garamond', 'Playfair Display', Georgia, 'Times New Roman', serif" font-size="78" font-weight="700" fill="url(#gold)">Stock Mover</text>
+    <text x="84" y="214" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" fill="#f3e3d3">Right stock · Right store · Right size</text>
+    <g transform="translate(84 244)" fill="#f0c060">
+      <rect y="0" width="120" height="1.5" fill="url(#gold)"/><path d="M132 -5 l5 5 -5 5 -5 -5z"/><rect x="144" y="0" width="120" height="1.5" fill="url(#gold)"/>
+    </g>
+    <text x="84" y="290" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" letter-spacing="2" fill="#d9bfa8">by SYNAPSE</text>
   </g>
 </svg>

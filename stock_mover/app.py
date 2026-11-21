@@ -28,24 +28,35 @@ st.set_page_config(page_title="Stock Mover · Synapse", page_icon=str(_icon) if 
 # ----------------------------------------------------------------------------- look & feel (desktop + phone)
 st.markdown("""
 <style>
-:root{--syn-deep:#264653;--syn-teal:#2a9d8f;--syn-teal-d:#238478;--syn-gold:#e9c46a;--syn-sand:#f4a261;--syn-coral:#e76f51}
-.stButton>button[kind="primary"],.stDownloadButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"]{background:var(--syn-teal)!important;border-color:var(--syn-teal)!important;color:#fff!important}
-.stButton>button[kind="primary"]:hover,.stDownloadButton>button[kind="primary"]:hover{background:var(--syn-teal-d)!important;border-color:var(--syn-teal-d)!important}
-.stButton>button:hover,.stDownloadButton>button:hover{border-color:var(--syn-teal)!important;color:var(--syn-teal)}
-.stButton>button[kind="primary"]:hover{color:#fff!important}
-.stButton>button[kind="primary"]:disabled{opacity:.45;cursor:not-allowed}
-.stTabs [aria-selected="true"]{color:var(--syn-teal)!important}
-.stTabs [data-baseweb="tab-highlight"]{background-color:var(--syn-teal)!important}
-[data-testid="stFileUploaderDropzone"]{border:1.5px dashed rgba(42,157,143,.55)!important}
-.syn-top{display:flex;align-items:center;gap:.55rem;margin:0 0 1.1rem;font-weight:700;font-size:1rem;letter-spacing:.01em}
-.syn-top .sep{opacity:.35;font-weight:400}.syn-top .prod{opacity:.75;font-weight:600}
-.syn-hero{background:linear-gradient(135deg,#264653,#1b323b);color:#f1faee;border-radius:18px;padding:2rem 2rem 1.6rem;margin:0 0 1.4rem}
-.syn-hero .eb{color:#7fd1c4;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin:0 0 .5rem}
-.syn-hero h1{color:#f1faee!important;font-size:2.4rem!important;line-height:1.1;margin:0 0 .6rem!important;padding:0!important}
-.syn-hero p{color:#cfe3e2;font-size:1.02rem;line-height:1.6;margin:0 0 .4rem;max-width:760px}
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
+:root{--syn-deep:#4a0e1c;--syn-maroon:#8b1a2b;--syn-maroon-d:#6b1421;--syn-gold:#e8a317;--syn-gold-l:#f0c060;--syn-saffron:#e07020;--syn-crimson:#d1495b}
+h1,h2,h3,.syn-serif{font-variant-numeric:lining-nums;font-family:'Cormorant Garamond',Georgia,serif!important;font-weight:700!important;letter-spacing:.005em}
+h1{color:var(--syn-maroon)} h2,h3{color:var(--syn-deep)}
+@media (prefers-color-scheme:dark){h1{color:var(--syn-gold-l)} h2,h3{color:#f3e3d3}}
+.stButton>button,.stDownloadButton>button{border-radius:999px!important;letter-spacing:.02em}
+.stButton>button[kind="primary"],.stDownloadButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"]{background:linear-gradient(135deg,#8b1a2b,#6b1421)!important;border:1px solid var(--syn-gold)!important;color:#fdf6ea!important;box-shadow:0 2px 10px rgba(139,26,43,.18)}
+.stButton>button[kind="primary"]:hover,.stDownloadButton>button[kind="primary"]:hover{background:linear-gradient(135deg,#6b1421,#4a0e1c)!important;color:var(--syn-gold-l)!important}
+.stButton>button:hover,.stDownloadButton>button:hover{border-color:var(--syn-gold)!important;color:var(--syn-maroon)}
+.stButton>button[kind="primary"]:disabled{opacity:.4;cursor:not-allowed}
+.stTabs [aria-selected="true"]{color:var(--syn-maroon)!important;font-weight:600}
+.stTabs [data-baseweb="tab-highlight"]{background:linear-gradient(90deg,var(--syn-gold),var(--syn-saffron))!important}
+[data-testid="stFileUploaderDropzone"]{border:1.5px dashed rgba(232,163,23,.7)!important;background:rgba(232,163,23,.05)!important}
+[data-testid="stExpander"] details{border-color:rgba(232,163,23,.35)!important}
+.syn-top{display:flex;align-items:center;gap:.6rem;margin:0 0 1.1rem;font-size:1rem}
+.syn-top .nm{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:1.35rem;color:var(--syn-maroon)}
+.syn-top .sep{color:var(--syn-gold)}.syn-top .prod{opacity:.75;font-weight:600}
+.syn-top .for{margin-left:auto;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#8a6a4f}
+.syn-top .for b{color:var(--syn-saffron)}
+@media (prefers-color-scheme:dark){.syn-top .nm{color:var(--syn-gold-l)}}
+.syn-hero{position:relative;overflow:hidden;background:radial-gradient(120% 140% at 100% 0%,#7a1a2c 0%,#4a0e1c 45%,#2e0811 100%);color:#fdf6ea;border-radius:20px;padding:2.2rem 2.2rem 1.7rem;margin:0 0 1.4rem;border:1px solid rgba(240,192,96,.45);box-shadow:inset 0 0 0 6px rgba(74,14,28,1),inset 0 0 0 7px rgba(240,192,96,.35)}
+.syn-hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:repeating-radial-gradient(circle,rgba(240,192,96,.16) 0 2px,transparent 2px 14px);pointer-events:none}
+.syn-hero .eb{color:var(--syn-gold-l);font-size:.74rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin:0 0 .5rem}
+.syn-hero h1{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:2.9rem!important;line-height:1.05;margin:0 0 .7rem!important;padding:0!important;background:linear-gradient(90deg,#f8d77a,#f0a010 55%,#e07020);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.syn-hero p{color:#f3e3d3;font-size:1.02rem;line-height:1.65;margin:0 0 .4rem;max-width:760px;position:relative;z-index:1}
 .syn-hero b{color:#fff}
-.syn-bar{display:flex;gap:6px;margin-top:1.1rem}.syn-bar span{height:4px;border-radius:2px}
-@media (max-width:640px){.syn-hero{padding:1.3rem 1.1rem 1.1rem}.syn-hero h1{font-size:1.6rem!important}}
+.syn-orn{display:flex;align-items:center;gap:.6rem;margin-top:1.1rem;color:var(--syn-gold-l);max-width:320px}
+.syn-orn:before,.syn-orn:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(240,192,96,.8),transparent)}
+@media (max-width:640px){.syn-hero{padding:1.4rem 1.2rem 1.2rem}.syn-hero h1{font-size:2rem!important}.syn-top .for{display:none}}
 .block-container{padding-top:3.6rem;padding-bottom:5rem;max-width:1180px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin:.3rem 0 1rem}
 .kpi{border:1px solid rgba(128,128,128,.25);border-radius:14px;padding:.75rem .9rem;background:rgba(127,127,127,.06)}
@@ -72,11 +83,11 @@ LOGO_SVG = (f'<img src="data:image/svg+xml;base64,{base64.b64encode(_logo.read_b
 
 
 def brand_bar():
-    st.markdown(f'<div class="syn-top">{LOGO_SVG}<span>Synapse</span><span class="sep">/</span>'
-                f'<span class="prod">Stock Mover</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="syn-top">{LOGO_SVG}<span class="nm">Synapse</span><span class="sep">✦</span>'
+                f'<span class="prod">Stock Mover</span><span class="for">Prepared for <b>Manyavar · Mohey</b></span></div>', unsafe_allow_html=True)
 
 
-TYPE_COLORS = {sm.T_WH: "#2a9d8f", sm.T_S2S: "#e9c46a", sm.T_DISP: "#9b5de5", sm.T_AGE: "#f4a261", sm.T_PULL: "#e76f51"}
+TYPE_COLORS = {sm.T_WH: "#8b1a2b", sm.T_S2S: "#e8a317", sm.T_DISP: "#6d3a7d", sm.T_AGE: "#e07020", sm.T_PULL: "#d1495b"}
 TYPE_PLAIN = {
     sm.T_WH: ("Send from warehouse", "Stores that will run out soon get stock from the warehouse. When there isn't enough "
                                      "for everyone, the store that will run out first is served first."),
@@ -142,7 +153,7 @@ def kpi_cards(items):
         for l, v, s in items) + "</div>", unsafe_allow_html=True)
 
 
-def insight(text, color="#2a9d8f"):
+def insight(text, color="#8b1a2b"):
     html = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
     st.markdown(f'<div class="ins" style="--c:{color}">{html}</div>', unsafe_allow_html=True)
 
@@ -224,8 +235,7 @@ if "R" not in st.session_state:
         '<p>Every day, some stock is in the <b>wrong place</b>: one store runs out of a size customers want, while '
         'another has the same size sitting unsold. Stock Mover finds those problems and writes a '
         '<b>ready-to-approve list</b>: 🚚 send from the warehouse · 🔁 move between stores · ↩️ bring back to the warehouse.</p>'
-        '<div class="syn-bar"><span style="width:56px;background:#2a9d8f"></span><span style="width:24px;background:#e9c46a">'
-        '</span><span style="width:16px;background:#f4a261"></span><span style="width:10px;background:#e76f51"></span></div></div>',
+        '<div class="syn-orn">✦</div></div>',
         unsafe_allow_html=True)
     data_panel(True)
     st.stop()
@@ -256,7 +266,7 @@ with T[0]:
         st.markdown(f"- {d}")
     city = L["city"].reset_index(names="city").melt("city", var_name="", value_name="₹ lakh")
     plot(px.bar(city, x="city", y="₹ lakh", color="", barmode="group", title="Impact by city (₹ lakh at MRP)",
-                color_discrete_sequence=["#2a9d8f", "#f4a261"]), 300)
+                color_discrete_sequence=["#8b1a2b", "#e07020"]), 300)
     passed = int((val.status == "PASS").sum())
     r = fb.ratings()
     rate = f" · team rating {r.stars.mean():.1f}★ from {len(r)} reviews" if not r.empty else ""
@@ -304,8 +314,8 @@ with T[1]:
     if len(f):
         city_of = lambda x: x if x == WH else stores.city[x]
         cc = f.assign(fc=f.from_id.map(city_of), tc=f.to_id.map(city_of)).groupby(["fc", "tc"]).qty.sum().reset_index()
-        dot = ["digraph{rankdir=LR;bgcolor=transparent;node[shape=box style=\"rounded,filled\" fillcolor=\"#f1faee\" fontname=Helvetica];",
-               f'"{WH}"[fillcolor="#2a9d8f" fontcolor=white label="Warehouse\\n{WH}"];']
+        dot = ["digraph{rankdir=LR;bgcolor=transparent;node[shape=box style=\"rounded,filled\" fillcolor=\"#fdf6ea\" fontname=Helvetica];",
+               f'"{WH}"[fillcolor="#8b1a2b" fontcolor=white label="Warehouse\\n{WH}"];']
         for r in cc.itertuples():
             lab = f"{r.qty} within city" if r.fc == r.tc else f"{r.qty}"
             dot.append(f'"{r.fc}"->"{r.tc}"[label="{lab}" fontsize=10 penwidth={1 + min(r.qty / cc.qty.max() * 6, 6):.1f}];')
@@ -315,7 +325,7 @@ with T[1]:
             src, dst = sorted(set(agg.from_id)), sorted(set(agg.to_id))
             ix = {("f", s): i for i, s in enumerate(src)} | {("t", d): len(src) + i for i, d in enumerate(dst)}
             rgba = lambda h: f"rgba({int(h[1:3], 16)},{int(h[3:5], 16)},{int(h[5:7], 16)},0.55)"
-            fig = go.Figure(go.Sankey(node=dict(label=src + dst, pad=10, thickness=12, color="#577590"),
+            fig = go.Figure(go.Sankey(node=dict(label=src + dst, pad=10, thickness=12, color="#8a6a4f"),
                                       link=dict(source=[ix[("f", s)] for s in agg.from_id], target=[ix[("t", d)] for d in agg.to_id],
                                                 value=agg.qty, color=[rgba(TYPE_COLORS[t]) for t in agg.type])))
             plot(fig, max(420, 20 * (len(src) + len(dst))), legend=False)
@@ -346,14 +356,14 @@ with T[2]:
                 d = pd.DataFrame({"item": rows.location_id + " " + rows.sku_id, "Stock file": rows.on_hand,
                                   "Weekly count": rows.closing_on_hand.fillna(0)}).melt("item", var_name="record", value_name="pieces")
                 fig = px.bar(d, x="item", y="pieces", color="record", barmode="group", title="The two records side by side",
-                             color_discrete_sequence=["#e76f51", "#2a9d8f"])
+                             color_discrete_sequence=["#d1495b", "#8b1a2b"])
             elif kind == "Hidden stockout":
                 hs = ins.hidden_stockouts(R)
                 d = hs.groupby("store_id").agg(sizes=("sku_id", "size"), lakh=("at_risk", "sum")).reset_index()
                 d["lakh"] = d.lakh / 1e5
                 fig = px.bar(d.sort_values("lakh"), x="lakh", y="store_id", orientation="h", text="sizes",
                              title="Sales at risk next 30 days (₹ L) · label = sizes missing", labels={"lakh": "₹ lakh", "store_id": ""},
-                             color_discrete_sequence=["#e76f51"])
+                             color_discrete_sequence=["#d1495b"])
             elif kind == "Under-stocked store":
                 s = grp.store.iloc[0]
                 w = weekly[weekly.store_id.isin(stores.index)].groupby(["week", "store_id"]).days_in_stock.mean().reset_index()
@@ -361,7 +371,7 @@ with T[2]:
                 d = w.groupby(["week", "who"]).days_in_stock.mean().reset_index()
                 fig = px.line(d, x="week", y="days_in_stock", color="who", markers=True,
                               title=f"Days a week a size is on the shelf (7 = always)", labels={"days_in_stock": "days", "week": ""},
-                              color_discrete_map={s: "#e76f51", "other stores": "#adb5bd"})
+                              color_discrete_map={s: "#d1495b", "other stores": "#c9bba8"})
                 fig.update_yaxes(range=[0, 7])
             elif kind == "Warehouse shortfall":
                 need = g.groupby("dcat").need.sum()
@@ -369,13 +379,13 @@ with T[2]:
                 d = pd.DataFrame({"Stores need": need, "Warehouse has": whc}).fillna(0).reset_index(names="category") \
                     .melt("category", var_name="", value_name="pieces")
                 fig = px.bar(d, x="category", y="pieces", color="", barmode="group", title="Stores need vs warehouse has",
-                             color_discrete_sequence=["#e76f51", "#2a9d8f"])
+                             color_discrete_sequence=["#d1495b", "#8b1a2b"])
             elif kind == "New launch":
                 stys = grp.sku.tolist()
                 s = sales[sales.sku_id.map(pl.it.style_id).isin(stys) & (sales.date > P["today"] - pd.Timedelta(days=70))]
                 d = s.groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum().reset_index()
                 fig = px.bar(d, x="date", y="qty", title=f"{', '.join(stys)}: weekly sales since launch",
-                             labels={"qty": "pieces sold", "date": ""}, color_discrete_sequence=["#2a9d8f"])
+                             labels={"qty": "pieces sold", "date": ""}, color_discrete_sequence=["#8b1a2b"])
             elif kind == "New store":
                 s = sales[sales.store_id.isin(grp.store)]
                 d = s.groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum().reset_index()
@@ -394,7 +404,7 @@ with T[2]:
                             labels=["<1 mo", "1–3 mo", f"3 mo–{R['cfg']['age_days']}d", f"{R['cfg']['age_days']}d–1 yr", ">1 yr"])
         d = sn.groupby("band", observed=False).oh.sum().reset_index()
         plot(px.bar(d, x="band", y="oh", title="How long stock has been in stores", labels={"oh": "pieces", "band": ""},
-                    color_discrete_sequence=["#f4a261"]), 280, legend=False)
+                    color_discrete_sequence=["#e07020"]), 280, legend=False)
 
 # ---- Stores
 with T[3]:
@@ -412,16 +422,16 @@ with T[3]:
     cat["minimum"] = [P["md"].get((stores.tier[s], c_), 0) for c_ in cat.index]
     d = cat.reset_index(names="category").melt("category", ["now", "after"], var_name="", value_name="pieces")
     fig = px.bar(d, x="category", y="pieces", color="", barmode="group", title="Stock by category vs minimum display",
-                 color_discrete_sequence=["#adb5bd", "#2a9d8f"])
+                 color_discrete_sequence=["#c9bba8", "#8b1a2b"])
     fig.add_scatter(x=cat.index, y=cat.minimum, mode="markers", name="minimum",
-                    marker=dict(symbol="line-ew", size=26, line=dict(width=3, color="#e76f51")))
+                    marker=dict(symbol="line-ew", size=26, line=dict(width=3, color="#d1495b")))
     plot(fig, 320)
     cov = (gs.pos / gs.fd30).where(gs.fd30 > 0.01)
     band = pd.cut(cov, [-1, 7, 14, 30, 60, 1e9], labels=["<1 wk", "1–2 wk", "2–4 wk", "1–2 mo", "2+ mo"])
     d = band.value_counts().reindex(band.cat.categories).reset_index()
     d.columns = ["lasts", "sizes"]
     plot(px.bar(d, x="lasts", y="sizes", color="lasts", title="How long each size's stock lasts (before plan)",
-                color_discrete_sequence=["#e76f51", "#f4a261", "#e9c46a", "#2a9d8f", "#577590"]), 280, legend=False)
+                color_discrete_sequence=["#d1495b", "#e07020", "#e8a317", "#8b1a2b", "#8a6a4f"]), 280, legend=False)
     for title, df in (("⬇️ Coming in", inn), ("⬆️ Going out", out)):
         with st.expander(f"{title} · {len(df)} lines, {int(df.qty.sum())} pieces"):
             st.dataframe(df[["priority", "kind", "from_id", "to_id", "style_name", "size", "qty", "reason"]],
@@ -531,7 +541,7 @@ with T[6]:
             d = ch.value_counts().reset_index()
             d.columns = ["request", "votes"]
             plot(px.bar(d, x="votes", y="request", orientation="h", title="Most requested changes",
-                        color_discrete_sequence=["#577590"]), 80 + 34 * len(d), legend=False)
+                        color_discrete_sequence=["#8a6a4f"]), 80 + 34 * len(d), legend=False)
         notes = r[r.comment.fillna("") != ""].tail(8)[::-1]
         for n in notes.itertuples():
             st.markdown(f"> {'★' * int(n.stars)} {n.comment}  \n> <small>{n.name or 'anonymous'} · {n.rated_at}</small>",
@@ -559,15 +569,15 @@ with T[6]:
 with T[7]:
     st.markdown("#### How Stock Mover decides")
     st.graphviz_chart("""
-digraph{rankdir=TB;bgcolor=transparent;node[shape=box style="rounded,filled" fontname=Helvetica fillcolor="#f1faee"];
-data[label="Your data: sales · stock · deliveries · calendar · rules" fillcolor="#e9ecef"];
+digraph{rankdir=TB;bgcolor=transparent;node[shape=box style="rounded,filled" fontname=Helvetica fillcolor="#fdf6ea"];
+data[label="Your data: sales · stock · deliveries · calendar · rules" fillcolor="#f3ebe0"];
 clean[label="1. Check & clean: fix bad records, spot problems"];
 speed[label="2. Selling speed = sales ÷ days on shelf"];
 season[label="3. Season: weddings & festivals lift demand"];
 need[label="4. Who needs what: stock + on the way vs demand"];
-plan[label="5. Plan: warehouse→store · store→store · old stock · back to WH" fillcolor="#e9f5f2"];
+plan[label="5. Plan: warehouse→store · store→store · old stock · back to WH" fillcolor="#fbeedd"];
 check[label="6. Re-check every rule" fillcolor="#fff3cd"];
-out[label="Ready-to-approve list + problems explained" fillcolor="#2a9d8f" fontcolor=white];
+out[label="Ready-to-approve list + problems explained" fillcolor="#8b1a2b" fontcolor=white];
 data->clean->speed->need; season->need; need->plan->check->out;}""", use_container_width=True)
     st.markdown("""
 - **Selling speed (velocity):** pieces of a size a store sells per day, counting **only days it was on the shelf**. 4 sold in 10 days in stock = 0.4/day, even if it was missing for weeks. That's how hidden stockouts are caught.

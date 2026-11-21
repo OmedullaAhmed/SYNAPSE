@@ -55,13 +55,13 @@ def leadership(R):
         s = hs.groupby("store_id").at_risk.sum().sort_values(ascending=False)
         top = s.index[0]
         under = ex[(ex.issue == "Under-stocked store") & (ex.store == top)]
-        ins.append(("#e76f51", f"**{top} ({st.city[top]}) is losing sales.** {int((hs.store_id == top).sum())} sizes have been "
+        ins.append(("#d1495b", f"**{top} ({st.city[top]}) is losing sales.** {int((hs.store_id == top).sum())} sizes have been "
                                f"missing from its shelves for a month, about {inr(s.iloc[0])} of sales in the next 30 days"
                     + (". Its shelves are only " + under.detail.iloc[0].split(" of capacity")[0].replace("Only ", "") + " full" if len(under) else "")
                     + ". Today's plan refills it first."))
     short = ex[ex.issue == "Warehouse shortfall"]
     for r in short.itertuples():
-        ins.append(("#e9c46a", f"**Not enough {r.sku} for wedding season.** {r.detail}. Stores will share what's there, "
+        ins.append(("#e8a317", f"**Not enough {r.sku} for wedding season.** {r.detail}. Stores will share what's there, "
                                "and the buying team should speed up supplier deliveries."))
     nl = ex[ex.issue == "New launch"]
     sales = R["sales"]
@@ -70,16 +70,16 @@ def leadership(R):
         wk = s[s.date > P["today"] - pd.Timedelta(days=28)].groupby(pd.Grouper(key="date", freq="W-SAT")).qty.sum()
         if len(wk) >= 2 and wk.iloc[0] > 0:
             name = it[it.style_id == r.sku].style_name.iloc[0]
-            ins.append(("#2a9d8f", f"**{name} ({r.sku}) is a hit.** Weekly sales went from {int(wk.iloc[0])} to {int(wk.iloc[-1])} "
+            ins.append(("#8b1a2b", f"**{name} ({r.sku}) is a hit.** Weekly sales went from {int(wk.iloc[0])} to {int(wk.iloc[-1])} "
                                    "in four weeks. It's new, not slow, so stores are being restocked from the warehouse's big delivery."))
     bad = ex[ex.issue == "Stock records disagree"]
     if len(bad):
         b = bad.iloc[0]
-        ins.append(("#9b5de5", f"**Stock records can't be trusted everywhere.** {b.store} {b.sku}: {b.detail.split(' and the item')[0]}. "
+        ins.append(("#6d3a7d", f"**Stock records can't be trusted everywhere.** {b.store} {b.sku}: {b.detail.split(' and the item')[0]}. "
                                "The plan ignores the suspect number, and the store should recount."))
     if len(old):
         dead = ex[ex.issue == "Dead style"]
-        ins.append(("#f4a261", f"**{inr(old.value_mrp.sum())} of old stock is sitting idle.** "
+        ins.append(("#e07020", f"**{inr(old.value_mrp.sum())} of old stock is sitting idle.** "
                                f"{int(mv[mv.type == sm.T_AGE].qty.sum())} pieces go to stores that sell them, "
                                f"{int(mv[mv.type == sm.T_PULL].qty.sum())} return to the warehouse"
                     + (f"; {', '.join(dead.sku)} has never sold and shouldn't be re-ordered." if len(dead) else ".")))

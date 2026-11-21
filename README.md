@@ -1,13 +1,13 @@
 <p align="center">
-  <img src=".github/assets/banner.svg" alt="Synapse: connecting retail data to everyday decisions" width="100%">
+  <img src=".github/assets/banner.svg" alt="Stock Mover by Synapse, prepared for Manyavar and Mohey" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://synapse-stock-mover.streamlit.app"><img alt="Live app" src="https://img.shields.io/badge/live%20app-open-2a9d8f?style=flat-square"></a>
-  <img alt="Python" src="https://img.shields.io/badge/python-streamlit-577590?style=flat-square">
-  <img alt="React" src="https://img.shields.io/badge/web-react%20%2B%20vite-264653?style=flat-square">
-  <img alt="Rules" src="https://img.shields.io/badge/rule%20checks-11%2F11%20passed-e9c46a?style=flat-square">
-  <img alt="Hackathon" src="https://img.shields.io/badge/manyavar%20AI%20hackathon-case%20B-e76f51?style=flat-square">
+  <a href="https://synapse-stock-mover.streamlit.app"><img alt="Live app" src="https://img.shields.io/badge/live%20app-open-8b1a2b?style=flat-square"></a>
+  <img alt="Python" src="https://img.shields.io/badge/python-streamlit-8a6a4f?style=flat-square">
+  <img alt="React" src="https://img.shields.io/badge/web-react%20%2B%20vite-4a0e1c?style=flat-square">
+  <img alt="Rules" src="https://img.shields.io/badge/rule%20checks-11%2F11%20passed-e8a317?style=flat-square">
+  <img alt="Hackathon" src="https://img.shields.io/badge/manyavar%20AI%20hackathon-case%20B-d1495b?style=flat-square">
 </p>
 
 <p align="center">
@@ -79,13 +79,25 @@ npm run build      # production build in dist/
 
 ## Brand
 
+Styled for **Manyavar · Mohey**: festive gold drawn from the Manyavar wordmark, deep maroon, ivory backgrounds and
+Cormorant Garamond serif headings, with gold ornament dividers.
+
 | Token | Color | Used for |
 |---|---|---|
-| Deep | `#264653` | backgrounds, headers |
-| Teal | `#2a9d8f` | primary actions, warehouse sends |
-| Gold | `#e9c46a` | highlights, store-to-store moves |
-| Sand | `#f4a261` | aged stock |
-| Coral | `#e76f51` | alerts, pull-backs |
+| Deep maroon | `#4a0e1c` | hero backgrounds, headers |
+| Maroon | `#8b1a2b` | primary buttons, warehouse sends |
+| Gold | `#e8a317` | accents, store-to-store moves |
+| Saffron | `#e07020` | aged stock, gradient end |
+| Crimson | `#d1495b` | alerts, pull-backs |
+| Plum | `#6d3a7d` | display fills |
+| Ivory | `#fdf9f3` | page background |
+
+---|---|---|
+| Deep | `#4a0e1c` | backgrounds, headers |
+| Teal | `#8b1a2b` | primary actions, warehouse sends |
+| Gold | `#e8a317` | highlights, store-to-store moves |
+| Sand | `#e07020` | aged stock |
+| Coral | `#d1495b` | alerts, pull-backs |
 
 ---
 

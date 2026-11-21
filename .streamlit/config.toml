@@ -1,3 +1,7 @@
-# Synapse brand theme. Colors match .github/assets and the website.
+# Synapse theme, styled for Manyavar · Mohey. Colors match .github/assets and the website.
 [theme]
-primaryColor = "#2a9d8f"
+base = "light"
+primaryColor = "#8b1a2b"
+backgroundColor = "#fdf9f3"
+secondaryBackgroundColor = "#f6ecdc"
+textColor = "#2b1a12"
