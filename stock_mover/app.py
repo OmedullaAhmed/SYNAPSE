@@ -390,6 +390,8 @@ def account_bar():
             st.rerun()
         return
     name, is_pg = db.backend()
+    if db.PLACEHOLDER and can_do("settings"):
+        note("⚠️ " + html.escape(db.PLACEHOLDER))
     a, b = st.columns([5, 1])
     a.caption(f"Signed in as **{USER}** ({ROLE}) · data stored in {name}"
               + ("" if is_pg else " — set a PostgreSQL URL in secrets so history survives restarts"))

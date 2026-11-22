@@ -135,8 +135,27 @@ def _secret_url():
     return os.environ.get("DATABASE_URL", "")
 
 
+PLACEHOLDER = None          # set when the configured URL is still the example text (shown on the Admin tab and sign-in)
+
+
+def _is_placeholder(u):
+    """The example from secrets.example.toml (USER / PASSWORD / HOST / DBNAME) or an obviously unfinished URL."""
+    try:
+        from sqlalchemy.engine import make_url
+        x = make_url(u.replace("postgres://", "postgresql://", 1))
+        return (x.host or "").upper() in ("HOST", "HOSTNAME", "YOUR-HOST", "") or (x.database or "").upper() in ("DBNAME", "DATABASE") \
+            or (x.username or "").upper() == "USER" and (x.password or "").upper() == "PASSWORD"
+    except Exception:  # noqa: BLE001
+        return True
+
+
 def url():
+    global PLACEHOLDER
     u = _secret_url()
+    if u and not u.startswith("sqlite") and _is_placeholder(u):
+        PLACEHOLDER = "The database URL in secrets is still the example text, so a temporary local database is used. " \
+                      "Paste your real PostgreSQL connection string in Settings → Secrets."
+        u = ""
     if u.startswith("postgres://"):
         u = "postgresql+psycopg://" + u[len("postgres://"):]
     elif u.startswith("postgresql://"):
