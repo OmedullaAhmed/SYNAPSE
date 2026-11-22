@@ -48,3 +48,9 @@ in the brand's data-processing agreement first.
 `engine.py` planning engine · `schema.py` settings and sheet definitions · `app.py` Streamlit app · `insights.py` ·
 `chat.py` · `feedback.py` (run log, ratings, released TOs, receipts in `./workspace`) · `auth.py` · `brands/*.json`
 settings profiles · `make_demo_data.py` fictional demo pack.
+
+## Hackathon data pack
+
+The original hackathon pack is still in `data/csv` (it belongs to Vedant Fashions Limited and is not for resale demos).
+Run it with: `python engine.py --data data/csv --config brands/sample_ethnic_chain.json --out output`.
+`tests/check_plan.py` re-checks a plan against the raw sheets, independently of the engine's own rule checks.

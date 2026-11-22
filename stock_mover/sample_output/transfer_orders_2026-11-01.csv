@@ -1,0 +1,1192 @@
+to_number,line_no,from_location,to_location,sku_id,qty,ship_date,expected_receipt,move_type,reason_group,move_id
+TO-261101-001,1,WH-JAI,JAI-02,DUP-01-ROS-FS,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01093
+TO-261101-001,2,WH-JAI,JAI-02,DUP-01-TEA-FS,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01082
+TO-261101-001,3,WH-JAI,JAI-02,DUP-02-PEA-FS,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00933
+TO-261101-001,4,WH-JAI,JAI-02,DUP-03-MAR-FS,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00859
+TO-261101-001,5,WH-JAI,JAI-02,JUT-01-TEA-7,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01090
+TO-261101-001,6,WH-JAI,JAI-02,JUT-01-TEA-8,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00757
+TO-261101-001,7,WH-JAI,JAI-02,JUT-01-TEA-9,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00979
+TO-261101-001,8,WH-JAI,JAI-02,JUT-02-EME-10,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00952
+TO-261101-001,9,WH-JAI,JAI-02,JUT-02-EME-9,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00860
+TO-261101-001,10,WH-JAI,JAI-02,JUT-03-IVO-10,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00888
+TO-261101-001,11,WH-JAI,JAI-02,JUT-03-IVO-6,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00552
+TO-261101-001,12,WH-JAI,JAI-02,JUT-03-IVO-7,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01055
+TO-261101-001,13,WH-JAI,JAI-02,JUT-03-IVO-8,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01161
+TO-261101-001,14,WH-JAI,JAI-02,JUT-03-IVO-9,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00984
+TO-261101-001,15,WH-JAI,JAI-02,KUR-01-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00608
+TO-261101-001,16,WH-JAI,JAI-02,KUR-01-EME-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00295
+TO-261101-001,17,WH-JAI,JAI-02,KUR-01-EME-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00470
+TO-261101-001,18,WH-JAI,JAI-02,KUR-01-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00601
+TO-261101-001,19,WH-JAI,JAI-02,KUR-01-NAV-L,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00232
+TO-261101-001,20,WH-JAI,JAI-02,KUR-01-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01018
+TO-261101-001,21,WH-JAI,JAI-02,KUR-01-NAV-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00298
+TO-261101-001,22,WH-JAI,JAI-02,KUR-02-MUS-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00511
+TO-261101-001,23,WH-JAI,JAI-02,KUR-02-MUS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00573
+TO-261101-001,24,WH-JAI,JAI-02,KUR-02-MUS-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00570
+TO-261101-001,25,WH-JAI,JAI-02,KUR-02-MUS-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00803
+TO-261101-001,26,WH-JAI,JAI-02,KUR-02-NAV-L,5,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01025
+TO-261101-001,27,WH-JAI,JAI-02,KUR-02-NAV-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00707
+TO-261101-001,28,WH-JAI,JAI-02,KUR-02-NAV-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00806
+TO-261101-001,29,WH-JAI,JAI-02,KUR-02-NAV-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01181
+TO-261101-001,30,WH-JAI,JAI-02,KUR-02-NAV-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01061
+TO-261101-001,31,WH-JAI,JAI-02,KUR-03-MUS-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01022
+TO-261101-001,32,WH-JAI,JAI-02,KUR-03-MUS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01040
+TO-261101-001,33,WH-JAI,JAI-02,KUR-03-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00837
+TO-261101-001,34,WH-JAI,JAI-02,KUR-03-NAV-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00649
+TO-261101-001,35,WH-JAI,JAI-02,KUR-03-NAV-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00492
+TO-261101-001,36,WH-JAI,JAI-02,KUR-03-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00835
+TO-261101-001,37,WH-JAI,JAI-02,KUR-03-NAV-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00652
+TO-261101-001,38,WH-JAI,JAI-02,KUR-04-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00751
+TO-261101-001,39,WH-JAI,JAI-02,KUR-04-EME-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00416
+TO-261101-001,40,WH-JAI,JAI-02,KUR-04-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00900
+TO-261101-001,41,WH-JAI,JAI-02,KUR-04-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01165
+TO-261101-001,42,WH-JAI,JAI-02,KUR-04-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00745
+TO-261101-001,43,WH-JAI,JAI-02,KUR-04-ROS-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00488
+TO-261101-001,44,WH-JAI,JAI-02,KUR-04-ROS-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00417
+TO-261101-001,45,WH-JAI,JAI-02,KUR-04-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00743
+TO-261101-001,46,WH-JAI,JAI-02,KUR-04-ROS-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00558
+TO-261101-001,47,WH-JAI,JAI-02,KUR-04-ROS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00896
+TO-261101-001,48,WH-JAI,JAI-02,KUR-05-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00731
+TO-261101-001,49,WH-JAI,JAI-02,KUR-05-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01054
+TO-261101-001,50,WH-JAI,JAI-02,KUR-05-EME-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00737
+TO-261101-001,51,WH-JAI,JAI-02,KUR-05-EME-XL,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00261
+TO-261101-001,52,WH-JAI,JAI-02,KUR-05-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00881
+TO-261101-001,53,WH-JAI,JAI-02,KUR-05-TEA-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00328
+TO-261101-001,54,WH-JAI,JAI-02,KUR-05-TEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00543
+TO-261101-001,55,WH-JAI,JAI-02,KUR-05-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00728
+TO-261101-001,56,WH-JAI,JAI-02,KUR-05-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00877
+TO-261101-001,57,WH-JAI,JAI-02,KUR-06-EME-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00521
+TO-261101-001,58,WH-JAI,JAI-02,KUR-06-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00760
+TO-261101-001,59,WH-JAI,JAI-02,KUR-06-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00917
+TO-261101-001,60,WH-JAI,JAI-02,KUR-06-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00911
+TO-261101-001,61,WH-JAI,JAI-02,KUR-06-MAR-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00921
+TO-261101-001,62,WH-JAI,JAI-02,KUR-06-MAR-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00922
+TO-261101-001,63,WH-JAI,JAI-02,KUR-07-IVO-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00514
+TO-261101-001,64,WH-JAI,JAI-02,KUR-07-IVO-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00516
+TO-261101-001,65,WH-JAI,JAI-02,KUR-07-IVO-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00680
+TO-261101-001,66,WH-JAI,JAI-02,KUR-07-MAR-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00667
+TO-261101-001,67,WH-JAI,JAI-02,KUR-07-MAR-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00858
+TO-261101-001,68,WH-JAI,JAI-02,KUR-07-MAR-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00671
+TO-261101-001,69,WH-JAI,JAI-02,KUR-08-PEA-L,16,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00107
+TO-261101-001,70,WH-JAI,JAI-02,KUR-08-PEA-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00375
+TO-261101-001,71,WH-JAI,JAI-02,KUR-08-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00827
+TO-261101-001,72,WH-JAI,JAI-02,KUR-08-PEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01125
+TO-261101-001,73,WH-JAI,JAI-02,KUR-08-PEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00634
+TO-261101-001,74,WH-JAI,JAI-02,KUR-08-ROS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01151
+TO-261101-001,75,WH-JAI,JAI-02,KUR-08-ROS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00627
+TO-261101-001,76,WH-JAI,JAI-02,KUR-08-ROS-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00633
+TO-261101-001,77,WH-JAI,JAI-02,LEH-01-NAV-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00150
+TO-261101-001,78,WH-JAI,JAI-02,LEH-01-NAV-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00148
+TO-261101-001,79,WH-JAI,JAI-02,LEH-01-NAV-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00089
+TO-261101-001,80,WH-JAI,JAI-02,LEH-01-NAV-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00426
+TO-261101-001,81,WH-JAI,JAI-02,LEH-01-PEA-M,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00060
+TO-261101-001,82,WH-JAI,JAI-02,LEH-01-PEA-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00240
+TO-261101-001,83,WH-JAI,JAI-02,LEH-01-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00425
+TO-261101-001,84,WH-JAI,JAI-02,LEH-02-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00405
+TO-261101-001,85,WH-JAI,JAI-02,LEH-02-EME-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00220
+TO-261101-001,86,WH-JAI,JAI-02,LEH-02-MUS-M,11,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00076
+TO-261101-001,87,WH-JAI,JAI-02,LEH-02-MUS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00407
+TO-261101-001,88,WH-JAI,JAI-02,LEH-02-MUS-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00182
+TO-261101-001,89,WH-JAI,JAI-02,LEH-03-ROS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Complete broken size sets,M00582
+TO-261101-001,90,WH-JAI,JAI-02,LEH-03-TEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01033
+TO-261101-001,91,WH-JAI,JAI-02,LEH-03-TEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00578
+TO-261101-001,92,WH-JAI,JAI-02,LEH-03-TEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00589
+TO-261101-001,93,WH-JAI,JAI-02,LEH-04-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00365
+TO-261101-001,94,WH-JAI,JAI-02,LEH-04-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00373
+TO-261101-001,95,WH-JAI,JAI-02,LEH-04-MUS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00619
+TO-261101-001,96,WH-JAI,JAI-02,LEH-04-MUS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00368
+TO-261101-001,97,WH-JAI,JAI-02,LEH-04-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01124
+TO-261101-001,98,WH-JAI,JAI-02,NEH-01-ROS-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01130
+TO-261101-001,99,WH-JAI,JAI-02,NEH-01-ROS-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00512
+TO-261101-001,100,WH-JAI,JAI-02,NEH-01-ROS-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00708
+TO-261101-001,101,WH-JAI,JAI-02,NEH-01-TEA-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00564
+TO-261101-001,102,WH-JAI,JAI-02,NEH-01-TEA-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00563
+TO-261101-001,103,WH-JAI,JAI-02,NEH-01-TEA-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00797
+TO-261101-001,104,WH-JAI,JAI-02,NEH-01-TEA-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00565
+TO-261101-001,105,WH-JAI,JAI-02,NEH-01-TEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00799
+TO-261101-001,106,WH-JAI,JAI-02,NEH-02-IVO-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00522
+TO-261101-001,107,WH-JAI,JAI-02,NEH-02-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00704
+TO-261101-001,108,WH-JAI,JAI-02,NEH-02-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00869
+TO-261101-001,109,WH-JAI,JAI-02,NEH-02-PEA-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01048
+TO-261101-001,110,WH-JAI,JAI-02,NEH-02-PEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01160
+TO-261101-001,111,WH-JAI,JAI-02,NEH-02-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00865
+TO-261101-001,112,WH-JAI,JAI-02,NEH-02-PEA-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00524
+TO-261101-001,113,WH-JAI,JAI-02,NEH-03-IVO-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01064
+TO-261101-001,114,WH-JAI,JAI-02,NEH-03-IVO-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00562
+TO-261101-001,115,WH-JAI,JAI-02,NEH-03-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01088
+TO-261101-001,116,WH-JAI,JAI-02,NEH-03-TEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01184
+TO-261101-001,117,WH-JAI,JAI-02,NEH-03-TEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00807
+TO-261101-001,118,WH-JAI,JAI-02,NEH-04-IVO-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00545
+TO-261101-001,119,WH-JAI,JAI-02,NEH-04-IVO-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00935
+TO-261101-001,120,WH-JAI,JAI-02,NEH-04-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00785
+TO-261101-001,121,WH-JAI,JAI-02,NEH-04-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00788
+TO-261101-001,122,WH-JAI,JAI-02,NEH-04-PEA-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00784
+TO-261101-001,123,WH-JAI,JAI-02,NEH-04-PEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00783
+TO-261101-001,124,WH-JAI,JAI-02,NEH-04-PEA-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00692
+TO-261101-001,125,WH-JAI,JAI-02,NEH-05-ROS-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00476
+TO-261101-001,126,WH-JAI,JAI-02,NEH-05-ROS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01057
+TO-261101-001,127,WH-JAI,JAI-02,NEH-05-ROS-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00661
+TO-261101-001,128,WH-JAI,JAI-02,NEH-05-ROS-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00931
+TO-261101-001,129,WH-JAI,JAI-02,NEH-05-TEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01169
+TO-261101-001,130,WH-JAI,JAI-02,NEH-05-TEA-S,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00420
+TO-261101-001,131,WH-JAI,JAI-02,NEH-05-TEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00781
+TO-261101-001,132,WH-JAI,JAI-02,SHE-01-EME-38,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00324
+TO-261101-001,133,WH-JAI,JAI-02,SHE-01-EME-40,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00322
+TO-261101-001,134,WH-JAI,JAI-02,SHE-01-EME-46,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00179
+TO-261101-001,135,WH-JAI,JAI-02,SHE-02-EME-38,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00247
+TO-261101-001,136,WH-JAI,JAI-02,SHE-02-EME-42,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00249
+TO-261101-001,137,WH-JAI,JAI-02,SHE-02-EME-44,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00123
+TO-261101-001,138,WH-JAI,JAI-02,SHE-02-EME-46,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00125
+TO-261101-001,139,WH-JAI,JAI-02,SHE-03-NAV-38,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00389
+TO-261101-001,140,WH-JAI,JAI-02,SHE-03-NAV-40,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00395
+TO-261101-001,141,WH-JAI,JAI-02,SHE-03-NAV-42,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01108
+TO-261101-001,142,WH-JAI,JAI-02,SHE-03-NAV-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00386
+TO-261101-001,143,WH-JAI,JAI-02,SHE-04-MAR-40,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00102
+TO-261101-001,144,WH-JAI,JAI-02,SHE-04-MAR-42,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00166
+TO-261101-001,145,WH-JAI,JAI-02,SHE-04-MAR-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00448
+TO-261101-001,146,WH-JAI,JAI-02,SHE-05-PEA-40,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00307
+TO-261101-001,147,WH-JAI,JAI-02,SHE-05-PEA-42,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01028
+TO-261101-002,1,WH-IND,NAG-01,DUP-01-ROS-FS,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00989
+TO-261101-002,2,WH-IND,NAG-01,DUP-02-MUS-FS,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00666
+TO-261101-002,3,WH-IND,NAG-01,DUP-02-PEA-FS,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00986
+TO-261101-002,4,WH-IND,NAG-01,JUT-01-TEA-7,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00976
+TO-261101-002,5,WH-IND,NAG-01,JUT-01-TEA-9,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00980
+TO-261101-002,6,WH-IND,NAG-01,JUT-02-EME-6,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01086
+TO-261101-002,7,WH-IND,NAG-01,JUT-02-EME-7,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00950
+TO-261101-002,8,WH-IND,NAG-01,JUT-02-EME-8,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00861
+TO-261101-002,9,WH-IND,NAG-01,JUT-02-EME-9,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00792
+TO-261101-002,10,WH-IND,NAG-01,JUT-03-IVO-10,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01091
+TO-261101-002,11,WH-IND,NAG-01,JUT-03-IVO-6,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00740
+TO-261101-002,12,WH-IND,NAG-01,JUT-03-IVO-7,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00646
+TO-261101-002,13,WH-IND,NAG-01,JUT-03-IVO-8,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00550
+TO-261101-002,14,WH-IND,NAG-01,JUT-03-IVO-9,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00985
+TO-261101-002,15,WH-IND,NAG-01,KUR-01-EME-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00597
+TO-261101-002,16,WH-IND,NAG-01,KUR-01-EME-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00600
+TO-261101-002,17,WH-IND,NAG-01,KUR-01-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01035
+TO-261101-002,18,WH-IND,NAG-01,KUR-01-NAV-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00264
+TO-261101-002,19,WH-IND,NAG-01,KUR-01-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01144
+TO-261101-002,20,WH-IND,NAG-01,KUR-01-NAV-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00599
+TO-261101-002,21,WH-IND,NAG-01,KUR-01-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00819
+TO-261101-002,22,WH-IND,NAG-01,KUR-02-MUS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00719
+TO-261101-002,23,WH-IND,NAG-01,KUR-02-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00958
+TO-261101-002,24,WH-IND,NAG-01,KUR-02-MUS-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00567
+TO-261101-002,25,WH-IND,NAG-01,KUR-02-NAV-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00709
+TO-261101-002,26,WH-IND,NAG-01,KUR-02-NAV-M,19,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00156
+TO-261101-002,27,WH-IND,NAG-01,KUR-02-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00965
+TO-261101-002,28,WH-IND,NAG-01,KUR-02-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00717
+TO-261101-002,29,WH-IND,NAG-01,KUR-02-NAV-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00722
+TO-261101-002,30,WH-IND,NAG-01,KUR-03-MUS-L,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00194
+TO-261101-002,31,WH-IND,NAG-01,KUR-03-MUS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00656
+TO-261101-002,32,WH-IND,NAG-01,KUR-03-NAV-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01154
+TO-261101-002,33,WH-IND,NAG-01,KUR-03-NAV-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00195
+TO-261101-002,34,WH-IND,NAG-01,KUR-03-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00833
+TO-261101-002,35,WH-IND,NAG-01,KUR-04-EME-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00898
+TO-261101-002,36,WH-IND,NAG-01,KUR-04-EME-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00890
+TO-261101-002,37,WH-IND,NAG-01,KUR-04-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00901
+TO-261101-002,38,WH-IND,NAG-01,KUR-04-EME-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00418
+TO-261101-002,39,WH-IND,NAG-01,KUR-04-ROS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00487
+TO-261101-002,40,WH-IND,NAG-01,KUR-04-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00744
+TO-261101-002,41,WH-IND,NAG-01,KUR-04-ROS-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01080
+TO-261101-002,42,WH-IND,NAG-01,KUR-04-ROS-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00747
+TO-261101-002,43,WH-IND,NAG-01,KUR-05-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00732
+TO-261101-002,44,WH-IND,NAG-01,KUR-05-EME-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00738
+TO-261101-002,45,WH-IND,NAG-01,KUR-05-EME-XL,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00234
+TO-261101-002,46,WH-IND,NAG-01,KUR-05-TEA-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01030
+TO-261101-002,47,WH-IND,NAG-01,KUR-05-TEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00733
+TO-261101-002,48,WH-IND,NAG-01,KUR-05-TEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00873
+TO-261101-002,49,WH-IND,NAG-01,KUR-05-TEA-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00464
+TO-261101-002,50,WH-IND,NAG-01,KUR-06-EME-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00906
+TO-261101-002,51,WH-IND,NAG-01,KUR-06-EME-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00905
+TO-261101-002,52,WH-IND,NAG-01,KUR-06-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00918
+TO-261101-002,53,WH-IND,NAG-01,KUR-06-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00912
+TO-261101-002,54,WH-IND,NAG-01,KUR-06-MAR-M,1,2026-11-01,2026-11-03,Warehouse -> store,Complete broken size sets,M00908
+TO-261101-002,55,WH-IND,NAG-01,KUR-07-IVO-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00520
+TO-261101-002,56,WH-IND,NAG-01,KUR-07-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00852
+TO-261101-002,57,WH-IND,NAG-01,KUR-07-MAR-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01075
+TO-261101-002,58,WH-IND,NAG-01,KUR-07-MAR-M,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00291
+TO-261101-002,59,WH-IND,NAG-01,KUR-08-PEA-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00310
+TO-261101-002,60,WH-IND,NAG-01,KUR-08-PEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01147
+TO-261101-002,61,WH-IND,NAG-01,KUR-08-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01150
+TO-261101-002,62,WH-IND,NAG-01,KUR-08-PEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00823
+TO-261101-002,63,WH-IND,NAG-01,KUR-08-ROS-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00630
+TO-261101-002,64,WH-IND,NAG-01,KUR-08-ROS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01019
+TO-261101-002,65,WH-IND,NAG-01,KUR-08-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00636
+TO-261101-002,66,WH-IND,NAG-01,KUR-08-ROS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00628
+TO-261101-002,67,WH-IND,NAG-01,LEH-01-NAV-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00997
+TO-261101-002,68,WH-IND,NAG-01,LEH-01-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00424
+TO-261101-002,69,WH-IND,NAG-01,LEH-01-NAV-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00427
+TO-261101-002,70,WH-IND,NAG-01,LEH-01-PEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00238
+TO-261101-002,71,WH-IND,NAG-01,LEH-02-EME-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00144
+TO-261101-002,72,WH-IND,NAG-01,LEH-02-EME-M,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00115
+TO-261101-002,73,WH-IND,NAG-01,LEH-02-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00640
+TO-261101-002,74,WH-IND,NAG-01,LEH-02-MUS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00645
+TO-261101-002,75,WH-IND,NAG-01,LEH-02-MUS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00408
+TO-261101-002,76,WH-IND,NAG-01,LEH-03-ROS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00583
+TO-261101-002,77,WH-IND,NAG-01,LEH-03-ROS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00197
+TO-261101-002,78,WH-IND,NAG-01,LEH-03-ROS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00592
+TO-261101-002,79,WH-IND,NAG-01,LEH-03-ROS-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00596
+TO-261101-002,80,WH-IND,NAG-01,LEH-03-TEA-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00351
+TO-261101-002,81,WH-IND,NAG-01,LEH-03-TEA-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00262
+TO-261101-002,82,WH-IND,NAG-01,LEH-04-IVO-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00363
+TO-261101-002,83,WH-IND,NAG-01,LEH-04-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00366
+TO-261101-002,84,WH-IND,NAG-01,LEH-04-MUS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00620
+TO-261101-002,85,WH-IND,NAG-01,NEH-01-ROS-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00499
+TO-261101-002,86,WH-IND,NAG-01,NEH-01-ROS-M,14,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00215
+TO-261101-002,87,WH-IND,NAG-01,NEH-01-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00801
+TO-261101-002,88,WH-IND,NAG-01,NEH-01-ROS-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01131
+TO-261101-002,89,WH-IND,NAG-01,NEH-01-TEA-L,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00289
+TO-261101-002,90,WH-IND,NAG-01,NEH-01-TEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01176
+TO-261101-002,91,WH-IND,NAG-01,NEH-01-TEA-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00506
+TO-261101-002,92,WH-IND,NAG-01,NEH-02-IVO-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00303
+TO-261101-002,93,WH-IND,NAG-01,NEH-02-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00701
+TO-261101-002,94,WH-IND,NAG-01,NEH-02-IVO-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00441
+TO-261101-002,95,WH-IND,NAG-01,NEH-02-PEA-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00347
+TO-261101-002,96,WH-IND,NAG-01,NEH-02-PEA-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00440
+TO-261101-002,97,WH-IND,NAG-01,NEH-02-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00866
+TO-261101-002,98,WH-IND,NAG-01,NEH-02-PEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01078
+TO-261101-002,99,WH-IND,NAG-01,NEH-03-IVO-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00811
+TO-261101-002,100,WH-IND,NAG-01,NEH-03-IVO-M,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00454
+TO-261101-002,101,WH-IND,NAG-01,NEH-03-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00963
+TO-261101-002,102,WH-IND,NAG-01,NEH-03-IVO-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00973
+TO-261101-002,103,WH-IND,NAG-01,NEH-03-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00972
+TO-261101-002,104,WH-IND,NAG-01,NEH-03-TEA-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01177
+TO-261101-002,105,WH-IND,NAG-01,NEH-03-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01062
+TO-261101-002,106,WH-IND,NAG-01,NEH-03-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00968
+TO-261101-002,107,WH-IND,NAG-01,NEH-04-IVO-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00685
+TO-261101-002,108,WH-IND,NAG-01,NEH-04-IVO-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00683
+TO-261101-002,109,WH-IND,NAG-01,NEH-04-IVO-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00940
+TO-261101-002,110,WH-IND,NAG-01,NEH-04-PEA-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00547
+TO-261101-002,111,WH-IND,NAG-01,NEH-04-PEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00687
+TO-261101-002,112,WH-IND,NAG-01,NEH-04-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00942
+TO-261101-002,113,WH-IND,NAG-01,NEH-05-ROS-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00660
+TO-261101-002,114,WH-IND,NAG-01,NEH-05-TEA-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00533
+TO-261101-002,115,WH-IND,NAG-01,NEH-05-TEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01042
+TO-261101-002,116,WH-IND,NAG-01,NEH-05-TEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01085
+TO-261101-002,117,WH-IND,NAG-01,NEH-05-TEA-XL,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00318
+TO-261101-002,118,WH-IND,NAG-01,SHE-01-EME-40,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00176
+TO-261101-002,119,WH-IND,NAG-01,SHE-01-EME-42,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00117
+TO-261101-002,120,WH-IND,NAG-01,SHE-01-EME-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00175
+TO-261101-002,121,WH-IND,NAG-01,SHE-01-EME-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00325
+TO-261101-002,122,WH-IND,NAG-01,SHE-02-EME-38,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00248
+TO-261101-002,123,WH-IND,NAG-01,SHE-02-EME-40,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00124
+TO-261101-002,124,WH-IND,NAG-01,SHE-02-EME-42,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00994
+TO-261101-002,125,WH-IND,NAG-01,SHE-02-EME-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00246
+TO-261101-002,126,WH-IND,NAG-01,SHE-03-NAV-42,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00208
+TO-261101-002,127,WH-IND,NAG-01,SHE-03-NAV-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00387
+TO-261101-002,128,WH-IND,NAG-01,SHE-03-NAV-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00392
+TO-261101-002,129,WH-IND,NAG-01,SHE-04-MAR-42,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00254
+TO-261101-002,130,WH-IND,NAG-01,SHE-04-MAR-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00252
+TO-261101-002,131,WH-IND,NAG-01,SHE-04-MAR-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00451
+TO-261101-002,132,WH-IND,NAG-01,SHE-05-PEA-38,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00528
+TO-261101-002,133,WH-IND,NAG-01,SHE-05-PEA-40,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01118
+TO-261101-002,134,WH-IND,NAG-01,SHE-05-PEA-42,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00167
+TO-261101-002,135,WH-IND,NAG-01,SHE-05-PEA-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00529
+TO-261101-003,1,WH-IND,IND-02,DUP-01-ROS-FS,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00771
+TO-261101-003,2,WH-IND,IND-02,DUP-01-TEA-FS,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01187
+TO-261101-003,3,WH-IND,IND-02,DUP-02-MUS-FS,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00932
+TO-261101-003,4,WH-IND,IND-02,DUP-02-PEA-FS,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00846
+TO-261101-003,5,WH-IND,IND-02,DUP-03-MAR-FS,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00412
+TO-261101-003,6,WH-IND,IND-02,DUP-03-ROS-FS,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00694
+TO-261101-003,7,WH-IND,IND-02,JUT-01-TEA-9,1,2026-11-01,2026-11-03,Warehouse -> store,Complete broken size sets,M00978
+TO-261101-003,8,WH-IND,IND-02,JUT-02-EME-10,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00987
+TO-261101-003,9,WH-IND,IND-02,JUT-02-EME-6,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00988
+TO-261101-003,10,WH-IND,IND-02,JUT-02-EME-7,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00949
+TO-261101-003,11,WH-IND,IND-02,JUT-02-EME-9,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00948
+TO-261101-003,12,WH-IND,IND-02,JUT-03-IVO-10,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00887
+TO-261101-003,13,WH-IND,IND-02,JUT-03-IVO-6,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01092
+TO-261101-003,14,WH-IND,IND-02,JUT-03-IVO-9,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00983
+TO-261101-003,15,WH-IND,IND-02,KUR-01-EME-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00297
+TO-261101-003,16,WH-IND,IND-02,KUR-01-EME-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00467
+TO-261101-003,17,WH-IND,IND-02,KUR-01-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01066
+TO-261101-003,18,WH-IND,IND-02,KUR-01-EME-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00296
+TO-261101-003,19,WH-IND,IND-02,KUR-01-NAV-L,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00185
+TO-261101-003,20,WH-IND,IND-02,KUR-01-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01068
+TO-261101-003,21,WH-IND,IND-02,KUR-01-NAV-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00598
+TO-261101-003,22,WH-IND,IND-02,KUR-01-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00818
+TO-261101-003,23,WH-IND,IND-02,KUR-02-MUS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00718
+TO-261101-003,24,WH-IND,IND-02,KUR-02-MUS-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00569
+TO-261101-003,25,WH-IND,IND-02,KUR-02-MUS-XL,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00398
+TO-261101-003,26,WH-IND,IND-02,KUR-02-NAV-L,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00343
+TO-261101-003,27,WH-IND,IND-02,KUR-02-NAV-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00706
+TO-261101-003,28,WH-IND,IND-02,KUR-02-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00716
+TO-261101-003,29,WH-IND,IND-02,KUR-03-MUS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01153
+TO-261101-003,30,WH-IND,IND-02,KUR-03-MUS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00655
+TO-261101-003,31,WH-IND,IND-02,KUR-03-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00836
+TO-261101-003,32,WH-IND,IND-02,KUR-03-MUS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00653
+TO-261101-003,33,WH-IND,IND-02,KUR-03-NAV-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00491
+TO-261101-003,34,WH-IND,IND-02,KUR-03-NAV-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00657
+TO-261101-003,35,WH-IND,IND-02,KUR-03-NAV-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00654
+TO-261101-003,36,WH-IND,IND-02,KUR-03-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00832
+TO-261101-003,37,WH-IND,IND-02,KUR-04-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00741
+TO-261101-003,38,WH-IND,IND-02,KUR-04-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00899
+TO-261101-003,39,WH-IND,IND-02,KUR-04-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01166
+TO-261101-003,40,WH-IND,IND-02,KUR-04-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00892
+TO-261101-003,41,WH-IND,IND-02,KUR-04-ROS-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01163
+TO-261101-003,42,WH-IND,IND-02,KUR-04-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00742
+TO-261101-003,43,WH-IND,IND-02,KUR-04-ROS-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00557
+TO-261101-003,44,WH-IND,IND-02,KUR-04-ROS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00895
+TO-261101-003,45,WH-IND,IND-02,KUR-05-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00729
+TO-261101-003,46,WH-IND,IND-02,KUR-05-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01079
+TO-261101-003,47,WH-IND,IND-02,KUR-05-TEA-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00463
+TO-261101-003,48,WH-IND,IND-02,KUR-05-TEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00871
+TO-261101-003,49,WH-IND,IND-02,KUR-05-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00876
+TO-261101-003,50,WH-IND,IND-02,KUR-06-EME-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00904
+TO-261101-003,51,WH-IND,IND-02,KUR-06-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00916
+TO-261101-003,52,WH-IND,IND-02,KUR-06-MAR-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00762
+TO-261101-003,53,WH-IND,IND-02,KUR-06-MAR-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00767
+TO-261101-003,54,WH-IND,IND-02,KUR-07-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01074
+TO-261101-003,55,WH-IND,IND-02,KUR-07-IVO-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00853
+TO-261101-003,56,WH-IND,IND-02,KUR-07-IVO-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00679
+TO-261101-003,57,WH-IND,IND-02,KUR-07-MAR-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00857
+TO-261101-003,58,WH-IND,IND-02,KUR-07-MAR-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00854
+TO-261101-003,59,WH-IND,IND-02,KUR-08-PEA-L,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00188
+TO-261101-003,60,WH-IND,IND-02,KUR-08-PEA-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00311
+TO-261101-003,61,WH-IND,IND-02,KUR-08-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00826
+TO-261101-003,62,WH-IND,IND-02,KUR-08-PEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00631
+TO-261101-003,63,WH-IND,IND-02,KUR-08-PEA-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00379
+TO-261101-003,64,WH-IND,IND-02,KUR-08-ROS-S,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00244
+TO-261101-003,65,WH-IND,IND-02,KUR-08-ROS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00626
+TO-261101-003,66,WH-IND,IND-02,LEH-01-NAV-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00151
+TO-261101-003,67,WH-IND,IND-02,LEH-01-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01014
+TO-261101-003,68,WH-IND,IND-02,LEH-01-PEA-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00152
+TO-261101-003,69,WH-IND,IND-02,LEH-02-EME-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00404
+TO-261101-003,70,WH-IND,IND-02,LEH-02-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00639
+TO-261101-003,71,WH-IND,IND-02,LEH-02-MUS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00644
+TO-261101-003,72,WH-IND,IND-02,LEH-02-MUS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00279
+TO-261101-003,73,WH-IND,IND-02,LEH-02-MUS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00402
+TO-261101-003,74,WH-IND,IND-02,LEH-03-ROS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00353
+TO-261101-003,75,WH-IND,IND-02,LEH-03-TEA-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00350
+TO-261101-003,76,WH-IND,IND-02,LEH-03-TEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00594
+TO-261101-003,77,WH-IND,IND-02,LEH-03-TEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00577
+TO-261101-003,78,WH-IND,IND-02,LEH-04-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00616
+TO-261101-003,79,WH-IND,IND-02,LEH-04-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00372
+TO-261101-003,80,WH-IND,IND-02,LEH-04-MUS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00367
+TO-261101-003,81,WH-IND,IND-02,LEH-04-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00624
+TO-261101-003,82,WH-IND,IND-02,LEH-04-MUS-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00206
+TO-261101-003,83,WH-IND,IND-02,NEH-01-ROS-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00498
+TO-261101-003,84,WH-IND,IND-02,NEH-01-ROS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01139
+TO-261101-003,85,WH-IND,IND-02,NEH-01-TEA-L,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00396
+TO-261101-003,86,WH-IND,IND-02,NEH-01-TEA-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00710
+TO-261101-003,87,WH-IND,IND-02,NEH-02-IVO-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01128
+TO-261101-003,88,WH-IND,IND-02,NEH-02-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00870
+TO-261101-003,89,WH-IND,IND-02,NEH-02-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00703
+TO-261101-003,90,WH-IND,IND-02,NEH-02-PEA-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00346
+TO-261101-003,91,WH-IND,IND-02,NEH-02-PEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00697
+TO-261101-003,92,WH-IND,IND-02,NEH-03-IVO-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00561
+TO-261101-003,93,WH-IND,IND-02,NEH-03-IVO-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00724
+TO-261101-003,94,WH-IND,IND-02,NEH-03-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00971
+TO-261101-003,95,WH-IND,IND-02,NEH-03-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00809
+TO-261101-003,96,WH-IND,IND-02,NEH-03-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00967
+TO-261101-003,97,WH-IND,IND-02,NEH-04-IVO-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00684
+TO-261101-003,98,WH-IND,IND-02,NEH-04-IVO-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00682
+TO-261101-003,99,WH-IND,IND-02,NEH-04-IVO-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00939
+TO-261101-003,100,WH-IND,IND-02,NEH-04-PEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00943
+TO-261101-003,101,WH-IND,IND-02,NEH-05-ROS-L,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00316
+TO-261101-003,102,WH-IND,IND-02,NEH-05-ROS-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00780
+TO-261101-003,103,WH-IND,IND-02,NEH-05-ROS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00926
+TO-261101-003,104,WH-IND,IND-02,NEH-05-TEA-L,20,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00138
+TO-261101-003,105,WH-IND,IND-02,NEH-05-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00772
+TO-261101-003,106,WH-IND,IND-02,NEH-05-TEA-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00478
+TO-261101-003,107,WH-IND,IND-02,SHE-01-EME-38,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00323
+TO-261101-003,108,WH-IND,IND-02,SHE-01-EME-42,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00051
+TO-261101-003,109,WH-IND,IND-02,SHE-01-EME-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00321
+TO-261101-003,110,WH-IND,IND-02,SHE-01-EME-46,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01004
+TO-261101-003,111,WH-IND,IND-02,SHE-02-EME-38,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00998
+TO-261101-003,112,WH-IND,IND-02,SHE-02-EME-40,5,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00992
+TO-261101-003,113,WH-IND,IND-02,SHE-02-EME-44,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00158
+TO-261101-003,114,WH-IND,IND-02,SHE-02-EME-46,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00162
+TO-261101-003,115,WH-IND,IND-02,SHE-03-NAV-38,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00111
+TO-261101-003,116,WH-IND,IND-02,SHE-03-NAV-40,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00394
+TO-261101-003,117,WH-IND,IND-02,SHE-03-NAV-42,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00061
+TO-261101-003,118,WH-IND,IND-02,SHE-03-NAV-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00385
+TO-261101-003,119,WH-IND,IND-02,SHE-03-NAV-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00391
+TO-261101-003,120,WH-IND,IND-02,SHE-04-MAR-38,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00256
+TO-261101-003,121,WH-IND,IND-02,SHE-04-MAR-40,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01016
+TO-261101-003,122,WH-IND,IND-02,SHE-04-MAR-42,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00127
+TO-261101-003,123,WH-IND,IND-02,SHE-04-MAR-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00446
+TO-261101-003,124,WH-IND,IND-02,SHE-05-PEA-38,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00230
+TO-261101-003,125,WH-IND,IND-02,SHE-05-PEA-40,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00306
+TO-261101-003,126,WH-IND,IND-02,SHE-05-PEA-42,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00228
+TO-261101-003,127,WH-IND,IND-02,SHE-05-PEA-44,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00168
+TO-261101-003,128,WH-IND,IND-02,SHE-05-PEA-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00532
+TO-261101-004,1,WH-IND,IND-01,DUP-01-ROS-FS,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01191
+TO-261101-004,2,WH-IND,IND-01,DUP-01-TEA-FS,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00847
+TO-261101-004,3,WH-IND,IND-01,DUP-02-MUS-FS,17,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00300
+TO-261101-004,4,WH-IND,IND-01,DUP-03-MAR-FS,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00693
+TO-261101-004,5,WH-IND,IND-01,JUT-01-TEA-10,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00844
+TO-261101-004,6,WH-IND,IND-01,JUT-01-TEA-8,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01043
+TO-261101-004,7,WH-IND,IND-01,JUT-01-TEA-9,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00977
+TO-261101-004,8,WH-IND,IND-01,JUT-02-EME-10,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00793
+TO-261101-004,9,WH-IND,IND-01,JUT-02-EME-7,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00613
+TO-261101-004,10,WH-IND,IND-01,JUT-02-EME-9,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01076
+TO-261101-004,11,WH-IND,IND-01,JUT-03-IVO-10,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00794
+TO-261101-004,12,WH-IND,IND-01,JUT-03-IVO-7,28,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00147
+TO-261101-004,13,WH-IND,IND-01,KUR-01-EME-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00361
+TO-261101-004,14,WH-IND,IND-01,KUR-01-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00604
+TO-261101-004,15,WH-IND,IND-01,KUR-01-EME-S,11,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00145
+TO-261101-004,16,WH-IND,IND-01,KUR-01-EME-XXL,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00233
+TO-261101-004,17,WH-IND,IND-01,KUR-01-NAV-L,15,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00108
+TO-261101-004,18,WH-IND,IND-01,KUR-01-NAV-XL,12,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00132
+TO-261101-004,19,WH-IND,IND-01,KUR-02-MUS-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01132
+TO-261101-004,20,WH-IND,IND-01,KUR-02-MUS-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00715
+TO-261101-004,21,WH-IND,IND-01,KUR-02-NAV-L,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00237
+TO-261101-004,22,WH-IND,IND-01,KUR-02-NAV-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00503
+TO-261101-004,23,WH-IND,IND-01,KUR-02-NAV-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00805
+TO-261101-004,24,WH-IND,IND-01,KUR-02-NAV-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00808
+TO-261101-004,25,WH-IND,IND-01,KUR-03-MUS-L,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01012
+TO-261101-004,26,WH-IND,IND-01,KUR-03-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01155
+TO-261101-004,27,WH-IND,IND-01,KUR-03-MUS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01039
+TO-261101-004,28,WH-IND,IND-01,KUR-03-NAV-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00496
+TO-261101-004,29,WH-IND,IND-01,KUR-03-NAV-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00333
+TO-261101-004,30,WH-IND,IND-01,KUR-03-NAV-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00410
+TO-261101-004,31,WH-IND,IND-01,KUR-04-EME-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00560
+TO-261101-004,32,WH-IND,IND-01,KUR-04-EME-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00414
+TO-261101-004,33,WH-IND,IND-01,KUR-04-EME-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01031
+TO-261101-004,34,WH-IND,IND-01,KUR-04-ROS-XL,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00341
+TO-261101-004,35,WH-IND,IND-01,KUR-04-ROS-XXL,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00231
+TO-261101-004,36,WH-IND,IND-01,KUR-05-EME-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00462
+TO-261101-004,37,WH-IND,IND-01,KUR-05-EME-XL,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00207
+TO-261101-004,38,WH-IND,IND-01,KUR-05-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00878
+TO-261101-004,39,WH-IND,IND-01,KUR-05-TEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01119
+TO-261101-004,40,WH-IND,IND-01,KUR-05-TEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00886
+TO-261101-004,41,WH-IND,IND-01,KUR-05-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00726
+TO-261101-004,42,WH-IND,IND-01,KUR-05-TEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00734
+TO-261101-004,43,WH-IND,IND-01,KUR-06-EME-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00770
+TO-261101-004,44,WH-IND,IND-01,KUR-06-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00768
+TO-261101-004,45,WH-IND,IND-01,KUR-06-MAR-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00638
+TO-261101-004,46,WH-IND,IND-01,KUR-06-MAR-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00765
+TO-261101-004,47,WH-IND,IND-01,KUR-06-MAR-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00920
+TO-261101-004,48,WH-IND,IND-01,KUR-06-MAR-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01168
+TO-261101-004,49,WH-IND,IND-01,KUR-06-MAR-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00924
+TO-261101-004,50,WH-IND,IND-01,KUR-07-IVO-L,14,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00130
+TO-261101-004,51,WH-IND,IND-01,KUR-07-IVO-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00423
+TO-261101-004,52,WH-IND,IND-01,KUR-07-IVO-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00515
+TO-261101-004,53,WH-IND,IND-01,KUR-07-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00676
+TO-261101-004,54,WH-IND,IND-01,KUR-07-IVO-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01047
+TO-261101-004,55,WH-IND,IND-01,KUR-07-MAR-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00518
+TO-261101-004,56,WH-IND,IND-01,KUR-07-MAR-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00200
+TO-261101-004,57,WH-IND,IND-01,KUR-07-MAR-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01045
+TO-261101-004,58,WH-IND,IND-01,KUR-07-MAR-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01157
+TO-261101-004,59,WH-IND,IND-01,KUR-08-PEA-L,25,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00063
+TO-261101-004,60,WH-IND,IND-01,KUR-08-PEA-M,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00276
+TO-261101-004,61,WH-IND,IND-01,KUR-08-PEA-S,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00278
+TO-261101-004,62,WH-IND,IND-01,KUR-08-PEA-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00313
+TO-261101-004,63,WH-IND,IND-01,KUR-08-PEA-XXL,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00243
+TO-261101-004,64,WH-IND,IND-01,KUR-08-ROS-L,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00190
+TO-261101-004,65,WH-IND,IND-01,KUR-08-ROS-M,17,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00098
+TO-261101-004,66,WH-IND,IND-01,KUR-08-ROS-XL,18,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00088
+TO-261101-004,67,WH-IND,IND-01,KUR-08-ROS-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00483
+TO-261101-004,68,WH-IND,IND-01,LEH-01-NAV-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01098
+TO-261101-004,69,WH-IND,IND-01,LEH-01-NAV-M,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00059
+TO-261101-004,70,WH-IND,IND-01,LEH-01-PEA-M,6,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00990
+TO-261101-004,71,WH-IND,IND-01,LEH-01-PEA-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00090
+TO-261101-004,72,WH-IND,IND-01,LEH-01-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01111
+TO-261101-004,73,WH-IND,IND-01,LEH-02-EME-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00224
+TO-261101-004,74,WH-IND,IND-01,LEH-02-EME-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01104
+TO-261101-004,75,WH-IND,IND-01,LEH-02-EME-S,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00062
+TO-261101-004,76,WH-IND,IND-01,LEH-02-EME-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00180
+TO-261101-004,77,WH-IND,IND-01,LEH-02-MUS-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00284
+TO-261101-004,78,WH-IND,IND-01,LEH-02-MUS-M,15,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00058
+TO-261101-004,79,WH-IND,IND-01,LEH-02-MUS-XL,11,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00077
+TO-261101-004,80,WH-IND,IND-01,LEH-03-ROS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00579
+TO-261101-004,81,WH-IND,IND-01,LEH-03-ROS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00196
+TO-261101-004,82,WH-IND,IND-01,LEH-03-ROS-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00595
+TO-261101-004,83,WH-IND,IND-01,LEH-03-TEA-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00999
+TO-261101-004,84,WH-IND,IND-01,LEH-03-TEA-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00355
+TO-261101-004,85,WH-IND,IND-01,LEH-03-TEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00586
+TO-261101-004,86,WH-IND,IND-01,LEH-04-IVO-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00204
+TO-261101-004,87,WH-IND,IND-01,LEH-04-IVO-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00201
+TO-261101-004,88,WH-IND,IND-01,LEH-04-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00371
+TO-261101-004,89,WH-IND,IND-01,LEH-04-MUS-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01007
+TO-261101-004,90,WH-IND,IND-01,LEH-04-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00623
+TO-261101-004,91,WH-IND,IND-01,NEH-01-ROS-L,28,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00113
+TO-261101-004,92,WH-IND,IND-01,NEH-01-ROS-M,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00342
+TO-261101-004,93,WH-IND,IND-01,NEH-01-ROS-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00713
+TO-261101-004,94,WH-IND,IND-01,NEH-01-ROS-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00510
+TO-261101-004,95,WH-IND,IND-01,NEH-01-TEA-L,7,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01011
+TO-261101-004,96,WH-IND,IND-01,NEH-01-TEA-M,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00236
+TO-261101-004,97,WH-IND,IND-01,NEH-01-TEA-S,17,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00187
+TO-261101-004,98,WH-IND,IND-01,NEH-02-IVO-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00302
+TO-261101-004,99,WH-IND,IND-01,NEH-02-IVO-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00527
+TO-261101-004,100,WH-IND,IND-01,NEH-02-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00867
+TO-261101-004,101,WH-IND,IND-01,NEH-02-PEA-L,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00192
+TO-261101-004,102,WH-IND,IND-01,NEH-02-PEA-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00439
+TO-261101-004,103,WH-IND,IND-01,NEH-02-PEA-S,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00193
+TO-261101-004,104,WH-IND,IND-01,NEH-02-PEA-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00438
+TO-261101-004,105,WH-IND,IND-01,NEH-02-PEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01049
+TO-261101-004,106,WH-IND,IND-01,NEH-03-IVO-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00810
+TO-261101-004,107,WH-IND,IND-01,NEH-03-IVO-M,19,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00155
+TO-261101-004,108,WH-IND,IND-01,NEH-03-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00961
+TO-261101-004,109,WH-IND,IND-01,NEH-03-IVO-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00813
+TO-261101-004,110,WH-IND,IND-01,NEH-03-TEA-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00504
+TO-261101-004,111,WH-IND,IND-01,NEH-03-TEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01133
+TO-261101-004,112,WH-IND,IND-01,NEH-03-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01063
+TO-261101-004,113,WH-IND,IND-01,NEH-03-TEA-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00575
+TO-261101-004,114,WH-IND,IND-01,NEH-04-IVO-L,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00227
+TO-261101-004,115,WH-IND,IND-01,NEH-04-IVO-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01058
+TO-261101-004,116,WH-IND,IND-01,NEH-04-IVO-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00690
+TO-261101-004,117,WH-IND,IND-01,NEH-04-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01173
+TO-261101-004,118,WH-IND,IND-01,NEH-04-PEA-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01138
+TO-261101-004,119,WH-IND,IND-01,NEH-04-PEA-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00691
+TO-261101-004,120,WH-IND,IND-01,NEH-05-ROS-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00477
+TO-261101-004,121,WH-IND,IND-01,NEH-05-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00776
+TO-261101-004,122,WH-IND,IND-01,NEH-05-TEA-L,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00348
+TO-261101-004,123,WH-IND,IND-01,NEH-05-TEA-XL,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00266
+TO-261101-004,124,WH-IND,IND-01,SHE-01-EME-38,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00177
+TO-261101-004,125,WH-IND,IND-01,SHE-01-EME-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00174
+TO-261101-004,126,WH-IND,IND-01,SHE-01-EME-46,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01106
+TO-261101-004,127,WH-IND,IND-01,SHE-02-EME-38,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00159
+TO-261101-004,128,WH-IND,IND-01,SHE-02-EME-40,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00072
+TO-261101-004,129,WH-IND,IND-01,SHE-02-EME-42,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01101
+TO-261101-004,130,WH-IND,IND-01,SHE-02-EME-44,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00122
+TO-261101-004,131,WH-IND,IND-01,SHE-03-NAV-40,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00213
+TO-261101-004,132,WH-IND,IND-01,SHE-03-NAV-42,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00081
+TO-261101-004,133,WH-IND,IND-01,SHE-03-NAV-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00382
+TO-261101-004,134,WH-IND,IND-01,SHE-04-MAR-42,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01115
+TO-261101-004,135,WH-IND,IND-01,SHE-04-MAR-44,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00100
+TO-261101-004,136,WH-IND,IND-01,SHE-05-PEA-38,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00305
+TO-261101-004,137,WH-IND,IND-01,SHE-05-PEA-42,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01096
+TO-261101-004,138,WH-IND,IND-01,SHE-05-PEA-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00530
+TO-261101-005,1,WH-JAI,UDR-01,DUP-01-ROS-FS,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01081
+TO-261101-005,2,WH-JAI,UDR-01,DUP-02-PEA-FS,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00934
+TO-261101-005,3,WH-JAI,UDR-01,DUP-03-MAR-FS,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00790
+TO-261101-005,4,WH-JAI,UDR-01,JUT-01-TEA-6,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00759
+TO-261101-005,5,WH-JAI,UDR-01,JUT-01-TEA-7,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00458
+TO-261101-005,6,WH-JAI,UDR-01,JUT-01-TEA-8,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00665
+TO-261101-005,7,WH-JAI,UDR-01,JUT-02-EME-6,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00953
+TO-261101-005,8,WH-JAI,UDR-01,JUT-02-EME-7,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00614
+TO-261101-005,9,WH-JAI,UDR-01,JUT-02-EME-8,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00695
+TO-261101-005,10,WH-JAI,UDR-01,JUT-03-IVO-10,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00647
+TO-261101-005,11,WH-JAI,UDR-01,JUT-03-IVO-6,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00982
+TO-261101-005,12,WH-JAI,UDR-01,JUT-03-IVO-7,16,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00268
+TO-261101-005,13,WH-JAI,UDR-01,JUT-03-IVO-9,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01186
+TO-261101-005,14,WH-JAI,UDR-01,KUR-01-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00605
+TO-261101-005,15,WH-JAI,UDR-01,KUR-01-EME-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00359
+TO-261101-005,16,WH-JAI,UDR-01,KUR-01-EME-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00471
+TO-261101-005,17,WH-JAI,UDR-01,KUR-01-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00602
+TO-261101-005,18,WH-JAI,UDR-01,KUR-01-NAV-L,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01107
+TO-261101-005,19,WH-JAI,UDR-01,KUR-01-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00469
+TO-261101-005,20,WH-JAI,UDR-01,KUR-01-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00820
+TO-261101-005,21,WH-JAI,UDR-01,KUR-02-MUS-L,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00344
+TO-261101-005,22,WH-JAI,UDR-01,KUR-02-MUS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00798
+TO-261101-005,23,WH-JAI,UDR-01,KUR-02-MUS-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00508
+TO-261101-005,24,WH-JAI,UDR-01,KUR-02-MUS-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00513
+TO-261101-005,25,WH-JAI,UDR-01,KUR-02-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01053
+TO-261101-005,26,WH-JAI,UDR-01,KUR-03-MUS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00495
+TO-261101-005,27,WH-JAI,UDR-01,KUR-03-MUS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00840
+TO-261101-005,28,WH-JAI,UDR-01,KUR-03-NAV-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00332
+TO-261101-005,29,WH-JAI,UDR-01,KUR-03-NAV-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00334
+TO-261101-005,30,WH-JAI,UDR-01,KUR-03-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01023
+TO-261101-005,31,WH-JAI,UDR-01,KUR-04-EME-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00486
+TO-261101-005,32,WH-JAI,UDR-01,KUR-04-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00902
+TO-261101-005,33,WH-JAI,UDR-01,KUR-04-EME-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00749
+TO-261101-005,34,WH-JAI,UDR-01,KUR-04-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00746
+TO-261101-005,35,WH-JAI,UDR-01,KUR-04-ROS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01137
+TO-261101-005,36,WH-JAI,UDR-01,KUR-04-ROS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00897
+TO-261101-005,37,WH-JAI,UDR-01,KUR-05-EME-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00542
+TO-261101-005,38,WH-JAI,UDR-01,KUR-05-EME-M,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00326
+TO-261101-005,39,WH-JAI,UDR-01,KUR-05-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00885
+TO-261101-005,40,WH-JAI,UDR-01,KUR-05-EME-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00540
+TO-261101-005,41,WH-JAI,UDR-01,KUR-05-TEA-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00541
+TO-261101-005,42,WH-JAI,UDR-01,KUR-05-TEA-M,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00330
+TO-261101-005,43,WH-JAI,UDR-01,KUR-05-TEA-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00461
+TO-261101-005,44,WH-JAI,UDR-01,KUR-06-EME-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01084
+TO-261101-005,45,WH-JAI,UDR-01,KUR-06-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00761
+TO-261101-005,46,WH-JAI,UDR-01,KUR-06-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00919
+TO-261101-005,47,WH-JAI,UDR-01,KUR-06-EME-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00769
+TO-261101-005,48,WH-JAI,UDR-01,KUR-06-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00913
+TO-261101-005,49,WH-JAI,UDR-01,KUR-06-MAR-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00763
+TO-261101-005,50,WH-JAI,UDR-01,KUR-07-IVO-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00517
+TO-261101-005,51,WH-JAI,UDR-01,KUR-07-IVO-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01156
+TO-261101-005,52,WH-JAI,UDR-01,KUR-07-MAR-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00675
+TO-261101-005,53,WH-JAI,UDR-01,KUR-07-MAR-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00668
+TO-261101-005,54,WH-JAI,UDR-01,KUR-07-MAR-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00681
+TO-261101-005,55,WH-JAI,UDR-01,KUR-07-MAR-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00672
+TO-261101-005,56,WH-JAI,UDR-01,KUR-07-MAR-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00855
+TO-261101-005,57,WH-JAI,UDR-01,KUR-08-PEA-L,24,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00070
+TO-261101-005,58,WH-JAI,UDR-01,KUR-08-PEA-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00189
+TO-261101-005,59,WH-JAI,UDR-01,KUR-08-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00828
+TO-261101-005,60,WH-JAI,UDR-01,KUR-08-PEA-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00314
+TO-261101-005,61,WH-JAI,UDR-01,KUR-08-PEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01069
+TO-261101-005,62,WH-JAI,UDR-01,KUR-08-ROS-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00377
+TO-261101-005,63,WH-JAI,UDR-01,KUR-08-ROS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00482
+TO-261101-005,64,WH-JAI,UDR-01,KUR-08-ROS-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00629
+TO-261101-005,65,WH-JAI,UDR-01,KUR-08-ROS-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00484
+TO-261101-005,66,WH-JAI,UDR-01,LEH-01-NAV-M,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00065
+TO-261101-005,67,WH-JAI,UDR-01,LEH-01-NAV-S,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00995
+TO-261101-005,68,WH-JAI,UDR-01,LEH-01-NAV-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00428
+TO-261101-005,69,WH-JAI,UDR-01,LEH-01-PEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00149
+TO-261101-005,70,WH-JAI,UDR-01,LEH-01-PEA-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00091
+TO-261101-005,71,WH-JAI,UDR-01,LEH-01-PEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00239
+TO-261101-005,72,WH-JAI,UDR-01,LEH-02-EME-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00223
+TO-261101-005,73,WH-JAI,UDR-01,LEH-03-ROS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00584
+TO-261101-005,74,WH-JAI,UDR-01,LEH-03-ROS-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00576
+TO-261101-005,75,WH-JAI,UDR-01,LEH-03-ROS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00593
+TO-261101-005,76,WH-JAI,UDR-01,LEH-03-TEA-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00263
+TO-261101-005,77,WH-JAI,UDR-01,LEH-04-IVO-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00275
+TO-261101-005,78,WH-JAI,UDR-01,LEH-04-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00618
+TO-261101-005,79,WH-JAI,UDR-01,LEH-04-IVO-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01123
+TO-261101-005,80,WH-JAI,UDR-01,LEH-04-MUS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00202
+TO-261101-005,81,WH-JAI,UDR-01,LEH-04-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00625
+TO-261101-005,82,WH-JAI,UDR-01,NEH-01-ROS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01087
+TO-261101-005,83,WH-JAI,UDR-01,NEH-01-ROS-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00572
+TO-261101-005,84,WH-JAI,UDR-01,NEH-01-ROS-XXL,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00397
+TO-261101-005,85,WH-JAI,UDR-01,NEH-01-TEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01179
+TO-261101-005,86,WH-JAI,UDR-01,NEH-02-IVO-L,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00270
+TO-261101-005,87,WH-JAI,UDR-01,NEH-02-IVO-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00702
+TO-261101-005,88,WH-JAI,UDR-01,NEH-02-PEA-L,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00269
+TO-261101-005,89,WH-JAI,UDR-01,NEH-02-PEA-S,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00271
+TO-261101-005,90,WH-JAI,UDR-01,NEH-02-PEA-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00525
+TO-261101-005,91,WH-JAI,UDR-01,NEH-03-IVO-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00812
+TO-261101-005,92,WH-JAI,UDR-01,NEH-03-IVO-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00500
+TO-261101-005,93,WH-JAI,UDR-01,NEH-03-TEA-L,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00288
+TO-261101-005,94,WH-JAI,UDR-01,NEH-03-TEA-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00723
+TO-261101-005,95,WH-JAI,UDR-01,NEH-03-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00969
+TO-261101-005,96,WH-JAI,UDR-01,NEH-04-IVO-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00546
+TO-261101-005,97,WH-JAI,UDR-01,NEH-04-IVO-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00489
+TO-261101-005,98,WH-JAI,UDR-01,NEH-04-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00937
+TO-261101-005,99,WH-JAI,UDR-01,NEH-04-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00938
+TO-261101-005,100,WH-JAI,UDR-01,NEH-04-PEA-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01172
+TO-261101-005,101,WH-JAI,UDR-01,NEH-04-PEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00688
+TO-261101-005,102,WH-JAI,UDR-01,NEH-04-PEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00944
+TO-261101-005,103,WH-JAI,UDR-01,NEH-05-ROS-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00535
+TO-261101-005,104,WH-JAI,UDR-01,NEH-05-ROS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00662
+TO-261101-005,105,WH-JAI,UDR-01,NEH-05-ROS-S,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00419
+TO-261101-005,106,WH-JAI,UDR-01,NEH-05-TEA-M,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00317
+TO-261101-005,107,WH-JAI,UDR-01,NEH-05-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00929
+TO-261101-005,108,WH-JAI,UDR-01,SHE-01-EME-42,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01105
+TO-261101-005,109,WH-JAI,UDR-01,SHE-01-EME-44,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00069
+TO-261101-005,110,WH-JAI,UDR-01,SHE-01-EME-46,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00118
+TO-261101-005,111,WH-JAI,UDR-01,SHE-02-EME-38,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00160
+TO-261101-005,112,WH-JAI,UDR-01,SHE-02-EME-40,5,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00993
+TO-261101-005,113,WH-JAI,UDR-01,SHE-02-EME-42,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00161
+TO-261101-005,114,WH-JAI,UDR-01,SHE-02-EME-44,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00094
+TO-261101-005,115,WH-JAI,UDR-01,SHE-02-EME-46,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00163
+TO-261101-005,116,WH-JAI,UDR-01,SHE-03-NAV-38,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01009
+TO-261101-005,117,WH-JAI,UDR-01,SHE-03-NAV-40,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00214
+TO-261101-005,118,WH-JAI,UDR-01,SHE-03-NAV-42,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00109
+TO-261101-005,119,WH-JAI,UDR-01,SHE-03-NAV-44,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00388
+TO-261101-005,120,WH-JAI,UDR-01,SHE-03-NAV-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00393
+TO-261101-005,121,WH-JAI,UDR-01,SHE-04-MAR-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00253
+TO-261101-005,122,WH-JAI,UDR-01,SHE-04-MAR-46,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00101
+TO-261101-005,123,WH-JAI,UDR-01,SHE-05-PEA-38,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00136
+TO-261101-005,124,WH-JAI,UDR-01,SHE-05-PEA-42,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00229
+TO-261101-005,125,WH-JAI,UDR-01,SHE-05-PEA-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00308
+TO-261101-006,1,WH-JAI,JAI-01,DUP-01-ROS-FS,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01089
+TO-261101-006,2,WH-JAI,JAI-01,DUP-01-TEA-FS,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00848
+TO-261101-006,3,WH-JAI,JAI-01,DUP-02-MUS-FS,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00782
+TO-261101-006,4,WH-JAI,JAI-01,DUP-03-MAR-FS,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01188
+TO-261101-006,5,WH-JAI,JAI-01,DUP-03-ROS-FS,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00413
+TO-261101-006,6,WH-JAI,JAI-01,JUT-01-TEA-10,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00981
+TO-261101-006,7,WH-JAI,JAI-01,JUT-01-TEA-7,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00758
+TO-261101-006,8,WH-JAI,JAI-01,JUT-01-TEA-8,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01185
+TO-261101-006,9,WH-JAI,JAI-01,JUT-01-TEA-9,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00843
+TO-261101-006,10,WH-JAI,JAI-01,JUT-02-EME-8,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00755
+TO-261101-006,11,WH-JAI,JAI-01,JUT-02-EME-9,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00549
+TO-261101-006,12,WH-JAI,JAI-01,JUT-03-IVO-7,6,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01120
+TO-261101-006,13,WH-JAI,JAI-01,JUT-03-IVO-8,25,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00184
+TO-261101-006,14,WH-JAI,JAI-01,KUR-01-EME-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01116
+TO-261101-006,15,WH-JAI,JAI-01,KUR-01-EME-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00473
+TO-261101-006,16,WH-JAI,JAI-01,KUR-01-EME-S,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01121
+TO-261101-006,17,WH-JAI,JAI-01,KUR-01-EME-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01122
+TO-261101-006,18,WH-JAI,JAI-01,KUR-01-EME-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00360
+TO-261101-006,19,WH-JAI,JAI-01,KUR-01-NAV-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00474
+TO-261101-006,20,WH-JAI,JAI-01,KUR-01-NAV-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00610
+TO-261101-006,21,WH-JAI,JAI-01,KUR-01-NAV-XL,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00157
+TO-261101-006,22,WH-JAI,JAI-01,KUR-01-NAV-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00609
+TO-261101-006,23,WH-JAI,JAI-01,KUR-02-MUS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01180
+TO-261101-006,24,WH-JAI,JAI-01,KUR-02-MUS-M,5,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01026
+TO-261101-006,25,WH-JAI,JAI-01,KUR-02-MUS-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00568
+TO-261101-006,26,WH-JAI,JAI-01,KUR-02-MUS-XL,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00290
+TO-261101-006,27,WH-JAI,JAI-01,KUR-02-MUS-XXL,6,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01017
+TO-261101-006,28,WH-JAI,JAI-01,KUR-02-NAV-M,18,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00171
+TO-261101-006,29,WH-JAI,JAI-01,KUR-02-NAV-S,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01141
+TO-261101-006,30,WH-JAI,JAI-01,KUR-02-NAV-XL,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00399
+TO-261101-006,31,WH-JAI,JAI-01,KUR-02-NAV-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00721
+TO-261101-006,32,WH-JAI,JAI-01,KUR-03-MUS-L,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00226
+TO-261101-006,33,WH-JAI,JAI-01,KUR-03-MUS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00658
+TO-261101-006,34,WH-JAI,JAI-01,KUR-03-MUS-XL,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00286
+TO-261101-006,35,WH-JAI,JAI-01,KUR-03-NAV-L,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00331
+TO-261101-006,36,WH-JAI,JAI-01,KUR-03-NAV-M,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00257
+TO-261101-006,37,WH-JAI,JAI-01,KUR-03-NAV-S,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01041
+TO-261101-006,38,WH-JAI,JAI-01,KUR-03-NAV-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00411
+TO-261101-006,39,WH-JAI,JAI-01,KUR-03-NAV-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00651
+TO-261101-006,40,WH-JAI,JAI-01,KUR-04-EME-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01167
+TO-261101-006,41,WH-JAI,JAI-01,KUR-04-EME-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00258
+TO-261101-006,42,WH-JAI,JAI-01,KUR-04-EME-XL,6,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01005
+TO-261101-006,43,WH-JAI,JAI-01,KUR-04-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01164
+TO-261101-006,44,WH-JAI,JAI-01,KUR-04-ROS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01021
+TO-261101-006,45,WH-JAI,JAI-01,KUR-04-ROS-S,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00259
+TO-261101-006,46,WH-JAI,JAI-01,KUR-05-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01134
+TO-261101-006,47,WH-JAI,JAI-01,KUR-05-EME-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00235
+TO-261101-006,48,WH-JAI,JAI-01,KUR-05-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00882
+TO-261101-006,49,WH-JAI,JAI-01,KUR-05-EME-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01029
+TO-261101-006,50,WH-JAI,JAI-01,KUR-05-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00879
+TO-261101-006,51,WH-JAI,JAI-01,KUR-05-TEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01135
+TO-261101-006,52,WH-JAI,JAI-01,KUR-05-TEA-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00739
+TO-261101-006,53,WH-JAI,JAI-01,KUR-05-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00727
+TO-261101-006,54,WH-JAI,JAI-01,KUR-05-TEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01136
+TO-261101-006,55,WH-JAI,JAI-01,KUR-06-EME-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01083
+TO-261101-006,56,WH-JAI,JAI-01,KUR-06-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01056
+TO-261101-006,57,WH-JAI,JAI-01,KUR-06-MAR-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00766
+TO-261101-006,58,WH-JAI,JAI-01,KUR-07-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00673
+TO-261101-006,59,WH-JAI,JAI-01,KUR-07-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01158
+TO-261101-006,60,WH-JAI,JAI-01,KUR-07-MAR-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00292
+TO-261101-006,61,WH-JAI,JAI-01,KUR-07-MAR-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00421
+TO-261101-006,62,WH-JAI,JAI-01,KUR-07-MAR-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00670
+TO-261101-006,63,WH-JAI,JAI-01,KUR-07-MAR-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01046
+TO-261101-006,64,WH-JAI,JAI-01,KUR-08-PEA-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01146
+TO-261101-006,65,WH-JAI,JAI-01,KUR-08-PEA-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01149
+TO-261101-006,66,WH-JAI,JAI-01,KUR-08-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00825
+TO-261101-006,67,WH-JAI,JAI-01,KUR-08-ROS-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00277
+TO-261101-006,68,WH-JAI,JAI-01,KUR-08-ROS-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00485
+TO-261101-006,69,WH-JAI,JAI-01,KUR-08-ROS-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00376
+TO-261101-006,70,WH-JAI,JAI-01,KUR-08-ROS-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00315
+TO-261101-006,71,WH-JAI,JAI-01,LEH-01-NAV-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00057
+TO-261101-006,72,WH-JAI,JAI-01,LEH-01-NAV-S,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00075
+TO-261101-006,73,WH-JAI,JAI-01,LEH-01-PEA-L,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01114
+TO-261101-006,74,WH-JAI,JAI-01,LEH-01-PEA-M,21,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00046
+TO-261101-006,75,WH-JAI,JAI-01,LEH-01-PEA-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00120
+TO-261101-006,76,WH-JAI,JAI-01,LEH-02-EME-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00225
+TO-261101-006,77,WH-JAI,JAI-01,LEH-02-EME-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01126
+TO-261101-006,78,WH-JAI,JAI-01,LEH-02-EME-XL,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00114
+TO-261101-006,79,WH-JAI,JAI-01,LEH-02-MUS-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00285
+TO-261101-006,80,WH-JAI,JAI-01,LEH-02-MUS-M,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00087
+TO-261101-006,81,WH-JAI,JAI-01,LEH-02-MUS-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00183
+TO-261101-006,82,WH-JAI,JAI-01,LEH-02-MUS-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01001
+TO-261101-006,83,WH-JAI,JAI-01,LEH-03-ROS-L,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00580
+TO-261101-006,84,WH-JAI,JAI-01,LEH-03-ROS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01000
+TO-261101-006,85,WH-JAI,JAI-01,LEH-03-ROS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01032
+TO-261101-006,86,WH-JAI,JAI-01,LEH-03-TEA-L,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00099
+TO-261101-006,87,WH-JAI,JAI-01,LEH-04-IVO-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00205
+TO-261101-006,88,WH-JAI,JAI-01,LEH-04-IVO-M,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00080
+TO-261101-006,89,WH-JAI,JAI-01,LEH-04-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01008
+TO-261101-006,90,WH-JAI,JAI-01,LEH-04-MUS-L,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00106
+TO-261101-006,91,WH-JAI,JAI-01,LEH-04-MUS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00996
+TO-261101-006,92,WH-JAI,JAI-01,LEH-04-MUS-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00622
+TO-261101-006,93,WH-JAI,JAI-01,NEH-01-ROS-L,30,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00103
+TO-261101-006,94,WH-JAI,JAI-01,NEH-01-ROS-M,15,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00199
+TO-261101-006,95,WH-JAI,JAI-01,NEH-01-ROS-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00714
+TO-261101-006,96,WH-JAI,JAI-01,NEH-01-ROS-XL,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00456
+TO-261101-006,97,WH-JAI,JAI-01,NEH-01-ROS-XXL,22,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00139
+TO-261101-006,98,WH-JAI,JAI-01,NEH-01-TEA-M,21,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00143
+TO-261101-006,99,WH-JAI,JAI-01,NEH-01-TEA-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00507
+TO-261101-006,100,WH-JAI,JAI-01,NEH-01-TEA-XL,25,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00121
+TO-261101-006,101,WH-JAI,JAI-01,NEH-01-TEA-XXL,18,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00172
+TO-261101-006,102,WH-JAI,JAI-01,NEH-02-IVO-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01117
+TO-261101-006,103,WH-JAI,JAI-01,NEH-02-IVO-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00526
+TO-261101-006,104,WH-JAI,JAI-01,NEH-02-IVO-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00699
+TO-261101-006,105,WH-JAI,JAI-01,NEH-02-PEA-L,19,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00104
+TO-261101-006,106,WH-JAI,JAI-01,NEH-02-PEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01129
+TO-261101-006,107,WH-JAI,JAI-01,NEH-02-PEA-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00523
+TO-261101-006,108,WH-JAI,JAI-01,NEH-02-PEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00698
+TO-261101-006,109,WH-JAI,JAI-01,NEH-02-PEA-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00437
+TO-261101-006,110,WH-JAI,JAI-01,NEH-03-IVO-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01051
+TO-261101-006,111,WH-JAI,JAI-01,NEH-03-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00804
+TO-261101-006,112,WH-JAI,JAI-01,NEH-03-TEA-L,16,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00191
+TO-261101-006,113,WH-JAI,JAI-01,NEH-03-TEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01143
+TO-261101-006,114,WH-JAI,JAI-01,NEH-03-TEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00974
+TO-261101-006,115,WH-JAI,JAI-01,NEH-04-IVO-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00544
+TO-261101-006,116,WH-JAI,JAI-01,NEH-04-IVO-S,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00432
+TO-261101-006,117,WH-JAI,JAI-01,NEH-04-IVO-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00786
+TO-261101-006,118,WH-JAI,JAI-01,NEH-04-PEA-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00490
+TO-261101-006,119,WH-JAI,JAI-01,NEH-04-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01174
+TO-261101-006,120,WH-JAI,JAI-01,NEH-04-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00946
+TO-261101-006,121,WH-JAI,JAI-01,NEH-05-ROS-L,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00287
+TO-261101-006,122,WH-JAI,JAI-01,NEH-05-ROS-XXL,10,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00267
+TO-261101-006,123,WH-JAI,JAI-01,NEH-05-TEA-L,19,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00142
+TO-261101-006,124,WH-JAI,JAI-01,NEH-05-TEA-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00778
+TO-261101-006,125,WH-JAI,JAI-01,NEH-05-TEA-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00663
+TO-261101-006,126,WH-JAI,JAI-01,SHE-01-EME-38,11,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00048
+TO-261101-006,127,WH-JAI,JAI-01,SHE-01-EME-40,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00086
+TO-261101-006,128,WH-JAI,JAI-01,SHE-01-EME-42,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01095
+TO-261101-006,129,WH-JAI,JAI-01,SHE-02-EME-38,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00095
+TO-261101-006,130,WH-JAI,JAI-01,SHE-02-EME-44,12,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00050
+TO-261101-006,131,WH-JAI,JAI-01,SHE-03-NAV-38,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00110
+TO-261101-006,132,WH-JAI,JAI-01,SHE-03-NAV-40,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00141
+TO-261101-006,133,WH-JAI,JAI-01,SHE-03-NAV-42,14,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00047
+TO-261101-006,134,WH-JAI,JAI-01,SHE-03-NAV-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00210
+TO-261101-006,135,WH-JAI,JAI-01,SHE-03-NAV-46,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00112
+TO-261101-006,136,WH-JAI,JAI-01,SHE-04-MAR-38,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01103
+TO-261101-006,137,WH-JAI,JAI-01,SHE-04-MAR-42,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00079
+TO-261101-006,138,WH-JAI,JAI-01,SHE-04-MAR-44,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01015
+TO-261101-006,139,WH-JAI,JAI-01,SHE-04-MAR-46,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00128
+TO-261101-006,140,WH-JAI,JAI-01,SHE-05-PEA-38,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00116
+TO-261101-006,141,WH-JAI,JAI-01,SHE-05-PEA-40,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00073
+TO-261101-006,142,WH-JAI,JAI-01,SHE-05-PEA-42,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00134
+TO-261101-006,143,WH-JAI,JAI-01,SHE-05-PEA-44,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00092
+TO-261101-006,144,WH-JAI,JAI-01,SHE-05-PEA-46,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00169
+TO-261101-007,1,WH-IND,BHO-01,DUP-01-ROS-FS,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00975
+TO-261101-007,2,WH-IND,BHO-01,DUP-02-PEA-FS,6,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01044
+TO-261101-007,3,WH-IND,BHO-01,DUP-03-MAR-FS,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00752
+TO-261101-007,4,WH-IND,BHO-01,DUP-03-ROS-FS,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01189
+TO-261101-007,5,WH-IND,BHO-01,JUT-01-TEA-8,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00664
+TO-261101-007,6,WH-IND,BHO-01,JUT-01-TEA-9,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00842
+TO-261101-007,7,WH-IND,BHO-01,JUT-02-EME-10,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01077
+TO-261101-007,8,WH-IND,BHO-01,JUT-02-EME-6,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00756
+TO-261101-007,9,WH-IND,BHO-01,JUT-02-EME-8,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00754
+TO-261101-007,10,WH-IND,BHO-01,JUT-03-IVO-8,12,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00337
+TO-261101-007,11,WH-IND,BHO-01,KUR-01-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00606
+TO-261101-007,12,WH-IND,BHO-01,KUR-01-EME-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00603
+TO-261101-007,13,WH-IND,BHO-01,KUR-01-EME-S,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00186
+TO-261101-007,14,WH-IND,BHO-01,KUR-01-EME-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00472
+TO-261101-007,15,WH-IND,BHO-01,KUR-01-NAV-L,12,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00131
+TO-261101-007,16,WH-IND,BHO-01,KUR-01-NAV-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00611
+TO-261101-007,17,WH-IND,BHO-01,KUR-01-NAV-S,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00299
+TO-261101-007,18,WH-IND,BHO-01,KUR-01-NAV-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00468
+TO-261101-007,19,WH-IND,BHO-01,KUR-01-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00816
+TO-261101-007,20,WH-IND,BHO-01,KUR-02-MUS-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00457
+TO-261101-007,21,WH-IND,BHO-01,KUR-02-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00954
+TO-261101-007,22,WH-IND,BHO-01,KUR-02-NAV-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00566
+TO-261101-007,23,WH-IND,BHO-01,KUR-02-NAV-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00574
+TO-261101-007,24,WH-IND,BHO-01,KUR-03-MUS-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00409
+TO-261101-007,25,WH-IND,BHO-01,KUR-03-MUS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01024
+TO-261101-007,26,WH-IND,BHO-01,KUR-03-MUS-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00493
+TO-261101-007,27,WH-IND,BHO-01,KUR-03-MUS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00838
+TO-261101-007,28,WH-IND,BHO-01,KUR-03-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00834
+TO-261101-007,29,WH-IND,BHO-01,KUR-03-NAV-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00830
+TO-261101-007,30,WH-IND,BHO-01,KUR-04-EME-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00559
+TO-261101-007,31,WH-IND,BHO-01,KUR-04-EME-XXL,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00304
+TO-261101-007,32,WH-IND,BHO-01,KUR-04-ROS-M,9,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00260
+TO-261101-007,33,WH-IND,BHO-01,KUR-04-ROS-S,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00340
+TO-261101-007,34,WH-IND,BHO-01,KUR-04-ROS-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00555
+TO-261101-007,35,WH-IND,BHO-01,KUR-04-ROS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00893
+TO-261101-007,36,WH-IND,BHO-01,KUR-05-EME-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00329
+TO-261101-007,37,WH-IND,BHO-01,KUR-05-EME-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00380
+TO-261101-007,38,WH-IND,BHO-01,KUR-05-EME-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00735
+TO-261101-007,39,WH-IND,BHO-01,KUR-05-TEA-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00327
+TO-261101-007,40,WH-IND,BHO-01,KUR-05-TEA-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00725
+TO-261101-007,41,WH-IND,BHO-01,KUR-06-EME-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00764
+TO-261101-007,42,WH-IND,BHO-01,KUR-06-EME-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00914
+TO-261101-007,43,WH-IND,BHO-01,KUR-06-EME-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00909
+TO-261101-007,44,WH-IND,BHO-01,KUR-06-MAR-L,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01037
+TO-261101-007,45,WH-IND,BHO-01,KUR-06-MAR-M,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00907
+TO-261101-007,46,WH-IND,BHO-01,KUR-06-MAR-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00923
+TO-261101-007,47,WH-IND,BHO-01,KUR-07-IVO-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00422
+TO-261101-007,48,WH-IND,BHO-01,KUR-07-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00850
+TO-261101-007,49,WH-IND,BHO-01,KUR-07-IVO-XL,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00293
+TO-261101-007,50,WH-IND,BHO-01,KUR-07-MAR-L,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00674
+TO-261101-007,51,WH-IND,BHO-01,KUR-07-MAR-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00856
+TO-261101-007,52,WH-IND,BHO-01,KUR-07-MAR-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00338
+TO-261101-007,53,WH-IND,BHO-01,KUR-07-MAR-XXL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00339
+TO-261101-007,54,WH-IND,BHO-01,KUR-08-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00824
+TO-261101-007,55,WH-IND,BHO-01,KUR-08-PEA-XL,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00312
+TO-261101-007,56,WH-IND,BHO-01,KUR-08-PEA-XXL,3,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01020
+TO-261101-007,57,WH-IND,BHO-01,KUR-08-ROS-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00481
+TO-261101-007,58,WH-IND,BHO-01,KUR-08-ROS-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00378
+TO-261101-007,59,WH-IND,BHO-01,LEH-01-NAV-L,13,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00049
+TO-261101-007,60,WH-IND,BHO-01,LEH-01-NAV-M,7,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00064
+TO-261101-007,61,WH-IND,BHO-01,LEH-01-NAV-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01109
+TO-261101-007,62,WH-IND,BHO-01,LEH-01-NAV-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00241
+TO-261101-007,63,WH-IND,BHO-01,LEH-01-PEA-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00153
+TO-261101-007,64,WH-IND,BHO-01,LEH-01-PEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01097
+TO-261101-007,65,WH-IND,BHO-01,LEH-01-PEA-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01113
+TO-261101-007,66,WH-IND,BHO-01,LEH-01-PEA-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00119
+TO-261101-007,67,WH-IND,BHO-01,LEH-02-EME-L,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00283
+TO-261101-007,68,WH-IND,BHO-01,LEH-02-EME-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00221
+TO-261101-007,69,WH-IND,BHO-01,LEH-02-EME-S,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00282
+TO-261101-007,70,WH-IND,BHO-01,LEH-02-MUS-M,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00216
+TO-261101-007,71,WH-IND,BHO-01,LEH-02-MUS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01127
+TO-261101-007,72,WH-IND,BHO-01,LEH-02-MUS-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00219
+TO-261101-007,73,WH-IND,BHO-01,LEH-03-ROS-S,1,2026-11-01,2026-11-03,Warehouse -> store,Complete broken size sets,M00591
+TO-261101-007,74,WH-IND,BHO-01,LEH-03-TEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00357
+TO-261101-007,75,WH-IND,BHO-01,LEH-03-TEA-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00354
+TO-261101-007,76,WH-IND,BHO-01,LEH-03-TEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00585
+TO-261101-007,77,WH-IND,BHO-01,LEH-04-IVO-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00203
+TO-261101-007,78,WH-IND,BHO-01,LEH-04-IVO-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00272
+TO-261101-007,79,WH-IND,BHO-01,LEH-04-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00364
+TO-261101-007,80,WH-IND,BHO-01,LEH-04-IVO-XL,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00370
+TO-261101-007,81,WH-IND,BHO-01,LEH-04-MUS-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00621
+TO-261101-007,82,WH-IND,BHO-01,NEH-01-ROS-M,8,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01006
+TO-261101-007,83,WH-IND,BHO-01,NEH-01-ROS-S,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01140
+TO-261101-007,84,WH-IND,BHO-01,NEH-01-ROS-XL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00571
+TO-261101-007,85,WH-IND,BHO-01,NEH-01-TEA-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00455
+TO-261101-007,86,WH-IND,BHO-01,NEH-01-TEA-M,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00501
+TO-261101-007,87,WH-IND,BHO-01,NEH-02-IVO-S,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00700
+TO-261101-007,88,WH-IND,BHO-01,NEH-02-PEA-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00301
+TO-261101-007,89,WH-IND,BHO-01,NEH-02-PEA-XXL,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01050
+TO-261101-007,90,WH-IND,BHO-01,NEH-03-IVO-M,18,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00170
+TO-261101-007,91,WH-IND,BHO-01,NEH-03-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00960
+TO-261101-007,92,WH-IND,BHO-01,NEH-03-IVO-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00970
+TO-261101-007,93,WH-IND,BHO-01,NEH-03-TEA-M,2,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01142
+TO-261101-007,94,WH-IND,BHO-01,NEH-04-IVO-M,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01171
+TO-261101-007,95,WH-IND,BHO-01,NEH-04-IVO-S,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00936
+TO-261101-007,96,WH-IND,BHO-01,NEH-04-IVO-XL,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00689
+TO-261101-007,97,WH-IND,BHO-01,NEH-04-IVO-XXL,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00548
+TO-261101-007,98,WH-IND,BHO-01,NEH-04-PEA-L,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00431
+TO-261101-007,99,WH-IND,BHO-01,NEH-04-PEA-M,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00686
+TO-261101-007,100,WH-IND,BHO-01,NEH-04-PEA-XL,1,2026-11-01,2026-11-03,Warehouse -> store,Complete broken size sets,M00945
+TO-261101-007,101,WH-IND,BHO-01,NEH-05-ROS-L,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00534
+TO-261101-007,102,WH-IND,BHO-01,NEH-05-ROS-S,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00538
+TO-261101-007,103,WH-IND,BHO-01,NEH-05-ROS-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00925
+TO-261101-007,104,WH-IND,BHO-01,NEH-05-TEA-M,11,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00251
+TO-261101-007,105,WH-IND,BHO-01,NEH-05-TEA-S,8,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00319
+TO-261101-007,106,WH-IND,BHO-01,NEH-05-TEA-XXL,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00927
+TO-261101-007,107,WH-IND,BHO-01,SHE-01-EME-38,1,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M01003
+TO-261101-007,108,WH-IND,BHO-01,SHE-01-EME-40,4,2026-11-01,2026-11-03,Warehouse -> store,Stock up for the peak ahead,M00991
+TO-261101-007,109,WH-IND,BHO-01,SHE-01-EME-42,4,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00085
+TO-261101-007,110,WH-IND,BHO-01,SHE-01-EME-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00173
+TO-261101-007,111,WH-IND,BHO-01,SHE-02-EME-38,6,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00078
+TO-261101-007,112,WH-IND,BHO-01,SHE-02-EME-42,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00096
+TO-261101-007,113,WH-IND,BHO-01,SHE-02-EME-46,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00250
+TO-261101-007,114,WH-IND,BHO-01,SHE-03-NAV-38,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00140
+TO-261101-007,115,WH-IND,BHO-01,SHE-03-NAV-44,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00209
+TO-261101-007,116,WH-IND,BHO-01,SHE-03-NAV-46,1,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00390
+TO-261101-007,117,WH-IND,BHO-01,SHE-04-MAR-44,3,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00164
+TO-261101-007,118,WH-IND,BHO-01,SHE-04-MAR-46,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00255
+TO-261101-007,119,WH-IND,BHO-01,SHE-05-PEA-42,5,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00133
+TO-261101-007,120,WH-IND,BHO-01,SHE-05-PEA-46,2,2026-11-01,2026-11-03,Warehouse -> store,Refill before it runs out,M00309
+TO-261101-008,1,WH-IND,PUN-01,DUP-01-TEA-FS,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00903
+TO-261101-008,2,WH-IND,PUN-01,DUP-02-MUS-FS,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00845
+TO-261101-008,3,WH-IND,PUN-01,DUP-03-MAR-FS,11,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00459
+TO-261101-008,4,WH-IND,PUN-01,DUP-03-ROS-FS,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00753
+TO-261101-008,5,WH-IND,PUN-01,JUT-01-TEA-7,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00841
+TO-261101-008,6,WH-IND,PUN-01,JUT-02-EME-10,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00951
+TO-261101-008,7,WH-IND,PUN-01,JUT-02-EME-6,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01190
+TO-261101-008,8,WH-IND,PUN-01,JUT-02-EME-8,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01175
+TO-261101-008,9,WH-IND,PUN-01,JUT-02-EME-9,16,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00336
+TO-261101-008,10,WH-IND,PUN-01,JUT-03-IVO-10,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00795
+TO-261101-008,11,WH-IND,PUN-01,JUT-03-IVO-8,9,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00434
+TO-261101-008,12,WH-IND,PUN-01,JUT-03-IVO-9,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00889
+TO-261101-008,13,WH-IND,PUN-01,KUR-01-EME-L,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00607
+TO-261101-008,14,WH-IND,PUN-01,KUR-01-EME-XL,6,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00265
+TO-261101-008,15,WH-IND,PUN-01,KUR-01-EME-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01036
+TO-261101-008,16,WH-IND,PUN-01,KUR-01-NAV-L,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01034
+TO-261101-008,17,WH-IND,PUN-01,KUR-01-NAV-M,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00612
+TO-261101-008,18,WH-IND,PUN-01,KUR-01-NAV-S,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01145
+TO-261101-008,19,WH-IND,PUN-01,KUR-01-NAV-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00817
+TO-261101-008,20,WH-IND,PUN-01,KUR-02-MUS-S,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00956
+TO-261101-008,21,WH-IND,PUN-01,KUR-02-MUS-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00802
+TO-261101-008,22,WH-IND,PUN-01,KUR-03-MUS-M,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00494
+TO-261101-008,23,WH-IND,PUN-01,KUR-03-MUS-S,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00497
+TO-261101-008,24,WH-IND,PUN-01,KUR-03-MUS-XL,4,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01013
+TO-261101-008,25,WH-IND,PUN-01,KUR-03-MUS-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00839
+TO-261101-008,26,WH-IND,PUN-01,KUR-03-NAV-L,13,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00137
+TO-261101-008,27,WH-IND,PUN-01,KUR-03-NAV-M,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01038
+TO-261101-008,28,WH-IND,PUN-01,KUR-03-NAV-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00831
+TO-261101-008,29,WH-IND,PUN-01,KUR-04-EME-L,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00750
+TO-261101-008,30,WH-IND,PUN-01,KUR-04-EME-XL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00748
+TO-261101-008,31,WH-IND,PUN-01,KUR-04-ROS-S,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00554
+TO-261101-008,32,WH-IND,PUN-01,KUR-04-ROS-XL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00556
+TO-261101-008,33,WH-IND,PUN-01,KUR-04-ROS-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00894
+TO-261101-008,34,WH-IND,PUN-01,KUR-05-EME-L,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00730
+TO-261101-008,35,WH-IND,PUN-01,KUR-05-EME-S,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00883
+TO-261101-008,36,WH-IND,PUN-01,KUR-05-EME-XL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00539
+TO-261101-008,37,WH-IND,PUN-01,KUR-05-EME-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00880
+TO-261101-008,38,WH-IND,PUN-01,KUR-05-TEA-XL,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00460
+TO-261101-008,39,WH-IND,PUN-01,KUR-05-TEA-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00875
+TO-261101-008,40,WH-IND,PUN-01,KUR-06-EME-M,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00637
+TO-261101-008,41,WH-IND,PUN-01,KUR-06-EME-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00915
+TO-261101-008,42,WH-IND,PUN-01,KUR-06-EME-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00910
+TO-261101-008,43,WH-IND,PUN-01,KUR-07-IVO-L,3,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01027
+TO-261101-008,44,WH-IND,PUN-01,KUR-07-IVO-M,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00519
+TO-261101-008,45,WH-IND,PUN-01,KUR-07-IVO-S,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00851
+TO-261101-008,46,WH-IND,PUN-01,KUR-07-IVO-XL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00677
+TO-261101-008,47,WH-IND,PUN-01,KUR-07-IVO-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00678
+TO-261101-008,48,WH-IND,PUN-01,KUR-07-MAR-S,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01159
+TO-261101-008,49,WH-IND,PUN-01,KUR-07-MAR-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01072
+TO-261101-008,50,WH-IND,PUN-01,KUR-08-PEA-M,11,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00146
+TO-261101-008,51,WH-IND,PUN-01,KUR-08-PEA-S,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01152
+TO-261101-008,52,WH-IND,PUN-01,KUR-08-ROS-S,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00635
+TO-261101-008,53,WH-IND,PUN-01,KUR-08-ROS-XL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00480
+TO-261101-008,54,WH-IND,PUN-01,KUR-08-ROS-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00632
+TO-261101-008,55,WH-IND,PUN-01,LEH-01-NAV-L,10,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00053
+TO-261101-008,56,WH-IND,PUN-01,LEH-01-NAV-M,6,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00074
+TO-261101-008,57,WH-IND,PUN-01,LEH-01-NAV-S,10,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00054
+TO-261101-008,58,WH-IND,PUN-01,LEH-01-NAV-XL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00242
+TO-261101-008,59,WH-IND,PUN-01,LEH-01-PEA-L,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00154
+TO-261101-008,60,WH-IND,PUN-01,LEH-01-PEA-S,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01112
+TO-261101-008,61,WH-IND,PUN-01,LEH-01-PEA-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01110
+TO-261101-008,62,WH-IND,PUN-01,LEH-02-EME-M,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00222
+TO-261101-008,63,WH-IND,PUN-01,LEH-02-EME-XL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00280
+TO-261101-008,64,WH-IND,PUN-01,LEH-02-MUS-L,3,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01002
+TO-261101-008,65,WH-IND,PUN-01,LEH-02-MUS-M,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00217
+TO-261101-008,66,WH-IND,PUN-01,LEH-02-MUS-XL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00281
+TO-261101-008,67,WH-IND,PUN-01,LEH-03-ROS-M,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00352
+TO-261101-008,68,WH-IND,PUN-01,LEH-03-TEA-L,6,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00129
+TO-261101-008,69,WH-IND,PUN-01,LEH-03-TEA-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00588
+TO-261101-008,70,WH-IND,PUN-01,LEH-04-IVO-M,8,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00105
+TO-261101-008,71,WH-IND,PUN-01,LEH-04-IVO-S,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00273
+TO-261101-008,72,WH-IND,PUN-01,LEH-04-MUS-L,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00369
+TO-261101-008,73,WH-IND,PUN-01,LEH-04-MUS-M,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00274
+TO-261101-008,74,WH-IND,PUN-01,LEH-04-MUS-S,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00374
+TO-261101-008,75,WH-IND,PUN-01,NEH-01-ROS-L,6,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00453
+TO-261101-008,76,WH-IND,PUN-01,NEH-01-ROS-S,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00800
+TO-261101-008,77,WH-IND,PUN-01,NEH-01-ROS-XL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00711
+TO-261101-008,78,WH-IND,PUN-01,NEH-01-ROS-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01178
+TO-261101-008,79,WH-IND,PUN-01,NEH-01-TEA-M,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00502
+TO-261101-008,80,WH-IND,PUN-01,NEH-01-TEA-XXL,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00712
+TO-261101-008,81,WH-IND,PUN-01,NEH-02-IVO-L,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00436
+TO-261101-008,82,WH-IND,PUN-01,NEH-02-IVO-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00868
+TO-261101-008,83,WH-IND,PUN-01,NEH-02-PEA-L,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00345
+TO-261101-008,84,WH-IND,PUN-01,NEH-02-PEA-S,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00863
+TO-261101-008,85,WH-IND,PUN-01,NEH-02-PEA-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00864
+TO-261101-008,86,WH-IND,PUN-01,NEH-02-PEA-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00696
+TO-261101-008,87,WH-IND,PUN-01,NEH-03-TEA-L,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00505
+TO-261101-008,88,WH-IND,PUN-01,NEH-03-TEA-M,1,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01183
+TO-261101-008,89,WH-IND,PUN-01,NEH-03-TEA-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00966
+TO-261101-008,90,WH-IND,PUN-01,NEH-04-IVO-L,8,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00335
+TO-261101-008,91,WH-IND,PUN-01,NEH-04-IVO-M,6,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00430
+TO-261101-008,92,WH-IND,PUN-01,NEH-04-IVO-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00787
+TO-261101-008,93,WH-IND,PUN-01,NEH-04-PEA-M,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01059
+TO-261101-008,94,WH-IND,PUN-01,NEH-04-PEA-S,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00941
+TO-261101-008,95,WH-IND,PUN-01,NEH-04-PEA-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Complete broken size sets,M00947
+TO-261101-008,96,WH-IND,PUN-01,NEH-04-PEA-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00789
+TO-261101-008,97,WH-IND,PUN-01,NEH-05-ROS-L,3,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00659
+TO-261101-008,98,WH-IND,PUN-01,NEH-05-ROS-M,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00779
+TO-261101-008,99,WH-IND,PUN-01,NEH-05-ROS-S,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00777
+TO-261101-008,100,WH-IND,PUN-01,NEH-05-ROS-XL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00930
+TO-261101-008,101,WH-IND,PUN-01,NEH-05-ROS-XXL,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00774
+TO-261101-008,102,WH-IND,PUN-01,NEH-05-TEA-L,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00475
+TO-261101-008,103,WH-IND,PUN-01,NEH-05-TEA-M,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00536
+TO-261101-008,104,WH-IND,PUN-01,NEH-05-TEA-XL,7,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00349
+TO-261101-008,105,WH-IND,PUN-01,NEH-05-TEA-XXL,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00928
+TO-261101-008,106,WH-IND,PUN-01,SHE-01-EME-40,8,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00052
+TO-261101-008,107,WH-IND,PUN-01,SHE-01-EME-44,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00320
+TO-261101-008,108,WH-IND,PUN-01,SHE-01-EME-46,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00178
+TO-261101-008,109,WH-IND,PUN-01,SHE-02-EME-38,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01099
+TO-261101-008,110,WH-IND,PUN-01,SHE-02-EME-40,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01100
+TO-261101-008,111,WH-IND,PUN-01,SHE-02-EME-42,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00097
+TO-261101-008,112,WH-IND,PUN-01,SHE-02-EME-44,7,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00071
+TO-261101-008,113,WH-IND,PUN-01,SHE-03-NAV-38,2,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00211
+TO-261101-008,114,WH-IND,PUN-01,SHE-03-NAV-42,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00082
+TO-261101-008,115,WH-IND,PUN-01,SHE-03-NAV-44,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00383
+TO-261101-008,116,WH-IND,PUN-01,SHE-03-NAV-46,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00084
+TO-261101-008,117,WH-IND,PUN-01,SHE-04-MAR-40,2,2026-11-01,2026-11-04,Warehouse -> store,Stock up for the peak ahead,M01102
+TO-261101-008,118,WH-IND,PUN-01,SHE-04-MAR-42,4,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00126
+TO-261101-008,119,WH-IND,PUN-01,SHE-05-PEA-42,5,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00135
+TO-261101-008,120,WH-IND,PUN-01,SHE-05-PEA-46,1,2026-11-01,2026-11-04,Warehouse -> store,Refill before it runs out,M00531
+TO-261101-009,1,WH-JAI,IND-01,JUT-02-EME-9,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01094
+TO-261101-009,2,WH-JAI,IND-01,JUT-03-IVO-8,2,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01162
+TO-261101-009,3,WH-JAI,IND-01,KUR-01-NAV-L,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00294
+TO-261101-009,4,WH-JAI,IND-01,KUR-03-MUS-L,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01070
+TO-261101-009,5,WH-JAI,IND-01,KUR-03-NAV-XXL,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00650
+TO-261101-009,6,WH-JAI,IND-01,KUR-04-EME-M,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00415
+TO-261101-009,7,WH-JAI,IND-01,KUR-07-MAR-M,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00849
+TO-261101-009,8,WH-JAI,IND-01,KUR-08-PEA-M,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00821
+TO-261101-009,9,WH-JAI,IND-01,LEH-02-EME-L,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00643
+TO-261101-009,10,WH-JAI,IND-01,LEH-02-EME-S,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00403
+TO-261101-009,11,WH-JAI,IND-01,LEH-02-EME-XL,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00181
+TO-261101-009,12,WH-JAI,IND-01,LEH-02-MUS-M,9,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00093
+TO-261101-009,13,WH-JAI,IND-01,LEH-03-TEA-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00587
+TO-261101-009,14,WH-JAI,IND-01,NEH-02-IVO-L,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00862
+TO-261101-009,15,WH-JAI,IND-01,NEH-03-IVO-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00962
+TO-261101-009,16,WH-JAI,IND-01,SHE-01-EME-44,7,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00056
+TO-261101-009,17,WH-JAI,IND-01,SHE-02-EME-44,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00442
+TO-261101-009,18,WH-JAI,IND-01,SHE-04-MAR-44,3,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00165
+TO-261101-010,1,WH-JAI,NAG-01,JUT-03-IVO-8,6,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00551
+TO-261101-010,2,WH-JAI,NAG-01,KUR-01-EME-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00815
+TO-261101-010,3,WH-JAI,NAG-01,KUR-01-NAV-L,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00814
+TO-261101-010,4,WH-JAI,NAG-01,KUR-02-MUS-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00959
+TO-261101-010,5,WH-JAI,NAG-01,KUR-03-MUS-L,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00648
+TO-261101-010,6,WH-JAI,NAG-01,KUR-04-EME-M,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00891
+TO-261101-010,7,WH-JAI,NAG-01,KUR-08-PEA-M,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01148
+TO-261101-010,8,WH-JAI,NAG-01,LEH-02-EME-L,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00406
+TO-261101-010,9,WH-JAI,NAG-01,LEH-02-EME-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00641
+TO-261101-010,10,WH-JAI,NAG-01,LEH-03-TEA-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00590
+TO-261101-010,11,WH-JAI,NAG-01,LEH-04-IVO-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00617
+TO-261101-010,12,WH-JAI,NAG-01,NEH-03-IVO-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00964
+TO-261101-010,13,WH-JAI,NAG-01,NEH-05-ROS-XXL,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01170
+TO-261101-010,14,WH-JAI,NAG-01,SHE-01-EME-44,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00068
+TO-261101-010,15,WH-JAI,NAG-01,SHE-02-EME-44,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00444
+TO-261101-010,16,WH-JAI,NAG-01,SHE-04-MAR-44,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00449
+TO-261101-011,1,WH-JAI,BHO-01,JUT-03-IVO-8,11,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00358
+TO-261101-011,2,WH-JAI,BHO-01,KUR-01-NAV-L,3,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00465
+TO-261101-011,3,WH-JAI,BHO-01,KUR-02-MUS-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00955
+TO-261101-011,4,WH-JAI,BHO-01,KUR-03-MUS-L,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00829
+TO-261101-011,5,WH-JAI,BHO-01,KUR-05-EME-XXL,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00736
+TO-261101-011,6,WH-JAI,BHO-01,KUR-07-MAR-XL,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00669
+TO-261101-011,7,WH-JAI,BHO-01,LEH-02-EME-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00642
+TO-261101-011,8,WH-JAI,BHO-01,LEH-02-MUS-M,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00400
+TO-261101-011,9,WH-JAI,BHO-01,NEH-03-IVO-S,3,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00720
+TO-261101-011,10,WH-JAI,BHO-01,NEH-05-ROS-XXL,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00773
+TO-261101-011,11,WH-JAI,BHO-01,SHE-01-EME-44,7,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00055
+TO-261101-011,12,WH-JAI,BHO-01,SHE-02-EME-38,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00445
+TO-261101-011,13,WH-JAI,BHO-01,SHE-03-NAV-44,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00381
+TO-261101-012,1,WH-JAI,PUN-01,JUT-02-EME-9,4,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00791
+TO-261101-012,2,WH-JAI,PUN-01,JUT-03-IVO-8,9,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00435
+TO-261101-012,3,WH-JAI,PUN-01,KUR-01-EME-XL,8,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00198
+TO-261101-012,4,WH-JAI,PUN-01,KUR-01-NAV-L,1,2026-11-01,2026-11-06,Warehouse -> store,Stock up for the peak ahead,M01065
+TO-261101-012,5,WH-JAI,PUN-01,KUR-02-MUS-S,1,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00957
+TO-261101-012,6,WH-JAI,PUN-01,KUR-07-MAR-XL,1,2026-11-01,2026-11-06,Warehouse -> store,Stock up for the peak ahead,M01073
+TO-261101-012,7,WH-JAI,PUN-01,KUR-08-PEA-M,3,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00479
+TO-261101-012,8,WH-JAI,PUN-01,LEH-02-EME-XL,4,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00218
+TO-261101-012,9,WH-JAI,PUN-01,LEH-02-MUS-M,2,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00401
+TO-261101-012,10,WH-JAI,PUN-01,LEH-04-IVO-S,1,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00615
+TO-261101-012,11,WH-JAI,PUN-01,NEH-05-ROS-XXL,4,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00537
+TO-261101-012,12,WH-JAI,PUN-01,SHE-01-EME-44,5,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00066
+TO-261101-012,13,WH-JAI,PUN-01,SHE-02-EME-44,2,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00245
+TO-261101-012,14,WH-JAI,PUN-01,SHE-03-NAV-44,1,2026-11-01,2026-11-06,Warehouse -> store,Refill before it runs out,M00384
+TO-261101-013,1,WH-JAI,IND-02,JUT-03-IVO-8,3,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01060
+TO-261101-013,2,WH-JAI,IND-02,KUR-01-EME-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01067
+TO-261101-013,3,WH-JAI,IND-02,KUR-01-NAV-L,3,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00466
+TO-261101-013,4,WH-JAI,IND-02,KUR-02-MUS-S,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00509
+TO-261101-013,5,WH-JAI,IND-02,KUR-04-EME-M,3,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00553
+TO-261101-013,6,WH-JAI,IND-02,KUR-05-TEA-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00872
+TO-261101-013,7,WH-JAI,IND-02,KUR-08-PEA-M,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00822
+TO-261101-013,8,WH-JAI,IND-02,NEH-03-IVO-S,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01182
+TO-261101-013,9,WH-JAI,IND-02,NEH-05-ROS-XXL,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00775
+TO-261101-013,10,WH-JAI,IND-02,SHE-01-EME-44,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00067
+TO-261101-013,11,WH-JAI,IND-02,SHE-02-EME-44,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00443
+TO-261101-013,12,WH-JAI,IND-02,SHE-04-MAR-44,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00447
+TO-261101-014,1,WH-IND,JAI-01,DUP-03-ROS-FS,12,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00433
+TO-261101-014,2,WH-IND,JAI-01,KUR-05-EME-M,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00874
+TO-261101-014,3,WH-IND,JAI-01,LEH-03-ROS-L,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00581
+TO-261101-014,4,WH-IND,JAI-01,NEH-03-IVO-M,3,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01052
+TO-261101-014,5,WH-IND,JAI-01,NEH-04-IVO-M,6,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00429
+TO-261101-014,6,WH-IND,JAI-01,SHE-03-NAV-38,5,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00083
+TO-261101-014,7,WH-IND,JAI-01,SHE-03-NAV-46,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00212
+TO-261101-014,8,WH-IND,JAI-01,SHE-04-MAR-46,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00450
+TO-261101-015,1,WH-IND,UDR-01,KUR-03-NAV-XL,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01071
+TO-261101-015,2,WH-IND,UDR-01,LEH-03-ROS-L,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00356
+TO-261101-015,3,WH-IND,UDR-01,NEH-03-IVO-M,2,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00796
+TO-261101-015,4,WH-IND,UDR-01,NEH-04-IVO-M,7,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00362
+TO-261101-015,5,WH-IND,UDR-01,SHE-03-NAV-38,1,2026-11-01,2026-11-05,Warehouse -> store,Stock up for the peak ahead,M01010
+TO-261101-015,6,WH-IND,UDR-01,SHE-04-MAR-46,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00452
+TO-261101-016,1,WH-IND,JAI-02,KUR-05-EME-S,1,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00884
+TO-261101-016,2,WH-IND,JAI-02,NEH-03-IVO-M,3,2026-11-01,2026-11-05,Warehouse -> store,Refill before it runs out,M00705
+TO-261101-017,1,PUN-01,IND-01,JUT-01-TEA-10,2,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00013
+TO-261101-017,2,PUN-01,IND-01,KUR-02-NAV-S,1,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00015
+TO-261101-017,3,PUN-01,IND-01,KUR-04-EME-M,2,2026-11-01,2026-11-06,Store -> store,Refill before it runs out,M00044
+TO-261101-017,4,PUN-01,IND-01,KUR-08-PEA-XXL,4,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00006
+TO-261101-017,5,PUN-01,IND-01,LEH-03-TEA-S,2,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00004
+TO-261101-017,6,PUN-01,IND-01,NEH-01-ROS-M,4,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00008
+TO-261101-017,7,PUN-01,IND-01,NEH-02-IVO-M,2,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00009
+TO-261101-017,8,PUN-01,IND-01,NEH-03-IVO-S,1,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00014
+TO-261101-018,1,IND-02,IND-01,KUR-07-IVO-M,3,2026-11-01,2026-11-02,Ageing stock,Old stock to faster-selling stores,M00007
+TO-261101-018,2,IND-02,IND-01,KUR-07-MAR-M,2,2026-11-01,2026-11-02,Store -> store,Refill before it runs out,M00043
+TO-261101-018,3,IND-02,IND-01,NEH-01-ROS-S,2,2026-11-01,2026-11-02,Ageing stock,Old stock to faster-selling stores,M00012
+TO-261101-019,1,NAG-01,JAI-01,DUP-03-ROS-FS,2,2026-11-01,2026-11-06,Store -> store,Refill before it runs out,M00045
+TO-261101-019,2,NAG-01,JAI-01,LEH-04-MUS-M,3,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00002
+TO-261101-020,1,JAI-02,JAI-01,SHE-03-NAV-46,1,2026-11-01,2026-11-02,Store -> store,Refill before it runs out,M00042
+TO-261101-021,1,JAI-01,JAI-OUT,KUR-09-EME-XL,1,2026-11-01,2026-11-02,Clearance to outlet,Clear end-of-season / dead stock,M00040
+TO-261101-021,2,JAI-01,JAI-OUT,KUR-09-MUS-L,11,2026-11-01,2026-11-02,Clearance to outlet,Clear end-of-season / dead stock,M00020
+TO-261101-021,3,JAI-01,JAI-OUT,LEH-05-EME-L,6,2026-11-01,2026-11-02,Clearance to outlet,Clear end-of-season / dead stock,M00019
+TO-261101-022,1,UDR-01,JAI-OUT,LEH-05-EME-M,7,2026-11-01,2026-11-03,Clearance to outlet,Clear end-of-season / dead stock,M00017
+TO-261101-022,2,UDR-01,JAI-OUT,LEH-05-EME-S,2,2026-11-01,2026-11-03,Clearance to outlet,Clear end-of-season / dead stock,M00035
+TO-261101-022,3,UDR-01,JAI-OUT,LEH-05-EME-XL,2,2026-11-01,2026-11-03,Clearance to outlet,Clear end-of-season / dead stock,M00036
+TO-261101-022,4,UDR-01,JAI-OUT,LEH-05-TEA-M,1,2026-11-01,2026-11-03,Clearance to outlet,Clear end-of-season / dead stock,M00039
+TO-261101-023,1,PUN-01,JAI-OUT,KUR-09-MUS-M,7,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00028
+TO-261101-023,2,PUN-01,JAI-OUT,KUR-09-MUS-XXL,7,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00029
+TO-261101-023,3,PUN-01,JAI-OUT,LEH-05-TEA-M,1,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00037
+TO-261101-023,4,PUN-01,JAI-OUT,LEH-05-TEA-S,4,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00025
+TO-261101-024,1,BHO-01,JAI-OUT,LEH-05-EME-XL,7,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00018
+TO-261101-024,2,BHO-01,JAI-OUT,LEH-05-TEA-S,5,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00021
+TO-261101-025,1,IND-01,JAI-OUT,LEH-05-EME-S,7,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00016
+TO-261101-025,2,IND-01,JAI-OUT,LEH-05-TEA-S,5,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00023
+TO-261101-026,1,IND-02,JAI-OUT,KUR-09-EME-S,1,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00041
+TO-261101-026,2,IND-02,JAI-OUT,KUR-09-EME-XL,9,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00024
+TO-261101-026,3,IND-02,JAI-OUT,LEH-05-TEA-L,3,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00032
+TO-261101-026,4,IND-02,JAI-OUT,LEH-05-TEA-M,3,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00031
+TO-261101-026,5,IND-02,JAI-OUT,LEH-05-TEA-XL,1,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00038
+TO-261101-027,1,JAI-02,JAI-OUT,KUR-09-EME-L,4,2026-11-01,2026-11-02,Clearance to outlet,Clear end-of-season / dead stock,M00034
+TO-261101-027,2,JAI-02,JAI-OUT,KUR-09-MUS-L,6,2026-11-01,2026-11-02,Clearance to outlet,Clear end-of-season / dead stock,M00030
+TO-261101-027,3,JAI-02,JAI-OUT,LEH-05-TEA-L,5,2026-11-01,2026-11-02,Clearance to outlet,Clear end-of-season / dead stock,M00022
+TO-261101-028,1,PUN-01,NAG-01,NEH-01-ROS-M,8,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00003
+TO-261101-028,2,PUN-01,NAG-01,NEH-02-IVO-M,2,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00011
+TO-261101-029,1,NAG-01,JAI-OUT,KUR-09-MUS-M,5,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00033
+TO-261101-029,2,NAG-01,JAI-OUT,LEH-05-EME-S,4,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00027
+TO-261101-029,3,NAG-01,JAI-OUT,LEH-05-TEA-M,4,2026-11-01,2026-11-06,Clearance to outlet,Clear end-of-season / dead stock,M00026
+TO-261101-030,1,UDR-01,IND-01,LEH-02-EME-S,4,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00001
+TO-261101-031,1,PUN-01,UDR-01,LEH-03-TEA-S,2,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00005
+TO-261101-031,2,PUN-01,UDR-01,NEH-02-IVO-M,2,2026-11-01,2026-11-06,Ageing stock,Old stock to faster-selling stores,M00010
