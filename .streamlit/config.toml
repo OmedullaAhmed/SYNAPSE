@@ -1,8 +1,15 @@
-# StockFlow AI theme, customized for Manyavar (palette from manyavar.com).
-# Streamlit Community Cloud reads this file (repo root); keep it identical to stock_mover/.streamlit/config.toml.
 [theme]
 base = "light"
-primaryColor = "#E04E1C"
-backgroundColor = "#FFFBF2"
-secondaryBackgroundColor = "#FFF3DD"
-textColor = "#222222"
+primaryColor = "#1E5C61"
+backgroundColor = "#F6F5F1"
+secondaryBackgroundColor = "#E4EFEE"
+textColor = "#17212B"
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+maxUploadSize = 400
+
+[browser]
+gatherUsageStats = false
