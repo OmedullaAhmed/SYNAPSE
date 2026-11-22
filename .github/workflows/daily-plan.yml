@@ -4,9 +4,11 @@
 #   STOCKFLOW_AUTOMATION_REMOTE_DIR    (or SOURCE=url with STOCKFLOW_AUTOMATION_URLS='["https://…"]' and STOCKFLOW_AUTOMATION_TOKEN)
 # Optional ERP pick-up: STOCKFLOW_ERP_CHANNEL, STOCKFLOW_ERP_EVENTS_URL, STOCKFLOW_ERP_TOKEN
 name: Daily stock plan
+# PAUSED: the schedule is switched off. Runs only when started by hand (Actions -> Daily stock plan -> Run workflow).
+# To resume every morning at 06:30 IST, put back:
+#   schedule:
+#     - cron: "0 1 * * *"
 on:
-  schedule:
-    - cron: "0 1 * * *"        # 06:30 IST
   workflow_dispatch: {}
 jobs:
   plan:
