@@ -48,6 +48,33 @@ def save_plan(R, plan_id, label, user, source, pack=None, cfg=None):
                         "approved_qty": mv.qty.astype(int)})
     for i in range(0, len(rec), 5000):
         db.insert_rows("recommendations", rec.iloc[i:i + 5000])
+    if len(trips):                                   # trips and transfer-order lines: release works without the plan in memory
+        tt = pd.DataFrame({"plan_id": plan_id, "to_number": trips.to_number, "from_id": trips.from_id, "to_id": trips.to_id,
+                           "dispatch": pd.to_datetime(trips.dispatch).dt.strftime("%Y-%m-%d"),
+                           "arrives": pd.to_datetime(trips.arrives).dt.strftime("%Y-%m-%d"), "lines": trips.lines.astype(int),
+                           "pieces": trips.pieces.astype(int), "value_mrp": trips.value_mrp.astype(float),
+                           "net_benefit": trips.net_benefit.astype(float), "urgent": trips.urgent.astype(int),
+                           "needs_approval": trips.needs_approval.astype(bool), "main_group": trips.main_group, "reason": trips.reason})
+        db.insert_rows("plan_trips", tt)
+    o = R.get("orders")
+    if o is not None and len(o):
+        cols = ["to_number", "line_no", "from_location", "to_location", "sku_id", "qty", "ship_date", "expected_receipt", "move_type",
+                "reason_group", "move_id"]
+        oo = o[[c for c in cols if c in o]].copy().assign(plan_id=plan_id)
+        for c in ("ship_date", "expected_receipt"):
+            if c in oo:
+                oo[c] = pd.to_datetime(oo[c]).dt.strftime("%Y-%m-%d")
+        for i in range(0, len(oo), 5000):
+            db.insert_rows("plan_orders", oo.iloc[i:i + 5000])
+
+
+def trips_of(plan_id):
+    return db.read("plan_trips", {"plan_id": plan_id})
+
+
+def orders_of(plan_id):
+    o = db.read("plan_orders", {"plan_id": plan_id})
+    return o.drop(columns=["id", "plan_id"], errors="ignore").sort_values(["to_number", "line_no"]) if len(o) else o
 
 
 def recent(limit=15, user=None):

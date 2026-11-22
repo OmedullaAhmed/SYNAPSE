@@ -1150,6 +1150,9 @@ with T[3]:
                                                                                                    if str(k_).startswith("ap_") and st.session_state[k_])))
                 st.session_state.released = orders.copy()
                 st.session_state.wa_sent = False
+                import webhooks
+                webhooks.emit("trips.released", {"plan_id": PLAN_ID, "to_numbers": sorted(orders.to_number.unique()),
+                                                 "pieces": int(orders.qty.sum())})
                 st.success(f"Released {orders.to_number.nunique()} transfer orders. Record receipts on the Track tab.")
                 if erp_on():
                     ok_, m_ = erp.export_orders(orders, PLAN_ID, USER, SECRETS)
@@ -1707,6 +1710,8 @@ def release_trips(numbers, where):
         log("erp.export", PLAN_ID, ok=ok, orders=int(o.to_number.nunique()), message=m[:200])
         msg += " " + m
     st.session_state.released = o.copy()
+    import webhooks
+    webhooks.emit("trips.released", {"plan_id": PLAN_ID, "to_numbers": sorted(o.to_number.unique()), "pieces": int(o.qty.sum())})
     return True, msg
 
 
@@ -1965,6 +1970,52 @@ if "Integrations" in TABS:
                     st.success("Saved.")
         st.markdown("Schedule it with the included GitHub Actions workflow (`.github/workflows/daily-plan.yml`), with cron "
                     "(`30 6 * * * cd stock_mover && python daily.py`), or Windows Task Scheduler (`run_daily.ps1`).")
+        sec("API keys and webhooks")
+        st.caption("API keys let another system (WMS, ERP, BI) use the StockFlow API with a role. The key is shown once; only a hash is "
+                   "stored. API documentation: /api/docs on the API server.")
+        with st.form("apikey", clear_on_submit=True):
+            a, b, c = st.columns([2, 1, 2])
+            kn = a.text_input("Key name (e.g. WMS robot)")
+            kr = b.selectbox("Role", ["viewer", "store", "approver"])
+            ks = c.text_input("Limit to locations (comma separated, optional)")
+            if st.form_submit_button("Create API key") and kn.strip():
+                import api as _api
+                raw = _api.make_api_key(kn.strip(), kr, ks.strip(), USER)
+                st.success("Copy this key now; it will not be shown again.")
+                st.code(raw, language=None)
+        try:
+            ks_ = db.read("api_keys")
+        except Exception:  # noqa: BLE001
+            ks_ = pd.DataFrame()
+        if len(ks_):
+            st.dataframe(ks_.drop(columns=["hash"]), hide_index=True, width="stretch")
+            kill = st.selectbox("Revoke a key", [""] + list(ks_[ks_.active.astype(bool)].key_id), key="kill_key")
+            if kill and st.button(f"Revoke {kill}", key="kill_btn"):
+                db.update_rows("api_keys", {"key_id": kill}, {"active": False})
+                log("apikey.revoke", kill)
+                st.rerun()
+        import webhooks as _wh
+        subs = _wh.subscriptions()
+        wtxt = st.text_area("Webhooks: one per line as  URL | events (comma separated, blank = all) | signing secret",
+                            "\n".join(f"{s_['url']} | {','.join(s_['events'])} | {'••••' if s_.get('secret') else ''}" for s_ in subs),
+                            help="Events: " + ", ".join(_wh.EVENTS) + ". Payloads are signed: X-StockFlow-Signature = sha256 HMAC.")
+        if st.button("Save webhooks", key="wh_save"):
+            new_ = []
+            for ln in [x for x in wtxt.splitlines() if x.strip()]:
+                parts = [p_.strip() for p_ in ln.split("|")] + ["", ""]
+                old_ = next((s_ for s_ in subs if s_["url"] == parts[0]), {})
+                new_.append(dict(url=parts[0], events=[e_.strip() for e_ in parts[1].split(",") if e_.strip()],
+                                 secret=old_.get("secret", "") if parts[2] == "••••" else parts[2]))
+            try:
+                _wh.save_subscriptions(new_, USER)
+                log("webhooks.set", "webhooks", count=len(new_))
+                st.success(f"Saved {len(new_)} webhooks.")
+            except ValueError as e_:
+                st.error(str(e_))
+        wl = _wh.log(50)
+        if wl is not None and len(wl):
+            with st.expander(f"Webhook deliveries ({len(wl)})"):
+                st.dataframe(wl, hide_index=True, width="stretch")
         sec("Reading stock from images")
         av = dict(db.get_setting("ai_vision", {}) or {})
         has_key = bool(os.environ.get("ANTHROPIC_API_KEY")) or bool(secret("ANTHROPIC_API_KEY"))

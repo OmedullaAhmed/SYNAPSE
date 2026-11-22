@@ -103,6 +103,22 @@ T["stock_counts"] = Table("stock_counts", md, Column("id", Integer, primary_key=
                           Column("counted_at", DateTime), Column("by", String(80)), Column("method", String(40)), Column("source", String(300)),
                           Column("confidence", Float), Column("scope", String(10)), Column("note", Text))
 
+T["plan_trips"] = Table("plan_trips", md, Column("plan_id", String(40), primary_key=True), Column("to_number", String(30), primary_key=True),
+                        Column("from_id", String(40)), Column("to_id", String(40)), Column("dispatch", String(10)), Column("arrives", String(10)),
+                        Column("lines", Integer), Column("pieces", Integer), Column("value_mrp", Float), Column("net_benefit", Float),
+                        Column("urgent", Integer), Column("needs_approval", Boolean), Column("main_group", String(60)), Column("reason", Text))
+T["plan_orders"] = Table("plan_orders", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("plan_id", String(40)),
+                         Column("to_number", String(30)), Column("line_no", Integer), Column("from_location", String(40)),
+                         Column("to_location", String(40)), Column("sku_id", String(80)), Column("qty", Integer), Column("ship_date", String(10)),
+                         Column("expected_receipt", String(10)), Column("move_type", String(40)), Column("reason_group", String(60)),
+                         Column("move_id", String(12)))
+T["api_keys"] = Table("api_keys", md, Column("key_id", String(20), primary_key=True), Column("hash", String(128)), Column("name", String(120)),
+                      Column("role", String(20)), Column("stores", Text, default=""), Column("created_by", String(80)),
+                      Column("created_at", DateTime), Column("last_used", DateTime), Column("active", Boolean, default=True))
+T["webhook_log"] = Table("webhook_log", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("at", DateTime),
+                         Column("event", String(60)), Column("url", String(300)), Column("status", String(12)), Column("code", Integer),
+                         Column("error", Text), Column("attempts", Integer))
+
 _ENGINE = None
 _URL = None
 

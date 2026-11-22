@@ -73,6 +73,13 @@ def record(items, source, close_missing=True, user="system"):
                             owner="", source=source))
     if new:
         db.insert_rows("exceptions", new)
+        try:
+            import webhooks
+            for n in new:
+                if n["severity"] == "high":
+                    webhooks.emit("exception.opened", {k: n[k] for k in ("key", "kind", "severity", "region", "location", "title", "value")})
+        except Exception:  # noqa: BLE001
+            pass
     closed = 0
     if close_missing:
         for k, r in by_key.items():

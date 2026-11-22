@@ -128,6 +128,12 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
         audit.log("plan.build", plan_id, dict(data=label[:80], trips=len(R["trips"]), lines=len(R["moves"]), source=kind,
                                               net=round(float(R["opportunity"]["net"])), stored_inputs=pack is not None or kind == "demo",
                                               data_issues=len(rep["issues"]) if rep else 0), user, role)
+        try:
+            import webhooks
+            webhooks.emit("plan.ready", {"plan_id": plan_id, "plan_date": f"{R['pl'].run:%Y-%m-%d}", "trips": len(R["trips"]),
+                                         "pieces": int(R["moves"].qty.sum()), "source": kind})
+        except Exception:  # noqa: BLE001
+            pass
         say("Done", 1.0)
         return dict(R=R, plan_id=plan_id, report=rep, save_error=save_error)
     finally:
