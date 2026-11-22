@@ -201,9 +201,19 @@ def load(source, cfg):
     st.loc[st.capacity_units <= 0, "capacity_units"] = INF
     _date(st, "opened_on")
     it = D["items"]
-    for c in ("colour", "fit", "launch_date", "season_end", "is_core_style", "is_non_product", "cost_price"):
+    for c in ("colour", "fit", "launch_date", "season_end", "is_core_style", "is_non_product", "cost_price", "size"):
         if c not in it:
             it[c] = ""
+    # goods without styles or names (electronics, grocery, spares): each SKU is its own product family
+    if "style_id" not in it:
+        it["style_id"] = it.sku_id
+    it["style_id"] = it.style_id.where(it.style_id != "", it.sku_id)
+    if "style_name" not in it:
+        it["style_name"] = it.style_id
+    it["style_name"] = it.style_name.where(it.style_name != "", it.style_id)
+    if "category" not in it:
+        it["category"] = "All"
+    it["category"] = it.category.where(it.category != "", "All")
     _num(it, "mrp", "items", default=0, as_int=False)
     it["cost_price"] = pd.to_numeric(it.cost_price.replace("", np.nan), errors="coerce")
     _num(it, "is_non_product", "items", default=0)
@@ -218,13 +228,15 @@ def load(source, cfg):
     if "net_value" in s:
         _num(s, "net_value", "sales", default=0, as_int=False)
     sn = D["stock_snapshot"]
-    for c, d in (("in_transit", 0), ("oldest_stock_received_on", ""), ("stock_status", ""), ("in_transit_arrives_on", "")):
+    for c, d in (("in_transit", 0), ("oldest_stock_received_on", ""), ("stock_status", ""), ("in_transit_arrives_on", ""),
+                 ("expiry_date", "")):
         if c not in sn:
             sn[c] = d
     _date(sn, "as_of_date")
     _num(sn, "on_hand", "stock_snapshot")
     _num(sn, "in_transit", "stock_snapshot", default=0)
     _date(sn, "oldest_stock_received_on")
+    _date(sn, "expiry_date")
     if "stock_weekly" in D:
         w = D["stock_weekly"]
         _date(w, "week_ending")
@@ -383,6 +395,11 @@ def prep(D, cfg):
     snap = snap[~bad_loc & snap.sku_id.isin(items.index)].copy()
     sellable = {x.lower() for x in cfg["stock_status"]["sellable"]}
     snap["ok"] = snap.stock_status.str.lower().isin(sellable)
+    if "expiry_date" in snap and snap.expiry_date.notna().any():     # expired units are never sold or moved
+        expired = snap.ok & snap.expiry_date.notna() & (snap.expiry_date <= today)
+        if expired.any():
+            snap.loc[expired, "stock_status"] = "expired"
+            snap.loc[expired, "ok"] = False
     held = snap[~snap.ok]
     nonsell = pd.DataFrame()
     if len(held):
@@ -394,7 +411,7 @@ def prep(D, cfg):
                   "Not counted as stock and never moved. Clear alterations/QC so it can sell.", "Medium", grp.value.sum())
     sn = snap[snap.ok].groupby(["location_id", "sku_id"]).agg(
         on_hand=("on_hand", "sum"), in_transit=("in_transit", "sum"),
-        oldest=("oldest_stock_received_on", "min")).reset_index()
+        oldest=("oldest_stock_received_on", "min"), expiry=("expiry_date", "min")).reset_index()
     tr_other = snap[~snap.ok].groupby(["location_id", "sku_id"]).in_transit.sum()   # transit is transit whatever the row
     sn = sn.set_index(["location_id", "sku_id"])
     sn["in_transit"] = sn.in_transit.add(tr_other, fill_value=0).reindex(sn.index).fillna(sn.in_transit)
@@ -420,7 +437,16 @@ def prep(D, cfg):
     sn.loc[neg, "suspect"] = True
     sn["oh"] = sn.oh.astype(int)
     sn["age"] = (today - sn.oldest).dt.days
-    if sn.oldest.isna().all():
+    if sn.expiry.notna().any():                                      # close to expiry = old stock: move it to faster stores
+        left = (sn.expiry - today).dt.days
+        soon = left.notna() & (left <= cfg["ageing"]["expiry_window_days"]) & (sn.oh > 0)
+        sn.loc[soon, "age"] = np.maximum(sn.loc[soon, "age"].fillna(0), cfg["ageing"]["age_days"])
+        for loc_id, grp in sn[soon].assign(value=lambda d: d.oh * d.sku_id.map(items.mrp)).groupby("location_id"):
+            issue("Expiring soon", loc_id, ", ".join(grp.sku_id.head(5)),
+                  f"{int(grp.oh.sum())} units of {len(grp)} SKUs expire within {cfg['ageing']['expiry_window_days']} days "
+                  f"({money(grp.value.sum(), cfg)} at MRP)", "Treated as old stock: sent to faster-selling stores where they sell in time.",
+                  "Medium", grp.value.sum())
+    if sn.oldest.isna().all() and sn.expiry.isna().all():
         issue("Stock age missing", "", "", "No oldest_stock_received_on dates", "Ageing moves and pull-backs are switched off", "Medium")
 
     if "opened_on" in stores:

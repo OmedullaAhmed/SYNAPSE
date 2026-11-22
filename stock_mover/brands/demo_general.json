@@ -1,0 +1,8 @@
+{
+  "_profile": "Demo Mart (fictional general retailer, demo data only).",
+  "brand": {"name": "Demo Mart", "primary_color": "#1F5C8A"},
+  "planning": {"cover_days": 21, "donor_min_cover": 21, "tier_order": ["A", "B", "C"]},
+  "ageing": {"age_days": 90, "sell_within": 30, "pullback_cover": 120, "expiry_window_days": 30},
+  "season": {"peak_label": "weekend", "event_label": "festival sale week"},
+  "economics": {"handling_per_unit": 8, "markdown_per_month": 0.03, "default_cost_ratio": 0.65}
+}

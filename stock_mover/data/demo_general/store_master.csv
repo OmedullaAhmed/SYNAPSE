@@ -1,0 +1,11 @@
+store_id,city,region,zone,tier,capacity_units,store_type,manager_id
+KOL-01,Kolkata,West Bengal,East,A,6000,store,RM-EAST
+KOL-02,Kolkata,West Bengal,East,B,3500,store,RM-EAST
+SIL-01,Siliguri,West Bengal,East,C,2200,store,RM-EAST
+BBS-01,Bhubaneswar,Odisha,East,B,3200,store,RM-EAST
+PAT-01,Patna,Bihar,East,B,3000,store,RM-EAST
+RAN-01,Ranchi,Jharkhand,East,C,2200,store,RM-EAST
+DEL-01,Delhi,Delhi NCR,North,A,6500,store,RM-NORTH
+GGN-01,Gurugram,Delhi NCR,North,A,5000,store,RM-NORTH
+LKO-01,Lucknow,Uttar Pradesh,North,B,3200,store,RM-NORTH
+JAI-01,Jaipur,Rajasthan,North,C,2400,store,RM-NORTH

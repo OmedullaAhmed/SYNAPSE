@@ -37,7 +37,7 @@ SYN = {
                "variant sku", "variant id", "material", "material code", "product code", "item sku"],
     "style_id": ["style", "style code", "style no", "design", "design code", "design no", "parent sku", "product id", "article no",
                  "model", "model no", "generic article"],
-    "style_name": ["style name", "design name", "product name", "item name", "item description", "description", "title", "product title",
+    "style_name": ["style name", "design name", "product name", "name", "item name", "item description", "description", "title", "product title",
                    "article name"],
     "category": ["category", "product type", "department", "dept", "class", "sub category", "subcategory", "product category",
                  "merchandise category", "item group", "group"],
@@ -59,6 +59,7 @@ SYN = {
                 "stock qty", "balance qty", "physical stock", "inventory", "stock"],
     "in_transit": ["in transit", "transit qty", "git", "goods in transit", "intransit"],
     "oldest_stock_received_on": ["oldest received", "first grn date", "grn date", "received on", "inward date", "oldest stock date"],
+    "expiry_date": ["expiry", "expiry date", "exp date", "best before", "use by", "batch expiry", "expiry dt"],
     "stock_status": ["status", "stock status", "stock type", "bin status", "condition"],
     "city": ["city", "town"],
     "region": ["region", "state", "province"],
@@ -75,7 +76,8 @@ RETURN_WORDS = {"return", "returned", "refund", "sales return", "rtn", "credit n
 RETURN_COLS = ["type", "transaction type", "txn type", "line type", "doc type", "bill type", "is return", "return flag"]
 
 ID_COLS = {"store_id", "location_id", "warehouse_id", "sku_id", "style_id", "manager_id", "home_warehouse", "to_id", "from_id"}
-DATE_COLS = {"date", "as_of_date", "expected_date", "week_ending", "launch_date", "season_end", "oldest_stock_received_on", "opened_on"}
+DATE_COLS = {"date", "as_of_date", "expected_date", "week_ending", "launch_date", "season_end", "oldest_stock_received_on", "opened_on",
+             "expiry_date"}
 NUM_COLS = {"qty", "net_value", "on_hand", "in_transit", "mrp", "cost_price", "capacity_units", "days_in_stock", "closing_on_hand",
             "lead_days", "cost_per_unit", "cost_per_trip", "min_display_units"}
 MASTER = {"stores", "warehouses", "items", "calendar", "lanes", "min_display", "protected_styles", "size_sets", "managers"}

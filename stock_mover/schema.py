@@ -43,6 +43,7 @@ DEFAULTS = {
         "pullback_max_share_of_stock": 0.05,  # and never more than 5% of a store's pieces at once
         "pullback_max_value_per_store": 150000,  # and never more than this much (at MRP) per store per run
         "eoss_window_days": 21,            # within this many days of season end, stop refilling past the end
+        "expiry_window_days": 30,          # stock expiring within this many days is treated as old: moved to faster stores
     },
     "economics": {
         "default_discount": 0.05,          # average discount off MRP when sales value is not given
@@ -136,21 +137,23 @@ TABLES = {
         ("zone", OPT, "Zone", "North"),
         ("whatsapp", OPT, "Warehouse WhatsApp number: gets the day's pick list when trips are released", "+91 98xxxxxx20"),
     ], {"location_id": "warehouse_id"}),
-    "items": (R, "One row per SKU (style + colour + size).", [
-        ("sku_id", R, "SKU code", "KRT-014-MAR-L"),
-        ("style_id", R, "Design code, shared by all its sizes and colours", "KRT-014"),
-        ("style_name", R, "Design name", "Silk Kurta Set"),
-        ("category", R, "Category (any labels)", "Kurta Set"),
-        ("size", R, "Size label", "L"),
-        ("mrp", R, "Tag price incl. tax", "4999"),
-        ("cost_price", REC, "Landed cost per piece; needed for true margins", "1850"),
-        ("colour", REC, "Colour; a style in one colour is one 'option' for size sets", "Maroon"),
-        ("fit", OPT, "Fit or cut", "Regular"),
+    "items": (R, "One row per SKU (product master). Apparel: one SKU per style + colour + size; other goods: one per product or variant.", [
+        ("sku_id", R, "SKU / item code", "KRT-014-MAR-L"),
+        ("style_id", REC, "Product family shared by variants (style, model, parent SKU); default = the SKU itself", "KRT-014"),
+        ("style_name", REC, "Product name; default = the SKU code", "Silk Kurta Set"),
+        ("category", REC, "Category (any labels); default = 'All'", "Kurta Set"),
+        ("size", OPT, "Size or pack variant; leave out for goods without sizes", "L"),
+        ("mrp", R, "Selling price incl. tax (MRP / retail price)", "4999"),
+        ("cost_price", REC, "Landed cost per unit; needed for true margins", "1850"),
+        ("colour", OPT, "Colour; for apparel a style in one colour is one 'option' for size sets", "Maroon"),
+        ("fit", OPT, "Fit or cut (apparel)", "Regular"),
         ("launch_date", OPT, "First sale date; not-yet-launched SKUs get no demand", "2026-08-01"),
-        ("season_end", OPT, "Last selling day of the season for this style (YYYY-MM-DD)", "2027-02-28"),
+        ("season_end", OPT, "Last selling day of the season or model (YYYY-MM-DD)", "2027-02-28"),
         ("is_core_style", OPT, "1 = replenished all year", "1"),
-        ("is_non_product", OPT, "1 = bag, hanger, gift box (ignored)", "0"),
-    ], {"color": "colour", "is_packaging": "is_non_product"}),
+        ("is_non_product", OPT, "1 = bag, hanger, gift box, packaging (ignored)", "0"),
+    ], {"color": "colour", "is_packaging": "is_non_product", "product_name": "style_name", "name": "style_name",
+        "item_name": "style_name", "description": "style_name", "product_id": "style_id", "parent_sku": "style_id",
+        "model": "style_id", "variant": "size", "pack_size": "size", "price": "mrp", "retail_price": "mrp", "cost": "cost_price"}),
     "sales": (R, "Sales lines. Alternative: bills + bill_lines (joined on bill_id). Last 12+ weeks; a year or more for season effects.", [
         ("date", R, "Sale date", "2026-10-30"),
         ("store_id", R, "Store", "DEL-01"),
@@ -166,7 +169,8 @@ TABLES = {
         ("in_transit", REC, "Pieces already shipped to this location", "0"),
         ("oldest_stock_received_on", REC, "When the oldest piece arrived; drives ageing", "2026-05-12"),
         ("stock_status", OPT, "sellable / damaged / alteration / return_qc… (one row per status)", "sellable"),
-    ], {}),
+        ("expiry_date", OPT, "Earliest expiry of these units (food, pharma, cosmetics); expired stock is never moved", "2027-01-15"),
+    ], {"batch_expiry": "expiry_date", "best_before": "expiry_date", "exp_date": "expiry_date"}),
     "stock_weekly": (REC, "Weekly in-stock record. Lets the plan tell 'no demand' from 'no stock' (hidden stockouts).", [
         ("week_ending", R, "Week end date", "2026-10-31"),
         ("store_id", R, "Store", "DEL-01"),

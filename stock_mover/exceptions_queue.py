@@ -18,7 +18,8 @@ import db
 KINDS = {"data": "Data quality", "plan": "Stock data", "transfer": "Transfer discrepancy"}
 # planner findings that are data problems someone has to fix at source (the rest are insights, not exceptions)
 PLAN_KINDS = {"Stock records disagree": "high", "Negative stock": "high", "Unknown location": "high", "Cost price missing": "medium",
-              "Stock age missing": "medium", "Non-sellable stock": "low", "Over capacity": "medium", "Warehouse shortfall": "medium"}
+              "Stock age missing": "medium", "Non-sellable stock": "low", "Over capacity": "medium", "Warehouse shortfall": "medium",
+              "Expiring soon": "high"}
 TRANSFER_STATES = {"Late leaving": "medium", "Late arriving": "high", "Received short": "high", "Received over": "medium"}
 SEV_ORDER = {"high": 0, "medium": 1, "low": 2}
 

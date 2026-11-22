@@ -1,0 +1,8 @@
+{
+  "_profile": "General retail: mixed goods, no sizes. Weekly peaks and sale events.",
+  "brand": {"name": "Your Company", "primary_color": "#2F5D62"},
+  "planning": {"cover_days": 21, "donor_min_cover": 21},
+  "ageing": {"age_days": 90, "sell_within": 30, "pullback_cover": 120, "expiry_window_days": 30},
+  "season": {"peak_label": "weekend", "event_label": "sale week"},
+  "economics": {"handling_per_unit": 8, "markdown_per_month": 0.03, "default_cost_ratio": 0.65}
+}

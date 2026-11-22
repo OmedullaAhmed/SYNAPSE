@@ -1,0 +1,8 @@
+{
+  "_profile": "Electronics and appliances: high value, slow movers, model changes. Moves only when clearly worth the freight.",
+  "brand": {"name": "Your Company", "primary_color": "#1F5C8A"},
+  "planning": {"cover_days": 30, "donor_min_cover": 30, "approval_value": 200000, "trip_approval_value": 1000000},
+  "ageing": {"age_days": 120, "sell_within": 45, "pullback_cover": 150, "pullback_max_value_per_store": 500000},
+  "season": {"peak_label": "sale day", "event_label": "festival sale week"},
+  "economics": {"handling_per_unit": 60, "markdown_per_month": 0.03, "default_cost_ratio": 0.78, "min_trip_units": 2}
+}

@@ -36,10 +36,15 @@ import safety
 import schema
 
 HERE = Path(__file__).parent
-BRANDS = sorted((HERE / "brands").glob("*.json"))
+BRANDS = sorted(b for b in (HERE / "brands").glob("*.json") if not b.stem.startswith("demo"))
 DEMO = HERE / "data" / "demo"
+DEMO2 = HERE / "data" / "demo_general"
+PROFILE_NAMES = {"apparel": "Apparel, footwear & ethnic wear", "general_retail": "General retail (mixed goods)",
+                 "electronics": "Electronics & appliances", "grocery_fmcg": "Grocery / FMCG (expiry-aware)",
+                 "pharmacy": "Pharmacy & health (expiry-critical)", "spare_parts": "Spare parts & hardware",
+                 "sample_ethnic_chain": "Sample ethnic-wear chain (hackathon data)"}
 IN_BROWSER = sys.platform == "emscripten"   # running as a static web page (stlite): no server, no file downloads
-st.set_page_config(page_title="StockFlow · stock planning for apparel retail", page_icon="📦", layout="wide",
+st.set_page_config(page_title="StockFlow · stock planning for stores and warehouses", page_icon="📦", layout="wide",
                    initial_sidebar_state="collapsed")
 
 # ----------------------------------------------------------------------------- look and feel
@@ -155,7 +160,7 @@ def plot(fig, h=320, legend=True):
 
 def topbar(cfg, extra=""):
     st.markdown(f'<div class="sf-top"><div class="sf-logo">📦</div><div><div class="sf-name">Stock<span>Flow</span></div>'
-                f'<div class="sf-sub">Daily stock planning for apparel retail</div></div>'
+                f'<div class="sf-sub">Stock planning for stores and warehouses</div></div>'
                 f'<div class="sf-chip">{html.escape(extra or cfg["brand"]["name"])}</div></div>', unsafe_allow_html=True)
 
 
@@ -469,7 +474,7 @@ def start(source, cfg, label, reopen=None, cleanup=None):
     The work runs as a background job (pipeline.build_plan): the page stays usable and shows progress; the plan is saved
     by the job itself, so it is kept even if the browser is closed."""
     tmp = cleanup                                          # a folder this call (then the job) owns and deletes
-    pack, kind = None, "demo" if source == DEMO else "upload"
+    pack, kind = None, "demo" if source in (DEMO, DEMO2) else "upload"
     try:
         if source is None:
             tmp = Path(tempfile.mkdtemp(prefix="stockflow_in_"))
@@ -571,7 +576,10 @@ def data_panel(key="main"):
         st.toggle("Standardise POS / ERP exports (any column names, Indian dates, ₹ amounts)", True, key="standardise",
                   help="Recognises each file, maps its columns to the standard sheets with your saved mapping profiles, "
                        "cleans dates, numbers and codes, and checks data quality. Turn off only for files already in the template.")
-        brand = st.selectbox("Settings profile", ["Standard settings"] + [b.stem for b in BRANDS], key=f"brand_{key}")
+        brand = st.selectbox("Business type", ["Standard settings"] + [b.stem for b in BRANDS], key=f"brand_{key}",
+                             format_func=lambda x: PROFILE_NAMES.get(x, x.replace("_", " ").title()),
+                             help="Starting settings for your kind of business: cover days, when stock counts as old, "
+                                  "expiry window, handling cost. Fine-tune them under Settings.")
         base = schema.load_config(HERE / "brands" / f"{brand}.json" if brand != "Standard settings" else None, fb.load_settings())
         with st.expander("⚙️ Settings"):
             settings_panel(base)
@@ -579,8 +587,17 @@ def data_panel(key="main"):
             start(None, base, ", ".join(f.name for f in ups)[:120])
 
 
-def demo_button(key, label="✨  Try the demo brand", primary=True):
-    if st.button(label, type="primary" if primary else "secondary", width="stretch", key=f"demo_{key}", disabled=not DEMO.exists()):
+def demo_button(key, label="✨  Try the demo brand", primary=True, general=False):
+    src = DEMO2 if general else DEMO
+    if st.button(label, type="primary" if primary else "secondary", width="stretch", key=f"demo_{key}{'_g' if general else ''}",
+                 disabled=not src.exists()):
+        start_demo(general)
+
+
+def start_demo(general=False):
+    if general:
+        start(DEMO2, schema.load_config(HERE / "brands" / "demo_general.json", fb.load_settings()), "Demo Mart (fictional general retailer)")
+    else:
         start(DEMO, schema.load_config(HERE / "brands" / "demo.json", fb.load_settings()), "Demo Threads (fictional brand)")
 
 
@@ -601,7 +618,7 @@ def reopen(plan_id):
         return
     cfg_ = row.settings or schema.load_config()
     if row.source == "demo":
-        start(DEMO, cfg_, row.data_label, reopen=plan_id)
+        start(DEMO2 if "Demo Mart" in str(row.data_label) else DEMO, cfg_, row.data_label, reopen=plan_id)
         return
     if row.input_pack is None:
         st.error("The input files of that plan are no longer stored (too large, or past the retention period), so it can't be rebuilt. "
@@ -727,10 +744,10 @@ language = "en"
 
 
 # ============================================================================= landing
-if "R" not in st.session_state and st.session_state.pop("auto_demo", False) and DEMO.exists():
+if "R" not in st.session_state and st.session_state.pop("auto_demo", False) and DEMO2.exists():
     css()
     with st.spinner("Building the demo plan…"):
-        start(DEMO, schema.load_config(HERE / "brands" / "demo.json", fb.load_settings()), "Demo Threads (fictional brand)")
+        start_demo(general=True)
 if "R" not in st.session_state:
     css()
     topbar(schema.DEFAULTS, "Demo" if OPEN or IN_BROWSER else USER)
@@ -738,9 +755,9 @@ if "R" not in st.session_state:
     job_panel()
     if st.session_state.get("job_note"):
         note(bold(st.session_state.pop("job_note")).replace("\n", "<br>"))
-    st.markdown("""<div class="hero"><h1>The right stock in the right store, in the right size, every morning.</h1>
-<p>Upload yesterday's sales and stock. StockFlow gives you a short list of trips to approve, with what each one earns and what it costs to move.</p>
-<div class="meta"><span>👗 Built for apparel & ethnic wear</span><span>🏬 5–500 stores</span><span>🔒 Your data stays yours</span></div></div>""",
+    st.markdown("""<div class="hero"><h1>The right stock in the right place, every morning.</h1>
+<p>Upload yesterday's sales and stock from your POS and ERP, or photograph a count sheet. StockFlow gives you a short list of transfers between your warehouses and stores to approve, with what each one earns and what it costs to move.</p>
+<div class="meta"><span>🏬 Stores, warehouses & franchises</span><span>📦 Apparel, electronics, grocery, pharmacy, spares</span><span>🏭 2–500 locations</span><span>📱 Web, Android & iOS</span></div></div>""",
                 unsafe_allow_html=True)
     if OPEN:
         note("🔓 <b>Open demo:</b> no sign-in is set up yet. Use the demo brand, or add users before uploading real data.")
@@ -749,23 +766,29 @@ if "R" not in st.session_state:
     left, right = st.columns([1, 1], gap="large")
     with left:
         st.markdown('<div class="sf-h" style="font-weight:800;font-size:1.05rem;margin-bottom:.3rem">See it in 20 seconds</div>'
-                    '<p style="color:#5E6875;margin:0 0 .7rem">A fictional 9-store brand with two warehouses and an outlet.</p>',
+                    '<p style="color:#5E6875;margin:0 0 .7rem">Two fictional businesses, each with two warehouses.</p>',
                     unsafe_allow_html=True)
-        demo_button("hero")
+        a_, b_ = st.columns(2)
+        with a_:
+            demo_button("hero", "🛒  General retail demo", general=True)
+            st.caption("10 stores · electronics, home, grocery with expiry dates")
+        with b_:
+            demo_button("hero", "👗  Apparel demo", primary=False)
+            st.caption("9 stores · sizes, colours, festival season")
         st.markdown("""<div style="margin-top:1rem;display:grid;gap:.8rem">
-<div class="step"><b class="n">1</b><div><b>Upload four sheets</b><br><span style="color:#5E6875">stores, items, sales and stock. More sheets switch on more features.</span></div></div>
-<div class="step"><b class="n">2</b><div><b>Get priced trips</b><br><span style="color:#5E6875">Refills, size-set fixes, old stock to faster stores, capped returns.</span></div></div>
-<div class="step"><b class="n">3</b><div><b>Approve in ten minutes</b><br><span style="color:#5E6875">About 25 decisions, then transfer orders for your ERP.</span></div></div></div>""",
+<div class="step"><b class="n">1</b><div><b>Send your exports as they are</b><br><span style="color:#5E6875">Locations, products, sales and stock from any POS or ERP, or photos of count sheets and barcodes.</span></div></div>
+<div class="step"><b class="n">2</b><div><b>Get priced transfers</b><br><span style="color:#5E6875">Refills, stock about to expire or sitting idle moved to where it sells, capped returns to the warehouse.</span></div></div>
+<div class="step"><b class="n">3</b><div><b>Approve by region, ship, track</b><br><span style="color:#5E6875">On the web or the phone app; orders go to your warehouse system and receipts come back.</span></div></div></div>""",
                     unsafe_allow_html=True)
     with right:
         data_panel("landing")
     recent_plans("landing")
-    sec("Why brands use it")
+    sec("Why teams use it")
     st.markdown("""<div class="grid">
 <div class="card"><div class="ic">💰</div><h4>Every move is priced</h4><p>Expected extra sales against freight and handling. Moves that don't pay are left out.</p></div>
-<div class="card"><div class="ic">🧩</div><h4>Size sets stay whole</h4><p>Missing core sizes are filled first, and broken runs of old stock move together.</p></div>
-<div class="card"><div class="ic">🚚</div><h4>Fewer, fuller trips</h4><p>One line per trip says why it goes. No more hundreds of single-piece transfers.</p></div>
-<div class="card"><div class="ic">🎉</div><h4>Knows your season</h4><p>Wedding dates and festival weeks by region, from your own calendar.</p></div></div>""", unsafe_allow_html=True)
+<div class="card"><div class="ic">🧩</div><h4>Sizes, batches, expiry</h4><p>Apparel size sets stay whole; food and medicines near expiry go where they sell in time; expired stock never moves.</p></div>
+<div class="card"><div class="ic">🚚</div><h4>Fewer, fuller trips</h4><p>One line per trip says why it goes. No more hundreds of single-unit transfers.</p></div>
+<div class="card"><div class="ic">🎉</div><h4>Knows your season</h4><p>Peak days, festivals and sale weeks by region, from your own calendar.</p></div></div>""", unsafe_allow_html=True)
     with st.expander("📄 What data do I need?"):
         data_guide("landing")
     st.stop()
@@ -798,7 +821,11 @@ if OPEN:
     note("🔓 <b>Open demo:</b> anyone with the link can see this. Set up sign-in before using real data.")
 with st.expander("📂  New data or settings"):
     data_panel("results")
-    demo_button("results", "✨  Reload the demo brand", primary=False)
+    a_, b_ = st.columns(2)
+    with a_:
+        demo_button("results", "🛒  General retail demo", primary=False, general=True)
+    with b_:
+        demo_button("results", "👗  Apparel demo", primary=False)
     recent_plans("results")
 
 TAB_NAMES = ["Overview", "Inventory", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]
@@ -1052,7 +1079,11 @@ with T[4]:
     sn = g[g.oh > 0].copy()
     if sn.age.notna().any():
         a = cfg["ageing"]["age_days"]
-        sn["band"] = pd.cut(sn.age, [-1, 30, 90, a, 365, 100000], labels=["< 1 month", "1–3 months", f"3 mo–{a} d", f"{a} d–1 yr", "> 1 year"])
+        edges = sorted({-1, 30, 90, int(a), 365, 100000})           # the "old" threshold depends on the business type
+        names_ = {30: "1 month", 90: "3 months", 365: "1 year", int(a): f"{int(a)} days"}
+        labels_ = [f"up to {names_[hi]}" if lo == -1 else (f"over {names_[lo]}" if hi == 100000 else f"{names_[lo]}–{names_[hi]}")
+                   for lo, hi in zip(edges[:-1], edges[1:])]
+        sn["band"] = pd.cut(sn.age, edges, labels=labels_)
         d = sn.groupby("band", observed=False).oh.sum().reset_index()
         plot(px.bar(d, x="band", y="oh", title="How long stock has been in stores", labels={"oh": "pieces", "band": ""},
                     color_discrete_sequence=[PLUM]), 280, False)

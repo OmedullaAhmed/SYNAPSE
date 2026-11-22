@@ -1,0 +1,9 @@
+{
+  "_profile": "Pharmacy and health: expiry-critical, steady demand. Batch expiry drives moves.",
+  "brand": {"name": "Your Company", "primary_color": "#2D6E8E"},
+  "planning": {"cover_days": 21, "donor_min_cover": 21},
+  "ageing": {"age_days": 120, "sell_within": 30, "pullback_cover": 120, "expiry_window_days": 90},
+  "stock_status": {"sellable": ["", "sellable", "available", "ok", "released"]},
+  "season": {"peak_label": "peak day", "event_label": "season week"},
+  "economics": {"handling_per_unit": 5, "markdown_per_month": 0.05, "default_cost_ratio": 0.72, "min_trip_units": 5}
+}

@@ -1,0 +1,9 @@
+{
+  "_profile": "Grocery / FMCG: fast movers, short shelf life, low value per unit. Expiry-aware.",
+  "brand": {"name": "Your Company", "primary_color": "#3E7B3A"},
+  "planning": {"cover_days": 10, "donor_min_cover": 10},
+  "ageing": {"age_days": 45, "sell_within": 14, "pullback_cover": 60, "expiry_window_days": 21},
+  "season": {"peak_label": "weekend", "event_label": "festival week"},
+  "economics": {"handling_per_unit": 3, "markdown_per_month": 0.10, "default_cost_ratio": 0.80, "min_trip_units": 20,
+                "store_holding_rate": 0.30}
+}

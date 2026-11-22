@@ -1,0 +1,139 @@
+sku_id,product_name,category,price,cost
+MOB001,USB-C Cable A,Mobile Accessories,2379,1799
+MOB002,Fast Charger A,Mobile Accessories,1679,1010
+MOB003,Power Bank A,Mobile Accessories,929,512
+MOB004,Earbuds A,Mobile Accessories,2229,1634
+MOB005,Phone Case A,Mobile Accessories,2099,1288
+MOB006,Screen Guard A,Mobile Accessories,969,632
+MOB007,USB-C Cable B,Mobile Accessories,1589,1237
+MOB008,Fast Charger B,Mobile Accessories,1519,1052
+MOB009,Power Bank B,Mobile Accessories,1329,779
+MOB010,Earbuds B,Mobile Accessories,779,436
+MOB011,Phone Case B,Mobile Accessories,619,406
+MOB012,Screen Guard B,Mobile Accessories,1439,999
+MOB013,USB-C Cable C,Mobile Accessories,889,539
+MOB014,Fast Charger C,Mobile Accessories,1399,831
+MOB015,Power Bank C,Mobile Accessories,2239,1421
+MOB016,Earbuds C,Mobile Accessories,749,554
+MOB017,Phone Case C,Mobile Accessories,1479,1112
+MOB018,Screen Guard C,Mobile Accessories,889,662
+MOB019,USB-C Cable D,Mobile Accessories,399,227
+MOB020,Fast Charger D,Mobile Accessories,1939,1292
+MOB021,Power Bank D,Mobile Accessories,1809,1243
+MOB022,Earbuds D,Mobile Accessories,1099,702
+MOB023,Phone Case D,Mobile Accessories,799,589
+MOB024,Screen Guard D,Mobile Accessories,629,487
+MOB025,USB-C Cable E,Mobile Accessories,1269,884
+MOB026,Fast Charger E,Mobile Accessories,1639,958
+MOB027,Power Bank E,Mobile Accessories,1089,699
+MOB028,Earbuds E,Mobile Accessories,829,640
+MOB029,Phone Case E,Mobile Accessories,319,197
+MOB030,Screen Guard E,Mobile Accessories,1779,1249
+SMA001,Mixer Grinder A,Small Appliances,6919,5309
+SMA002,Electric Kettle A,Small Appliances,6919,4712
+SMA003,Iron A,Small Appliances,4939,3770
+SMA004,Induction Cooktop A,Small Appliances,2349,1389
+SMA005,Air Fryer A,Small Appliances,7789,5304
+SMA006,Mixer Grinder B,Small Appliances,5499,3544
+SMA007,Electric Kettle B,Small Appliances,5999,4508
+SMA008,Iron B,Small Appliances,1269,857
+SMA009,Induction Cooktop B,Small Appliances,4129,2294
+SMA010,Air Fryer B,Small Appliances,6259,3486
+SMA011,Mixer Grinder C,Small Appliances,3909,2741
+SMA012,Electric Kettle C,Small Appliances,7769,5208
+SMA013,Iron C,Small Appliances,5779,3963
+SMA014,Induction Cooktop C,Small Appliances,3409,2153
+SMA015,Air Fryer C,Small Appliances,4719,3582
+SMA016,Mixer Grinder D,Small Appliances,6359,4862
+SMA017,Electric Kettle D,Small Appliances,5039,3710
+SMA018,Iron D,Small Appliances,6269,4051
+SMA019,Induction Cooktop D,Small Appliances,7799,5416
+SMA020,Air Fryer D,Small Appliances,1099,734
+TEL001,"32"" LED TV A",Televisions,26539,15808
+TEL002,"43"" Smart TV A",Televisions,26329,15567
+TEL003,"55"" 4K TV A",Televisions,30509,20803
+TEL004,"32"" LED TV B",Televisions,62409,38222
+TEL005,"43"" Smart TV B",Televisions,25949,20123
+TEL006,"55"" 4K TV B",Televisions,37229,24938
+TEL007,"32"" LED TV C",Televisions,53399,36500
+TEL008,"43"" Smart TV C",Televisions,52139,39207
+HOM001,Steel Bottle A,Home & Kitchen,2199,1244
+HOM002,Cookware Set A,Home & Kitchen,2789,1867
+HOM003,Storage Jar A,Home & Kitchen,2289,1683
+HOM004,Bedsheet A,Home & Kitchen,909,649
+HOM005,Towel A,Home & Kitchen,1039,666
+HOM006,Steel Bottle B,Home & Kitchen,1139,639
+HOM007,Cookware Set B,Home & Kitchen,1039,772
+HOM008,Storage Jar B,Home & Kitchen,2769,1828
+HOM009,Bedsheet B,Home & Kitchen,1479,917
+HOM010,Towel B,Home & Kitchen,2049,1346
+HOM011,Steel Bottle C,Home & Kitchen,1359,804
+HOM012,Cookware Set C,Home & Kitchen,1979,1275
+HOM013,Storage Jar C,Home & Kitchen,2159,1549
+HOM014,Bedsheet C,Home & Kitchen,2489,1891
+HOM015,Towel C,Home & Kitchen,2279,1527
+HOM016,Steel Bottle D,Home & Kitchen,2659,1490
+HOM017,Cookware Set D,Home & Kitchen,1419,862
+HOM018,Storage Jar D,Home & Kitchen,259,153
+HOM019,Bedsheet D,Home & Kitchen,889,609
+HOM020,Towel D,Home & Kitchen,309,218
+HOM021,Steel Bottle E,Home & Kitchen,1479,1132
+HOM022,Cookware Set E,Home & Kitchen,1069,787
+HOM023,Storage Jar E,Home & Kitchen,809,480
+HOM024,Bedsheet E,Home & Kitchen,1909,1067
+HOM025,Towel E,Home & Kitchen,1509,1126
+HOM026,Steel Bottle F,Home & Kitchen,2889,1813
+HOM027,Cookware Set F,Home & Kitchen,629,436
+HOM028,Storage Jar F,Home & Kitchen,519,322
+HOM029,Bedsheet F,Home & Kitchen,1419,822
+HOM030,Towel F,Home & Kitchen,2439,1836
+PAC001,Basmati Rice 5kg A,Packaged Food,429,298
+PAC002,Atta 10kg A,Packaged Food,429,245
+PAC003,Green Tea A,Packaged Food,89,65
+PAC004,Biscuits A,Packaged Food,459,286
+PAC005,Cooking Oil 1L A,Packaged Food,259,195
+PAC006,Masala Pack A,Packaged Food,619,344
+PAC007,Basmati Rice 5kg B,Packaged Food,479,325
+PAC008,Atta 10kg B,Packaged Food,189,120
+PAC009,Green Tea B,Packaged Food,629,441
+PAC010,Biscuits B,Packaged Food,349,222
+PAC011,Cooking Oil 1L B,Packaged Food,179,132
+PAC012,Masala Pack B,Packaged Food,479,304
+PAC013,Basmati Rice 5kg C,Packaged Food,249,151
+PAC014,Atta 10kg C,Packaged Food,189,123
+PAC015,Green Tea C,Packaged Food,279,190
+PAC016,Biscuits C,Packaged Food,539,306
+PAC017,Cooking Oil 1L C,Packaged Food,639,371
+PAC018,Masala Pack C,Packaged Food,139,79
+PAC019,Basmati Rice 5kg D,Packaged Food,529,328
+PAC020,Atta 10kg D,Packaged Food,229,158
+PAC021,Green Tea D,Packaged Food,69,51
+PAC022,Biscuits D,Packaged Food,339,241
+PAC023,Cooking Oil 1L D,Packaged Food,479,348
+PAC024,Masala Pack D,Packaged Food,529,372
+PAC025,Basmati Rice 5kg E,Packaged Food,519,347
+PAC026,Atta 10kg E,Packaged Food,99,58
+PAC027,Green Tea E,Packaged Food,539,389
+PAC028,Biscuits E,Packaged Food,399,230
+PAC029,Cooking Oil 1L E,Packaged Food,89,62
+PAC030,Masala Pack E,Packaged Food,569,443
+PER001,Shampoo A,Personal Care,739,538
+PER002,Face Wash A,Personal Care,779,543
+PER003,Toothpaste A,Personal Care,799,578
+PER004,Soap Pack A,Personal Care,709,462
+PER005,Body Lotion A,Personal Care,379,211
+PER006,Shampoo B,Personal Care,439,296
+PER007,Face Wash B,Personal Care,879,629
+PER008,Toothpaste B,Personal Care,539,399
+PER009,Soap Pack B,Personal Care,389,226
+PER010,Body Lotion B,Personal Care,409,318
+PER011,Shampoo C,Personal Care,369,272
+PER012,Face Wash C,Personal Care,669,386
+PER013,Toothpaste C,Personal Care,649,374
+PER014,Soap Pack C,Personal Care,889,606
+PER015,Body Lotion C,Personal Care,849,504
+PER016,Shampoo D,Personal Care,699,419
+PER017,Face Wash D,Personal Care,219,144
+PER018,Toothpaste D,Personal Care,159,98
+PER019,Soap Pack D,Personal Care,459,300
+PER020,Body Lotion D,Personal Care,679,528

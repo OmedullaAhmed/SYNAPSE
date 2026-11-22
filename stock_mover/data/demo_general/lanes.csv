@@ -1,0 +1,8 @@
+from,to,lead_days,cost_per_unit,cost_per_trip
+DC-KOL,zone:East,2,12,900
+DC-DEL,zone:North,2,12,900
+DC-KOL,zone:North,5,30,4000
+DC-DEL,zone:East,5,30,4000
+zone:East,zone:East,2,15,1200
+zone:North,zone:North,2,15,1200
+*,*,6,40,4500
