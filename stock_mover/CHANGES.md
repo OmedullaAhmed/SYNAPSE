@@ -52,3 +52,10 @@ bulk user import; Docker / compose / HTTPS / backup-restore kit; optional error 
 overview and a data-protection draft. Fixed: engine crash on stock without dates and nothing old; pack_size column
 swallowed by a size alias; Integrations tab crash without a secrets file; age bands for short "old stock" thresholds;
 store users seeing other stores' exceptions.
+
+## Forecast release (Nov 2026)
+
+Selling speed now blends the last 4 weeks with the longer average and carries category trends forward; items that sell
+before their launch date are forecast (and reported). Fixed a planner gap where an old-stock "whole run" move could leave
+a still-selling store without a core size or under its style cover when combined with a refill (rules 14 and 13). Plans
+change slightly as a result; all 17 rules pass on every dataset, including 100, 200 and 500 stores.

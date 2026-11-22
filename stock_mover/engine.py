@@ -557,8 +557,34 @@ def velocity(D, P):
     own = (g.ws / g.wd).where(g.wd > 0, 0)
     K = cfg["shrink_days"]
     g["v"] = np.where(g.ev > 0, (own * g.ev + g.prior * K) / (g.ev + K), g.prior)
+    # react to recent change: blend in the last 4 weeks' in-stock rate, and carry each category's chain-wide trend
+    # (last 4 weeks vs the longer average) forward. Tested on four datasets: less under-forecasting, same error.
+    blend, tstr = cfg.get("recent_blend", 0.0), cfg.get("trend_strength", 0.0)
+    if blend or tstr:
+        age = (today - f.week).dt.days // 7
+        r4 = f[age < 4].groupby(["store_id", "sku_id"])[["sold", "days"]].sum()
+        g = g.merge(r4.rename(columns={"sold": "s4", "days": "d4"}), left_on=["store_id", "sku_id"], right_index=True, how="left") \
+            .fillna({"s4": 0, "d4": 0})
+        if blend:
+            rv = np.where(g.d4 > 0, ((g.s4 / g.d4.where(g.d4 > 0, 1)) * g.d4 + g.prior * K) / (g.d4 + K), g.prior)
+            g["v"] = (1 - blend) * g.v + blend * rv
+        if tstr:
+            cat_ = f.sku_id.map(items.category)
+            c4 = f[age < 4].groupby(cat_[age < 4])[["sold", "days"]].sum()
+            ca = f.assign(ws_=f.w * f.sold, wd_=f.w * f.days).groupby(cat_)[["ws_", "wd_"]].sum()
+            lo, hi = cfg.get("trend_cap", [0.7, 1.6])
+            ratio = ((c4.sold / c4.days) / (ca.ws_ / ca.wd_)).clip(lo, hi).fillna(1.0)
+            g["v"] = g.v * (g.category.map(ratio).fillna(1.0) ** tstr)
+        g = g.drop(columns=["s4", "d4"])
     launch = g.sku_id.map(items.launch_date)
-    g.loc[launch > today, "v"] = 0
+    future = launch > today
+    selling = g.groupby("sku_id").sold12.transform("sum") > 0
+    g.loc[future & ~selling, "v"] = 0              # not launched and never sold: no demand yet
+    early = sorted(set(g[future & selling].sku_id))   # already selling: trust the sales, not the launch date
+    if early:
+        P["issue"]("Sales before launch date", "", ", ".join(early[:5]),
+                   f"{len(early)} SKUs have a launch date after today but are already selling",
+                   "Their selling speed is used. Correct launch_date in the product master.", "Low")
     return g[["store_id", "sku_id", "v", "ws", "wd", "ev", "sold12", "sold28", "chain_rate", "m"]], f
 
 
@@ -988,8 +1014,24 @@ class Planner:
                 if best:
                     r = best[1]
                     sent = 0
+                    # the run only counts as leaving whole if every size can actually go; otherwise each size keeps the
+                    # normal guard, so a still-selling option is never left without one of its core sizes
+                    # settle every size's quantity before moving any (each move changes the next one's limits)
+                    qs = {k: (self.give_cap(s, k, aged=True, whole_option=True) if self.out[(r, k)] == 0 else 0) for k in held}
+                    total = sum(self.cur(s, k) for k in held)
+                    whole = all(qs[k] >= self.cur(s, k) for k in held) and self.room[r] >= total
+                    if whole:                              # the store's other sizes of the style must still keep their cover
+                        pc_ = self.cfg["planning"]
+                        sty = orow.at[held[0], "style"]
+                        sfd_ = max(self.sty_fd30[(s, sty)], self.sty_give.get((s, sty), 0))
+                        left = self.sty_pos[(s, sty)] - self.sty_out[(s, sty)] - total
+                        if self.sty_out[(s, sty)] > 0:      # some of the style already leaves (e.g. a refill): no sweep on top
+                            whole = False
+                        elif sfd_ > 1e-9 and left > 0 and left < pc_["donor_min_cover"] * pc_["donor_margin"] * sfd_:
+                            whole = False
                     for k in held:
-                        q = min(self.give_cap(s, k, aged=True, whole_option=True), self.room[r])
+                        # whole run: the quantities settled above; otherwise each size is checked as it goes (normal guard)
+                        q = min(qs[k] if whole else self.give_cap(s, k, aged=True), self.room[r])
                         if q > 0 and self.out[(r, k)] == 0:
                             self.add(T_AGE, s, r, k, q, self.run,
                                      f"{s} holds a broken run of {opt} ({opos} pcs, core sizes missing, {days(ocov)} of stock); "

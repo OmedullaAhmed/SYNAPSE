@@ -22,6 +22,9 @@ DEFAULTS = {
         "shrink_days": 28,                 # in-stock days before a store's own sales outweigh similar stores
         "week_decay": 0.85,                # weight of each older week of sales
         "history_weeks": 12,
+        "recent_blend": 0.5,               # weight of the last 4 weeks' selling speed against the longer, fading average
+        "trend_strength": 0.5,             # how much of a category's recent rise or fall is carried into the forecast (0 = none)
+        "trend_cap": [0.7, 1.6],           # the trend never scales the forecast below 70% or above 160%
         "inbound_usable_days": 1,          # inbound due within this many days of the run can be allocated
         "approval_value": 100000,          # one line above this (at MRP) needs a person's sign-off
         "trip_approval_value": 500000,     # one trip above this (at MRP) needs a person's sign-off

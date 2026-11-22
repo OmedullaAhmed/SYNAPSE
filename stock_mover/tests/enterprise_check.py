@@ -583,6 +583,33 @@ def t_urls():
     return not bad, "all refused" if not bad else bad
 
 
+
+@check("Correctness", "Weekly forecast: under-prediction no worse than 15% and error within 3 points of the simple average")
+def t_forecast_weekly():
+    import kpi
+    out, ok = {}, True
+    for name, src, prof in (("apparel", DEMO, "demo"), ("general", TMP / "gen_std", "demo_general")):
+        rep = kpi.replay(src, schema.load_config(HERE / "brands" / f"{prof}.json"), 8)
+        e, es = kpi.wape(rep), kpi.wape(rep, "simple")
+        b = float((rep.pred.sum() - rep.actual.sum()) / rep.actual.sum())
+        out[name] = f"error {e:.0%} (simple {es:.0%}), bias {b:+.0%}"
+        ok &= b > -0.15 and e <= es + 0.03
+    return ok, out
+
+
+@check("Correctness", "Items already selling are forecast even if their launch date is still ahead")
+def t_launch():
+    d = TMP / "launch"
+    shutil.copytree(DEMO, d)
+    it = pd.read_csv(d / "items.csv", dtype=str)
+    it.loc[it.index[:20], "launch_date"] = "2027-01-01"
+    it.to_csv(d / "items.csv", index=False)
+    R = E.run(d, None, CFG())
+    early = R["issues"].issue.eq("Sales before launch date").any()
+    v = R["pl"].g.reset_index()
+    sold = v[v.sku_id.isin(it.sku_id[:20]) & (v.sold12 > 0)]
+    return early and (sold.v > 0).all(), f"warned: {early}; selling items with future launch dates forecast > 0: {(sold.v > 0).all()}"
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json")

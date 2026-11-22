@@ -123,9 +123,15 @@ an *Approvals overdue* exception per region, high if urgent refills are waiting,
 stock and supplier deliveries due, rounded to pack size / minimum order (optional item columns `vendor`, `pack_size`, `moq`).
 
 **Forecast accuracy.** How it works → "Measure it": the plan is rebuilt as of 4 weeks ago and its forecast compared with
-what then sold (only where the item was on the shelf), next to the simple 28-day average. On the demo data StockFlow's
-store × category error is 27% vs 32% (apparel) and 11% vs 12% (general retail); on the hackathon data both methods
-under-forecast the October festival ramp by about 46%, which a year of history and an event calendar improve.
+what then sold (only where the item was on the shelf), next to the simple 28-day average. Store × category error on the
+demo data: apparel 25% vs 32%, general retail 11% vs 12%, toys 20% vs 22%, hackathon 48% vs 51%. Week by week (KPIs tab)
+StockFlow and the simple average are level (within ±1 point; hackathon 39% vs 43%) and StockFlow under-predicts less.
+
+**Forecast changes (Nov 2026).** Items already selling are forecast even if their launch date is still ahead (reported as
+a data issue). The selling speed blends the last 4 weeks with the longer fading average (`planning.recent_blend`, 0.5) and
+carries each category's recent trend forward (`planning.trend_strength`, 0.5, capped 0.7–1.6×). Tested on four datasets
+with an 8-week replay: under-prediction cut from −13/−17/−20/−5% to −8/−16/−12/−4%. Still weak: festival peaks the
+history has never seen (needs a year of sales); the remaining gap to the noise floor (about 20% for apparel) is there.
 
 ## KPIs tab
 
