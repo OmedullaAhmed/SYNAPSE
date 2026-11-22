@@ -151,7 +151,8 @@ TABLES = {
         ("season_end", OPT, "Last selling day of the season or model (YYYY-MM-DD)", "2027-02-28"),
         ("is_core_style", OPT, "1 = replenished all year", "1"),
         ("is_non_product", OPT, "1 = bag, hanger, gift box, packaging (ignored)", "0"),
-    ], {"color": "colour", "is_packaging": "is_non_product", "product_name": "style_name", "name": "style_name",
+        ("barcode", OPT, "EAN / UPC printed on the item; lets photos and scans of barcodes be counted", "8901234567890"),
+    ], {"color": "colour", "ean": "barcode", "upc": "barcode", "gtin": "barcode", "is_packaging": "is_non_product", "product_name": "style_name", "name": "style_name",
         "item_name": "style_name", "description": "style_name", "product_id": "style_id", "parent_sku": "style_id",
         "model": "style_id", "variant": "size", "pack_size": "size", "price": "mrp", "retail_price": "mrp", "cost": "cost_price"}),
     "sales": (R, "Sales lines. Alternative: bills + bill_lines (joined on bill_id). Last 12+ weeks; a year or more for season effects.", [

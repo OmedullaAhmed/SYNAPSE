@@ -33,6 +33,7 @@ SYN = {
     "location_id": ["location", "location id", "location code", "store code", "store", "site", "site code", "warehouse", "wh code",
                     "branch", "plant", "storage location", "godown", "bin location"],
     "warehouse_id": ["warehouse", "warehouse code", "wh", "wh code", "dc", "dc code", "depot", "godown", "receiving warehouse"],
+    "barcode": ["barcode", "ean", "ean code", "upc", "gtin", "bar code"],
     "sku_id": ["sku", "sku code", "item code", "itemcode", "item id", "item no", "barcode", "ean", "upc", "article", "article code",
                "variant sku", "variant id", "material", "material code", "product code", "item sku"],
     "style_id": ["style", "style code", "style no", "design", "design code", "design no", "parent sku", "product id", "article no",
@@ -75,7 +76,7 @@ SYN = {
 RETURN_WORDS = {"return", "returned", "refund", "sales return", "rtn", "credit note", "cn"}
 RETURN_COLS = ["type", "transaction type", "txn type", "line type", "doc type", "bill type", "is return", "return flag"]
 
-ID_COLS = {"store_id", "location_id", "warehouse_id", "sku_id", "style_id", "manager_id", "home_warehouse", "to_id", "from_id"}
+ID_COLS = {"store_id", "location_id", "warehouse_id", "sku_id", "style_id", "manager_id", "home_warehouse", "to_id", "from_id", "barcode"}
 DATE_COLS = {"date", "as_of_date", "expected_date", "week_ending", "launch_date", "season_end", "oldest_stock_received_on", "opened_on",
              "expiry_date"}
 NUM_COLS = {"qty", "net_value", "on_hand", "in_transit", "mrp", "cost_price", "capacity_units", "days_in_stock", "closing_on_hand",
@@ -143,6 +144,10 @@ def suggest_mapping(sheet, columns, profile=None):
                 out[hit] = std
                 used.add(std)
                 break
+    if "sku_id" in std_cols(sheet) and "sku_id" not in used and "barcode" in used:      # a file keyed by barcode only
+        src = next(c for c, s in out.items() if s == "barcode")
+        out[src] = "sku_id"
+        used = (used - {"barcode"}) | {"sku_id"}
     for std in [t for t in targets if t not in used]:
         pool = [c for c in cols if c not in out]
         cands = [key(std)] + [key(s) for s in SYN.get(std, [])]

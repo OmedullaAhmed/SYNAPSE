@@ -39,7 +39,9 @@ for cat, (n, (lo, hi), share, life) in cats.items():
     for j in range(1, n + 1):
         base = names[cat][(j - 1) % len(names[cat])]
         mrp = int(rng.integers(lo, hi) // 10 * 10 + 9)
-        items.append(dict(sku_id=f"{cat[:3].upper()}{j:03d}", product_name=f"{base} {chr(65 + (j - 1) // len(names[cat]))}",
+        body = f"890{len(items) + 1:09d}"
+        chk = (10 - sum(int(d) * (3 if k % 2 else 1) for k, d in enumerate(body)) % 10) % 10
+        items.append(dict(sku_id=f"{cat[:3].upper()}{j:03d}", barcode=body + str(chk), product_name=f"{base} {chr(65 + (j - 1) // len(names[cat]))}",
                           category=cat, price=mrp, cost=int(mrp * rng.uniform(.55, .78)), _w=share * rng.lognormal(0, .8) / n, _life=life))
 items = pd.DataFrame(items)
 W = items._w.values / items._w.sum()

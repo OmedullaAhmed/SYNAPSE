@@ -1465,9 +1465,12 @@ def opportunity(R):
     aged = g[(g.oh > 0) & (g.age >= ac["age_days"])].copy()
     aged["left"] = aged.oh - out_.reindex(aged.index).fillna(0)
     aged = aged[aged.left > 0]
-    aged_month = float((aged.left * (aged.sku_id.map(it.cost) if "sku_id" in aged else aged.index.get_level_values(1).map(it.cost))
-                        * ec["store_holding_rate"] / 12).sum()
-                       + (aged.left * aged.index.get_level_values(1).map(it.net_price) * ec["markdown_per_month"]).sum())
+    if len(aged):
+        skus_ = aged.index.get_level_values(1)
+        aged_month = float((aged.left * pd.to_numeric(skus_.map(it.cost), errors="coerce") * ec["store_holding_rate"] / 12).sum()
+                           + (aged.left * pd.to_numeric(skus_.map(it.net_price), errors="coerce") * ec["markdown_per_month"]).sum())
+    else:
+        aged_month = 0.0                     # no stock dates (or nothing old): nothing to cost
     by = mv.groupby("group").agg(lines=("qty", "size"), pieces=("qty", "sum"), benefit=("benefit", "sum"),
                                  move_cost=("move_cost", "sum"), net=("net_benefit", "sum")).reindex(GROUPS).dropna(how="all").reset_index()
     return dict(benefit=float(mv.benefit.sum()), move_cost=float(mv.move_cost.sum()), net=float(mv.net_benefit.sum()),

@@ -15,7 +15,7 @@ import pandas as pd
 
 import db
 
-KINDS = {"data": "Data quality", "plan": "Stock data", "transfer": "Transfer discrepancy"}
+KINDS = {"data": "Data quality", "plan": "Stock data", "transfer": "Transfer discrepancy", "count": "Count vs system"}
 # planner findings that are data problems someone has to fix at source (the rest are insights, not exceptions)
 PLAN_KINDS = {"Stock records disagree": "high", "Negative stock": "high", "Unknown location": "high", "Cost price missing": "medium",
               "Stock age missing": "medium", "Non-sellable stock": "low", "Over capacity": "medium", "Warehouse shortfall": "medium",

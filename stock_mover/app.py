@@ -166,6 +166,17 @@ def topbar(cfg, extra=""):
 
 # ----------------------------------------------------------------------------- sign in (mandatory)
 SECRETS = st.secrets if hasattr(st, "secrets") else None
+
+
+def secret(*path, default=None):
+    """A value from Streamlit secrets, or default when it (or the whole secrets file) is missing. Never raises."""
+    try:
+        cur = SECRETS
+        for k in path:
+            cur = cur[k]
+        return cur
+    except Exception:  # noqa: BLE001
+        return default
 USERS = auth.users(SECRETS)            # secrets users (kept from earlier versions)
 
 
@@ -560,6 +571,89 @@ def job_panel():
     _watch()
 
 
+def ai_vision_on():
+    """AI reading of handwriting/photos: an admin switched it on (data-processing confirmed) and the server has a key."""
+    try:
+        on = bool((db.get_setting("ai_vision", {}) or {}).get("enabled"))
+    except Exception:  # noqa: BLE001
+        on = False
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    try:
+        key = key or secret("ANTHROPIC_API_KEY")
+    except Exception:  # noqa: BLE001
+        pass
+    return on and bool(key), key
+
+
+def stock_from_images(key):
+    """Photos or scans of count sheets, registers, delivery notes or barcodes -> a reviewed stock count."""
+    import stockcount
+    import vision
+    if GUEST:
+        st.caption("Sign in to count stock from photos.")
+        return
+    cat = stockcount.catalog()
+    if cat.empty and "R" in st.session_state:
+        it_ = st.session_state.R["P"]["items"].reset_index()
+        cat = pd.DataFrame({"sku_id": it_.sku_id, "name": it_.style_name, "barcode": it_.get("barcode", "")})
+    ai_ok, api_key = ai_vision_on()
+    locs = sorted(XQ.locations()) or []
+    a, b, c = st.columns([2, 1.3, 1.3])
+    loc = a.selectbox("Location counted", locs, key=f"im_loc_{key}") if locs else a.text_input("Location code counted", key=f"im_loc_{key}")
+    day = b.date_input("Stock as of", value=datetime.now().date() - timedelta(days=1), key=f"im_day_{key}",
+                       help="The closing-stock day this count stands for. It is used by the plan for that day.")
+    scope = c.selectbox("This count is", ["partial", "full"], key=f"im_scope_{key}",
+                        format_func=lambda x: "Some items" if x == "partial" else "Everything at the location",
+                        help="Everything: items not in the count are set to 0 at that location.")
+    opts = ["Barcodes (each scan = 1 unit)", "Printed sheets and registers"] + (["Handwriting and photos (AI)"] if ai_ok else [])
+    meth = st.multiselect("Read", opts, default=opts[:2] if not ai_ok else [opts[0], opts[2]], key=f"im_m_{key}")
+    files = st.file_uploader("Photos or scans (JPG, PNG, PDF; several at once)", type=["jpg", "jpeg", "png", "webp", "pdf", "tif", "tiff"],
+                             accept_multiple_files=True, key=f"im_up_{key}")
+    cam = st.camera_input("…or take a photo", key=f"im_cam_{key}") if st.toggle("Use the camera", False, key=f"im_camt_{key}") else None
+    if not ai_ok:
+        st.caption("Handwritten registers need AI reading, which an admin can switch on in Integrations.")
+    src = [(f.name, f.getvalue()) for f in (files or [])] + ([("camera.jpg", cam.getvalue())] if cam else [])
+    if st.button("🔍 Read the images", type="primary", disabled=not src or not meth or not loc, key=f"im_go_{key}"):
+        methods = tuple(m for m, w in (("barcode", "Barcodes"), ("ocr", "Printed"), ("ai", "Handwriting")) if any(x.startswith(w) for x in meth))
+        with st.spinner("Reading…"):
+            df, notes_ = vision.extract(src, cat, methods, api_key if "ai" in methods else None)
+        st.session_state[f"im_res_{key}"] = (vision.summarise(df), notes_, ", ".join(n for n, _ in src)[:300], methods)
+        log("vision.read", str(loc), files=len(src), methods=",".join(methods), lines=len(df), ai="ai" in methods)
+    res = st.session_state.get(f"im_res_{key}")
+    if res:
+        sm, notes_, srcname, methods = res
+        st.caption(" · ".join(notes_))
+        if sm.empty:
+            st.warning("Nothing readable was found. Try a sharper, flatter photo in good light, or the AI reading for handwriting.")
+            return
+        low0 = (sm.confidence < 0.7) | (sm.sku_id == "")
+        sm = pd.concat([sm[low0], sm[~low0]], ignore_index=True)      # lines to check first
+        low = (sm.confidence < 0.7) | (sm.sku_id == "")
+        kpis([("Items read", f"{int((sm.sku_id != '').sum())}", f"{int(sm[sm.sku_id != ''].qty.sum()):,} units"),
+              ("Check these", f"{int(low.sum())}", "unclear or not in the product list", SAFFRON if low.any() else GREEN)])
+        ed = st.data_editor(sm.assign(check=low.values), hide_index=True, width="stretch", num_rows="dynamic", key=f"im_ed_{key}",
+                            column_order=["check", "sku_id", "name", "qty", "confidence", "matched_by", "method", "lines"],
+                            disabled=["check", "name", "confidence", "matched_by", "method", "lines"],
+                            column_config={"check": st.column_config.CheckboxColumn("⚠️", help="Check this line"),
+                                           "sku_id": st.column_config.TextColumn("SKU", help="Type the right code for any line not found"),
+                                           "qty": st.column_config.NumberColumn("qty", min_value=0, step=1),
+                                           "confidence": st.column_config.ProgressColumn(min_value=0, max_value=1, format="percent")})
+        unknown = set(ed.sku_id.astype(str)) - set(cat.sku_id) - {"", "None", "nan"}
+        if unknown and len(cat):
+            st.warning(f"{len(unknown)} codes are not in the product list and will be saved as typed: {', '.join(sorted(unknown)[:6])}")
+        a, b = st.columns(2)
+        if a.button(f"💾 Save count for {loc}", type="primary", width="stretch", key=f"im_save_{key}"):
+            ed_ = ed[ed.sku_id.astype(str).str.strip().isin(["", "None", "nan"]) == False]  # noqa: E712
+            cid, n = stockcount.save(loc, day.isoformat(), ed_.assign(qty=ed_.qty.fillna(0)), USER,
+                                     "photo:" + "+".join(methods), srcname, scope)
+            st.session_state.pop(f"im_res_{key}", None)
+            st.success(f"Saved {n} lines for {loc} ({day:%d %b}). The next plan for that day uses them; differences from the system "
+                       "show on the Exceptions tab.")
+        snap_ = pd.DataFrame({"as_of_date": day.isoformat(), "location_id": loc, "sku_id": ed.sku_id, "on_hand": ed.qty})
+        b.download_button("⬇️ As stock_snapshot.csv", safety.csv(snap_[snap_.sku_id.astype(str) != ""]), f"stock_{loc}_{day}.csv",
+                          width="stretch", key=f"im_dl_{key}")
+
+
 def data_panel(key="main"):
     if GUEST:
         with st.container(border=True):
@@ -585,6 +679,14 @@ def data_panel(key="main"):
             settings_panel(base)
         if st.button("▶️  Build my plan", type="primary", disabled=not ups, width="stretch", key=f"go_{key}"):
             start(None, base, ", ".join(f.name for f in ups)[:120])
+    if not IN_BROWSER:
+        if key == "results":                               # already inside an expander: no nesting
+            with st.container(border=True):
+                st.markdown("**📷 Stock from photos or scans**")
+                stock_from_images(key)
+        else:
+            with st.expander("📷  Stock from photos or scans"):
+                stock_from_images(key)
 
 
 def demo_button(key, label="✨  Try the demo brand", primary=True, general=False):
@@ -843,10 +945,7 @@ T = [TABS[n] for n in ["Overview", "Money", "Trips", "Approve", "Issues", "Store
 def erp_on():
     if os.environ.get("STOCKFLOW_ERP_CHANNEL"):
         return True
-    try:
-        return bool(SECRETS is not None and "erp" in SECRETS)
-    except Exception:  # noqa: BLE001 - no secrets file
-        return False
+    return bool(secret("erp"))
 
 
 # ---- overview
@@ -1866,6 +1965,22 @@ if "Integrations" in TABS:
                     st.success("Saved.")
         st.markdown("Schedule it with the included GitHub Actions workflow (`.github/workflows/daily-plan.yml`), with cron "
                     "(`30 6 * * * cd stock_mover && python daily.py`), or Windows Task Scheduler (`run_daily.ps1`).")
+        sec("Reading stock from images")
+        av = dict(db.get_setting("ai_vision", {}) or {})
+        has_key = bool(os.environ.get("ANTHROPIC_API_KEY")) or bool(secret("ANTHROPIC_API_KEY"))
+        st.caption("Barcodes and printed count sheets are read on this server. Handwritten registers and difficult photos can be read "
+                   "by AI (Claude); the image is then sent to Anthropic. Check your data-processing agreement covers this first.")
+        st.markdown(f"**AI reading:** {'on' if av.get('enabled') else 'off'}" + ("" if has_key else " · ⚠️ no ANTHROPIC_API_KEY in secrets"))
+        if av.get("enabled"):
+            if st.button("Turn AI image reading off", key="aiv_off"):
+                db.upsert_setting("ai_vision", dict(enabled=False), USER)
+                log("ai.vision", "off")
+                st.rerun()
+        elif st.checkbox("Sending count-sheet images to the AI provider is covered by our data-processing agreement", key="aiv_ok") \
+                and st.button("Turn AI image reading on", key="aiv_on", disabled=not has_key):
+            db.upsert_setting("ai_vision", dict(enabled=True, by=USER, at=datetime.now().isoformat(timespec="seconds")), USER)
+            log("ai.vision", "on")
+            st.rerun()
         sec("ERP / WMS connection")
         ec = erp.conf(SECRETS)
         st.markdown(f"**Channel:** {html.escape(erp.describe(ec))} · format **{ec.get('format')}** · "

@@ -53,6 +53,22 @@ def housekeeping(hours=24):
             pass
 
 
+def _apply_counts(std_dir, user):
+    import pandas as pd
+
+    import stockcount
+    price = {}
+    f = Path(std_dir) / "items.csv"
+    if f.exists():
+        it = pd.read_csv(f, dtype=str, keep_default_na=False)
+        if "mrp" in it:
+            price = dict(zip(it.sku_id, pd.to_numeric(it.mrp, errors="coerce").fillna(0)))
+    try:
+        return stockcount.apply(std_dir, user, value_of=lambda s: float(price.get(s, 0)))
+    except Exception as e:  # noqa: BLE001 - counts never block a plan
+        return dict(applied=0, created=False, variances=[], error=f"{type(e).__name__}: {e}")
+
+
 def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None, standardise=True, reopen=None, role=""):
     """Returns dict(R, plan_id, report). Raises engine.DataError when required data is missing."""
     say = progress or (lambda *_: None)
@@ -64,6 +80,10 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
         if standardise:
             say("Standardising the files", 0.01)
             rep = ingest.run(src, work / "std", cfg=cfg, user=user, source_label=label, log=not reopen, stale=kind not in ("demo",) and not reopen)
+            if kind != "demo":                     # stock counts from photos, scans or the phone app
+                rep["counts"] = _apply_counts(work / "std", user)
+                if rep["counts"].get("created"):
+                    rep["missing"] = [m for m in rep["missing"] if m != "stock_snapshot"]
             if rep["missing"]:
                 if not reopen:
                     XQ.record(XQ.from_ingestion(rep), "data", user=user)
@@ -87,7 +107,19 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
         except Exception as e:  # noqa: BLE001 - the plan is still usable in this session
             save_error = f"{type(e).__name__}: {e}"
         try:
+            import stockcount
+            stockcount.save_catalog(R["P"]["items"], user)
+        except Exception:  # noqa: BLE001
+            pass
+        try:
             XQ.save_locations(R, user)
+            if rep is not None and rep.get("counts", {}).get("variances") is not None:
+                XQ.record([dict(key=f"count:{v['location']}", kind="count", severity="high" if v["value"] > 10000 or v["full"] else "medium",
+                                location=v["location"], ref=v["location"], title=f"Count differs from system at {v['location']}",
+                                detail=f"{v['units']:,} units differ across {v['skus']} counted SKUs"
+                                       + (" (full count: uncounted SKUs set to 0)" if v["full"] else "")
+                                       + ". The plan used the counted figures.", value=v["value"])
+                           for v in rep["counts"]["variances"]], "count", user=user)
             if rep is not None:
                 XQ.record(XQ.from_ingestion(rep), "data", user=user)
             XQ.record(XQ.from_plan(R), "plan", user=user)

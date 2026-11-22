@@ -96,6 +96,13 @@ T["erp_exchange"] = Table("erp_exchange", md, Column("id", Integer, primary_key=
                           Column("file", String(300)), Column("records", Integer), Column("status", String(12)), Column("error", Text),
                           Column("by", String(80)), Column("checksum", String(64)))
 
+T["catalog"] = Table("catalog", md, Column("sku_id", String(80), primary_key=True), Column("name", String(200)), Column("barcode", String(40)),
+                     Column("category", String(120)), Column("updated_at", DateTime))
+T["stock_counts"] = Table("stock_counts", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("count_id", String(40)),
+                          Column("location_id", String(40)), Column("sku_id", String(80)), Column("qty", Integer), Column("counted_on", String(10)),
+                          Column("counted_at", DateTime), Column("by", String(80)), Column("method", String(40)), Column("source", String(300)),
+                          Column("confidence", Float), Column("scope", String(10)), Column("note", Text))
+
 _ENGINE = None
 _URL = None
 
