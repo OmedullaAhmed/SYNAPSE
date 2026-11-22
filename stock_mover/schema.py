@@ -75,7 +75,13 @@ DEFAULTS = {
         "default_country_code": "91",      # added to 10-digit numbers
     },
     "privacy": {
-        "drop_columns": ["customer_id", "customer_name", "mobile", "phone", "email", "salesperson_id"],
+        "drop_columns": ["customer_id", "customer_name", "mobile", "phone", "email", "salesperson_id", "customer_mobile",
+                         "customer_phone", "customer_email", "address", "pan", "gstin_customer", "loyalty_id"],
+        "retention_days": 90,        # stored input files (sales lines) are purged from plans older than this
+    },
+    "integration": {
+        "stale_stock_days": 2,       # stock older than this raises a data-quality exception
+        "uppercase_ids": True,       # store / SKU codes compared without case (del-01 = DEL-01)
     },
 }
 

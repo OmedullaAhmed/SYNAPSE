@@ -3,6 +3,7 @@ import io
 import json
 import zipfile
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 
@@ -19,6 +20,16 @@ def pack_uploads(uploads):
             z.writestr(f.name.split("/")[-1], f.getvalue())
     b = buf.getvalue()
     return b if len(b) <= MAX_PACK_BYTES else None
+
+
+def pack_dir(folder):
+    """Zip a folder of input files (for the daily run), or None if over the size limit."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in Path(folder).rglob("*"):
+            if f.is_file():
+                z.write(f, f.relative_to(folder).as_posix())
+    return buf.getvalue() if buf.tell() <= MAX_PACK_BYTES else None
 
 
 def save_plan(R, plan_id, label, user, source, pack=None, cfg=None):
@@ -43,6 +54,8 @@ def recent(limit=15, user=None):
     d = db.read("plans", order=["-created_at"], limit=limit)
     if user is not None and len(d):
         d = d[d.created_by == user]
+    if len(d):
+        d = d.assign(has_inputs=d.input_pack.notna() | (d.source == "demo"))
     return d.drop(columns=["input_pack", "settings"]) if len(d) else d
 
 
@@ -91,3 +104,20 @@ def apply_decisions(orders, plan_id):
     o = o[(o.decision != "rejected") & (o.qty > 0)].drop(columns="decision")
     o["line_no"] = o.groupby("to_number").cumcount() + 1
     return o
+
+
+def purge_inputs(days, user="retention"):
+    """Data retention: drop stored input files (they hold sales lines) from plans older than `days`.
+    The plan, its lines, decisions and audit stay; only 'reopen after restart' stops working for those plans."""
+    import db
+    from datetime import timedelta
+    if not days or int(days) <= 0:
+        return 0
+    cut = datetime.now() - timedelta(days=int(days))
+    d = db.read("plans")
+    if d.empty:
+        return 0
+    old = d[(pd.to_datetime(d.created_at) < cut) & d.input_pack.notna()]
+    for pid in old.plan_id:
+        db.update_rows("plans", {"plan_id": pid}, {"input_pack": None})
+    return len(old)

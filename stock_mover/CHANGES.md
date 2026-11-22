@@ -31,3 +31,13 @@ released orders, movements, settings, users and audit; mandatory sign-in with da
 a permission matrix, lockout, idle timeout and forced password change; an append-only audit trail with an Audit tab;
 line-level approve, reject and quantity edits feeding transfer orders; a chain-wide Inventory dashboard with store
 comparison; plans saved with their inputs so they can be reopened after a restart, with tracking kept in the database.
+
+## Operations release (Nov 2026)
+
+Added without removing anything: standardised ingestion of POS / stock / product-master exports with mapping profiles and
+data-quality checks (ingest.py); ERP/WMS exchange by folder, SFTP or API with idempotent confirmations (erp.py); daily
+automation with GitHub Actions, cron or an in-app scheduler (daily.py); an exceptions queue for data problems and transfer
+discrepancies (exceptions_queue.py); regional approval queues and transfer status by region (Operations tab); background
+jobs with progress (jobs.py) through one shared pipeline (pipeline.py); a 3.6–5x faster engine with identical output;
+shared plan cache; company sign-in (OIDC); spreadsheet-formula neutralising on every export (safety.py); HTML escaping of
+data in the page; retention purge of stored inputs; Teams/Slack/Google Chat alerts; tests/enterprise_check.py.

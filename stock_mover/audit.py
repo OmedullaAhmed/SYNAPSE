@@ -6,7 +6,9 @@ import pandas as pd
 import db
 
 ACTIONS = {
-    "login.ok": "Signed in", "login.guest": "Opened demo as guest", "login.failed": "Failed sign-in", "login.locked": "Account locked", "logout": "Signed out",
+    "login.ok": "Signed in", "login.guest": "Opened demo as guest", "login.sso": "Signed in with company account", "queue.decide": "Regional queue decision", "exception.resolve": "Resolved exception",
+    "exception.assign": "Assigned exception", "mapping.save": "Saved column mapping", "automation.settings": "Changed automation",
+    "automation.run": "Daily run", "automation.failed": "Daily run failed", "erp.export": "Sent orders to ERP", "erp.poll": "Picked up ERP confirmations", "login.failed": "Failed sign-in", "login.locked": "Account locked", "logout": "Signed out",
     "session.timeout": "Session timed out", "user.create": "Created user", "user.update": "Changed user", "user.password": "Changed password",
     "plan.build": "Built a plan", "plan.reopen": "Reopened a plan", "decision.line": "Line decision", "decision.bulk": "Bulk line decision",
     "orders.release": "Released transfer orders", "orders.download": "Downloaded transfer orders", "move.dispatched": "Marked as left",

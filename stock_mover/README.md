@@ -81,6 +81,58 @@ edited lines. Trip-level toggles still work as before.
 size availability and old stock, by category, and a store-by-store comparison (shelf used, cover, sizes on shelf,
 old stock, hidden stockouts, pieces in and out in today's plan) with zone, tier and category filters and a CSV export.
 
+## Operations at scale
+
+**Data integration.** Upload (or drop in the daily folder) exports exactly as the POS, ERP or WMS produces them. Each file
+is recognised (sales, stock, product master, store list …), its columns are mapped to the standard sheets (saved mapping
+profile → exact name → a vocabulary of common POS/ERP headers → close spelling), and values are cleaned: day-first dates,
+Excel serial dates, ₹ and comma-formatted amounts, `(12)` negatives, title rows above the header, `;` or tab separators,
+Windows-1252 text, lower-case codes, and return lines flagged by a type column. Columns that are not needed (customer
+mobile numbers, names) are never read. Correct a mapping once in **Integrations → Column mapping profiles**; every later file
+with those headers is read the same way. Tested: the demo brand rewritten as vendor-style exports gives the identical plan.
+
+**Data-quality alerts.** Each load is checked for stale or mixed-date stock, negative and duplicated stock rows, SKUs missing
+from the product master, stores that sent no stock, missing warehouse stock, sales gaps and sales that stop before the stock
+date. These, plus stock-data problems the planner finds, become **exceptions**.
+
+**Exceptions.** One queue (Exceptions tab) for data problems and transfer discrepancies (late leaving, late arriving,
+received short or over). The same problem seen again is updated rather than duplicated; problems that disappear are closed
+as "cleared"; people assign and resolve the rest with a note. Every action is audited.
+
+**Regional approval queues.** Operations tab: each trip sits in the queue of the region it serves. Approvers limited to some
+stores see their regions only. Approve or reject trips (or all pending in a queue), then release the approved ones. A trip
+rejected in a queue is left out of the transfer orders everywhere. Transfer status is shown by region.
+
+**ERP / WMS exchange.** Released transfer orders are sent automatically, as CSV or JSON in the ERP's own field names, to a
+folder, an SFTP server (written as `.part`, then renamed) or an HTTP API. Dispatch and receipt confirmations come back the
+same way (file name or an `event` column says which), are applied once each (checksums), archived, and update tracking and
+exceptions. See `[erp]` in `secrets.example.toml`.
+
+**Daily automation.** `python daily.py` picks up ERP confirmations, fetches the day's exports (folder, SFTP or URLs),
+standardises them, builds the plan and saves it for approval (nothing is released automatically), refreshes transfer
+exceptions, purges stored inputs older than the retention period and posts a summary to Teams / Slack / Google Chat. Run it
+from the included GitHub Actions workflow (`.github/workflows/daily-plan.yml`, 06:30 IST), cron, or Windows Task Scheduler;
+on your own server, `STOCKFLOW_SCHEDULER=on` runs it inside the app. A second trigger on the same day does nothing.
+
+**Background processing and speed.** Plans are built in a background worker: the page shows progress, stays usable, and the
+plan is saved even if the browser is closed. Plans are shared between sessions, so many approvers opening the same daily
+plan use one copy and it opens instantly. The engine was optimised without changing a single recommendation (verified line
+by line against the previous engine):
+
+| Stores | Before | Now | Memory |
+|---|---|---|---|
+| 9 (demo) | 7.7 s | 2.1 s | — |
+| 20 (hackathon data) | 15.0 s | 6.4 s | — |
+| 100 | 102.8 s | 22.1 s | ~0.5 GB |
+| 200 | 197 s | 51.5 s | ~0.9 GB |
+| 500 | 716 s | 139 s | ~1.9 GB (use a 4 GB server) |
+
+**Company sign-in.** Add an `[auth]` section (Microsoft Entra ID, Google Workspace, Okta) and a "Sign in with your company
+account" button appears. The work email is matched to a StockFlow user for the role; MFA comes from the identity provider.
+
+**Readiness checks.** `python tests/enterprise_check.py` runs 25 checks across data integration, security, reliability,
+auditability and correctness against the configured database (SQLite or PostgreSQL).
+
 ## AI answers (optional)
 
 The Ask tab works offline by default. An admin can turn on AI answers with an Anthropic API key after confirming that

@@ -19,6 +19,11 @@ import plotly.express as px
 import streamlit as st
 
 import audit
+import erp
+import exceptions_queue as XQ
+import ingest
+import jobs
+import pipeline
 import auth
 import chat
 import db
@@ -27,6 +32,7 @@ import feedback as fb
 import insights as ins
 import notify
 import plans
+import safety
 import schema
 
 HERE = Path(__file__).parent
@@ -167,13 +173,39 @@ def _set_session(name, rec):
 
 def sign_out(reason="logout"):
     audit.log(reason, st.session_state.get("user", ""), {}, st.session_state.get("user", ""), st.session_state.get("role", ""))
+    sso = st.session_state.get("sso")
     for k in list(st.session_state.keys()):
         del st.session_state[k]
+    if sso:
+        try:
+            st.logout()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def sso_providers():
+    """Company sign-in (OIDC: Microsoft Entra ID, Google Workspace, Okta…) from Streamlit's [auth] secrets. [] when not set up."""
+    try:
+        a = SECRETS["auth"]
+    except Exception:  # noqa: BLE001
+        return []
+    try:
+        named = [k for k, v in dict(a).items() if hasattr(v, "keys") and "client_id" in v]
+        return named or (["default"] if "client_id" in a else [])
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def sso_user():
+    try:
+        return st.user.get("email") if st.user.is_logged_in else None
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def guest_allowed():
     """Demo without sign-in is on unless secrets say  guest_demo = false  (top level or under [auth])."""
-    for path_ in (("guest_demo",), ("auth", "guest_demo")):
+    for path_ in (("guest_demo",),):
         try:
             cur = SECRETS
             for k_ in path_:
@@ -261,8 +293,36 @@ def login_gate():
         with mid:
             guest_button("setup")
         st.stop()
+    provs = sso_providers()
+    email = sso_user() if provs else None
+    if email:                                        # signed in with the company account: map the email to a StockFlow user
+        rec = next((v for k, v in everyone.items() if k.lower() == email.lower()), None)
+        if rec and rec.get("active", True):
+            _set_session(email.lower(), dict(rec, must_change=False))
+            st.session_state.sso = True
+            audit.log("login.sso", email.lower(), {"role": rec.get("role")}, email.lower(), rec.get("role", ""))
+            try:
+                auth.update_user(email.lower(), last_login=datetime.now(), failed=0) if rec.get("source") == "database" else None
+            except Exception:  # noqa: BLE001
+                pass
+            st.rerun()
+        topbar(schema.DEFAULTS, "No access")
+        st.error(f"{email} signed in, but has no StockFlow access. Ask an admin to add this email as a user in the Admin tab.")
+        audit.log("login.failed", email.lower(), {"sso": True, "reason": "not a user"}, email.lower(), "")
+        if st.button("Sign out of the company account"):
+            st.logout()
+        st.stop()
     topbar(schema.DEFAULTS, "Sign in")
     st.markdown('<div class="hero"><h1>Welcome back</h1><p>Sign in to see today\'s stock plan.</p></div>', unsafe_allow_html=True)
+    if provs:
+        _, mid0, _ = st.columns([1, 2, 1])
+        with mid0:
+            for p_ in provs:
+                if st.button("🔐  Sign in with your company account" + ("" if p_ == "default" else f" ({p_.title()})"),
+                             type="primary", width="stretch", key=f"sso_{p_}"):
+                    st.login() if p_ == "default" else st.login(p_)
+            st.markdown('<div style="text-align:center;color:#5E6875;margin:.4rem 0">or with a StockFlow password</div>',
+                        unsafe_allow_html=True)
     if st.session_state.pop("timed_out", False):
         note(f"You were signed out after {auth.IDLE_MINUTES} minutes without activity.", "ok")
     _, mid, _ = st.columns([1, 2, 1])
@@ -283,6 +343,9 @@ def login_gate():
 
 
 login_gate()
+if os.environ.get("STOCKFLOW_SCHEDULER", "").lower() in ("on", "1", "true") and not IN_BROWSER:
+    import daily
+    daily.start_scheduler(dict(SECRETS) if SECRETS is not None else {})
 GUEST = bool(st.session_state.get("guest"))
 USER = st.session_state.get("user", "demo")
 ROLE = st.session_state.get("role", "admin" if IN_BROWSER else "viewer")
@@ -401,9 +464,11 @@ def settings_panel(base):
                + (" Only an admin can change these." if dis else ""))
 
 
-def start(source, cfg, label, reopen=None):
-    """Build a plan. source None = the uploaded files; reopen = plan_id of a saved plan being rebuilt (not saved again)."""
-    tmp = None
+def start(source, cfg, label, reopen=None, cleanup=None):
+    """Build a plan. source None = the uploaded files; reopen = plan_id of a saved plan being rebuilt (not saved again).
+    The work runs as a background job (pipeline.build_plan): the page stays usable and shows progress; the plan is saved
+    by the job itself, so it is kept even if the browser is closed."""
+    tmp = cleanup                                          # a folder this call (then the job) owns and deletes
     pack, kind = None, "demo" if source == DEMO else "upload"
     try:
         if source is None:
@@ -412,31 +477,82 @@ def start(source, cfg, label, reopen=None):
             cfg = schema.merge(cfg, over) if over else cfg
             pack = plans.pack_uploads(st.session_state.ups)
             source = tmp
-        with st.spinner("Checking your data, measuring selling speed, planning and pricing every move…"):
-            R = run_engine(source, cfg)
-        st.session_state.R, st.session_state.label = R, label
-        if reopen:
-            st.session_state.run_id = reopen
-            log("plan.reopen", reopen, trips=len(R["trips"]))
-        else:
-            st.session_state.run_id = fb.log_run(R, label, USER)
+        std_on = bool(st.session_state.get("standardise", True))
+        user, role, own = USER, ROLE, tmp                  # `own` is fixed now; `tmp` is cleared below once the job owns it
+
+        def work(progress):
             try:
-                plans.save_plan(R, st.session_state.run_id, label, USER, kind, pack, cfg)
-            except Exception as e:  # noqa: BLE001  (plan still usable in this session)
-                st.session_state.save_error = f"{type(e).__name__}: {e}"
-            log("plan.build", st.session_state.run_id, data=label[:80], trips=len(R["trips"]), lines=len(R["moves"]),
-                net=round(float(R["opportunity"]["net"])), stored_inputs=pack is not None or kind == "demo")
-        st.session_state.pop("released", None)
-        st.session_state.chat = []
-        st.session_state.pop("ctx", None)
+                return pipeline.build_plan(source, cfg, label, user, kind, pack, progress, standardise=std_on, reopen=reopen, role=role)
+            finally:
+                if own:
+                    shutil.rmtree(own, ignore_errors=True)
+        if IN_BROWSER:                                     # no threads in the browser-only copy
+            with st.spinner("Checking your data, measuring selling speed, planning and pricing every move…"):
+                finish_plan(work(lambda *_: None), label, reopen)
+            return
+        tmp = None                                         # the job owns the folder now
+        job = jobs.submit("plan" if not reopen else "reopen", work, USER, plan_id=reopen, label=f"Starting: {label}"[:120])
+        st.session_state.job = dict(id=job, label=label, reopen=reopen)
         st.rerun()
     except E.DataError as e:
         st.error("**The data isn't quite what StockFlow needs.** Please fix:\n\n" + "\n".join(f"- {p}" for p in str(e).splitlines()))
     except Exception as e:  # noqa: BLE001
+        if type(e).__name__ in ("RerunException", "StopException"):
+            raise
         st.error(f"Something went wrong while planning: {type(e).__name__}: {e}")
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)
+
+
+def finish_plan(res, label, reopen=None):
+    R = res["R"]
+    st.session_state.R, st.session_state.label = R, label
+    st.session_state.run_id = res["plan_id"]
+    if res.get("save_error"):
+        st.session_state.save_error = res["save_error"]
+    if reopen:
+        log("plan.reopen", reopen, trips=len(R["trips"]))
+    st.session_state.pop("released", None)
+    st.session_state.chat = []
+    st.session_state.pop("ctx", None)
+    st.rerun()
+
+
+def job_panel():
+    """Progress of the plan being built in the background; picks up the result when it is ready."""
+    j = st.session_state.get("job")
+    if not j:
+        return
+
+    @st.fragment(run_every=1.2)
+    def _watch():
+        s_ = jobs.status(j["id"]) or {}
+        state = s_.get("status", "queued")
+        if state in ("queued", "running"):
+            with st.container(border=True):
+                st.markdown(f"**⏳ Building the plan:** {html.escape(j['label'])}")
+                st.progress(float(s_.get("progress") or 0.0), text=str(s_.get("step") or "Waiting for a free worker"))
+                st.caption("This runs in the background: you can keep using the app, and the plan is saved even if you close the page.")
+            return
+        res = jobs.result(j["id"])
+        if not isinstance(res, dict) and j.get("reopen") and state == "done":
+            cached = pipeline.cache_get(j["reopen"])      # another session started the same reopen
+            res = dict(R=cached, plan_id=j["reopen"]) if cached is not None else None
+        st.session_state.pop("job", None)
+        if state == "done" and isinstance(res, dict):
+            finish_plan(res, j["label"], j.get("reopen"))
+        elif state == "done":
+            st.session_state.job_note = "The plan was built and saved. Open it from 'Pick up where you left off'."
+        else:
+            err = res if isinstance(res, Exception) else None
+            if isinstance(err, E.DataError):
+                st.session_state.job_note = "**The data isn't quite what StockFlow needs.** Please fix:\n\n" + "\n".join(
+                    f"- {p}" for p in str(err).splitlines())
+            else:
+                st.session_state.job_note = f"The plan could not be built: {s_.get('error') or state}."
+        st.rerun(scope="app")
+    _watch()
 
 
 def data_panel(key="main"):
@@ -452,6 +568,9 @@ def data_panel(key="main"):
         st.markdown('<div class="sf-h" style="font-weight:800;font-size:1.05rem">Plan with your own data</div>', unsafe_allow_html=True)
         ups = st.file_uploader("Drop a zip, an Excel workbook or the CSV files (add config.json for brand settings)",
                                type=["zip", "csv", "xlsx", "xlsm", "json"], accept_multiple_files=True, key="ups")
+        st.toggle("Standardise POS / ERP exports (any column names, Indian dates, ₹ amounts)", True, key="standardise",
+                  help="Recognises each file, maps its columns to the standard sheets with your saved mapping profiles, "
+                       "cleans dates, numbers and codes, and checks data quality. Turn off only for files already in the template.")
         brand = st.selectbox("Settings profile", ["Standard settings"] + [b.stem for b in BRANDS], key=f"brand_{key}")
         base = schema.load_config(HERE / "brands" / f"{brand}.json" if brand != "Standard settings" else None, fb.load_settings())
         with st.expander("⚙️ Settings"):
@@ -467,6 +586,15 @@ def demo_button(key, label="✨  Try the demo brand", primary=True):
 
 def reopen(plan_id):
     """Rebuild a saved plan after a restart: same input pack + same settings give the same plan (the engine is deterministic)."""
+    cached = pipeline.cache_get(plan_id)
+    if cached is not None:                       # another session already has it open: share it, no rebuild
+        row_ = plans.get(plan_id)
+        finish_plan(dict(R=cached, plan_id=plan_id), str(row_.data_label) if row_ is not None else plan_id, reopen=plan_id)
+        return
+    busy_ = jobs.active_for(plan_id)
+    if busy_:                                    # someone is already rebuilding it: wait for that job instead of a second build
+        st.session_state.job = dict(id=busy_, label=f"Reopening {plan_id}", reopen=plan_id)
+        st.rerun()
     row = plans.get(plan_id)
     if row is None:
         st.error("That plan is no longer in the database.")
@@ -476,8 +604,10 @@ def reopen(plan_id):
         start(DEMO, cfg_, row.data_label, reopen=plan_id)
         return
     if row.input_pack is None:
-        st.error("The input files of that plan were too large to store, so it can't be rebuilt. Upload them again.")
+        st.error("The input files of that plan are no longer stored (too large, or past the retention period), so it can't be rebuilt. "
+                 "Its lines, decisions and audit history are still kept.")
         return
+    handed = False
     tmp = Path(tempfile.mkdtemp(prefix="stockflow_re_"))
     try:
         with zipfile.ZipFile(io.BytesIO(bytes(row.input_pack))) as z:
@@ -498,9 +628,11 @@ def reopen(plan_id):
             zf.unlink()
         for j in tmp.glob("*.json"):
             j.unlink()
-        start(tmp, cfg_, row.data_label, reopen=plan_id)
+        handed = True                                       # the background job reads the folder later and deletes it
+        start(tmp, cfg_, row.data_label, reopen=plan_id, cleanup=tmp)
     finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        if not handed:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 def recent_plans(key):
@@ -517,7 +649,10 @@ def recent_plans(key):
         a.markdown(f"**{r_.plan_date}** · {html.escape(str(r_.brand))} · {r_.trips} trips · built by {r_.created_by} "
                    f"{pd.Timestamp(r_.created_at):%d %b %H:%M}  \n<span style='color:{MUTED};font-size:.85rem'>{html.escape(str(r_.data_label))}</span>",
                    unsafe_allow_html=True)
-        if b.button("Reopen", key=f"re_{key}_{r_.plan_id}", width="stretch"):
+        can_re = bool(getattr(r_, "has_inputs", True)) or pipeline.cache_get(r_.plan_id) is not None
+        if b.button("Reopen" if can_re else "Inputs removed", key=f"re_{key}_{r_.plan_id}", width="stretch", disabled=not can_re,
+                    help=None if can_re else "Its input files are no longer stored (too large, or past the retention period). "
+                                             "Its lines, decisions and audit history are still in the database."):
             reopen(r_.plan_id)
 
 
@@ -532,7 +667,7 @@ def whatsapp_panel(released, approved):
         if preview:
             with st.expander(f"Preview · {len(preview)} people will be told"):
                 for rec in preview:
-                    st.markdown(f"**{rec['who']}** · {rec['role']}  \n<span style='color:{MUTED}'>{html.escape(rec['text'])}</span>",
+                    st.markdown(f"**{html.escape(str(rec['who']))}** · {html.escape(str(rec['role']))}  \n<span style='color:{MUTED}'>{html.escape(rec['text'])}</span>",
                                 unsafe_allow_html=True)
     else:
         recs = notify.recipients(R, released)
@@ -600,9 +735,12 @@ if "R" not in st.session_state:
     css()
     topbar(schema.DEFAULTS, "Demo" if OPEN or IN_BROWSER else USER)
     account_bar()
+    job_panel()
+    if st.session_state.get("job_note"):
+        note(bold(st.session_state.pop("job_note")).replace("\n", "<br>"))
     st.markdown("""<div class="hero"><h1>The right stock in the right store, in the right size, every morning.</h1>
 <p>Upload yesterday's sales and stock. StockFlow gives you a short list of trips to approve, with what each one earns and what it costs to move.</p>
-<div class="meta"><span>👗 Built for apparel & ethnic wear</span><span>🏬 5–100 stores</span><span>🔒 Your data stays yours</span></div></div>""",
+<div class="meta"><span>👗 Built for apparel & ethnic wear</span><span>🏬 5–500 stores</span><span>🔒 Your data stays yours</span></div></div>""",
                 unsafe_allow_html=True)
     if OPEN:
         note("🔓 <b>Open demo:</b> no sign-in is set up yet. Use the demo brand, or add users before uploading real data.")
@@ -636,7 +774,7 @@ if "R" not in st.session_state:
 R = st.session_state.R
 cfg = R["cfg"]
 css(cfg["brand"].get("primary_color", TEAL) if cfg["brand"].get("primary_color", "").startswith("#") else TEAL)
-M = lambda v: E.money(v, cfg)
+M = lambda v: html.escape(E.money(v, cfg))
 pl, mv, ex, val, tr, O = R["pl"], R["moves"], R["issues"], R["checks"], R["trips"], R["opportunity"]
 P, g, stores = R["P"], pl.g, pl.st
 SCOPE = st.session_state.get("scope") or []
@@ -646,6 +784,9 @@ if SCOPE:  # a user limited to some stores sees only their trips
 L = ins.leadership(R)
 topbar(cfg, f"{USER} · {ROLE}")
 account_bar()
+job_panel()
+if st.session_state.get("job_note"):
+    note(bold(st.session_state.pop("job_note")).replace("\n", "<br>"))
 if st.session_state.get("save_error"):
     note(f"⚠️ This plan could not be saved to the database ({html.escape(st.session_state.save_error)}). It works for this session only.")
 allp = bool((val.status == "PASS").all())
@@ -661,12 +802,25 @@ with st.expander("📂  New data or settings"):
     recent_plans("results")
 
 TAB_NAMES = ["Overview", "Inventory", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]
+if not GUEST and not IN_BROWSER:                 # live operations data is never shown to guests
+    TAB_NAMES[8:8] = ["Operations", "Exceptions"]
+if can_do("settings") and not GUEST and not IN_BROWSER:
+    TAB_NAMES.append("Integrations")
 if can_do("audit"):
     TAB_NAMES.append("Audit")
 if can_do("users"):
     TAB_NAMES.append("Admin")
 TABS = dict(zip(TAB_NAMES, st.tabs(TAB_NAMES)))
 T = [TABS[n] for n in ["Overview", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]]
+
+def erp_on():
+    if os.environ.get("STOCKFLOW_ERP_CHANNEL"):
+        return True
+    try:
+        return bool(SECRETS is not None and "erp" in SECRETS)
+    except Exception:  # noqa: BLE001 - no secrets file
+        return False
+
 
 # ---- overview
 with T[0]:
@@ -691,7 +845,7 @@ with T[0]:
                 f'<div style="margin:.45rem 0"><div style="display:flex;justify-content:space-between;font-size:.88rem"><span>{GICON[k]} {k}</span>'
                 f'<b>{int(v):,}</b></div><div class="bar" style="--c:{GCOL[k]}"><i style="width:{100 * v / mx:.1f}%"></i></div></div>'
                 for k, v in d.items()) + "</div>", unsafe_allow_html=True)
-    if R["xlsx"]:
+    if R["xlsx"] and Path(R["xlsx"]).exists():
         st.download_button("⬇️ Full plan (Excel)", Path(R["xlsx"]).read_bytes(), Path(R["xlsx"]).name, key="xl1", width="stretch")
 
 # ---- money
@@ -845,6 +999,14 @@ with T[3]:
     orders = orders[orders.to_number.isin(ok_to) & orders.to_number.isin(tr.to_number)] if len(orders) else orders
     if saved:
         orders = plans.apply_decisions(orders, PLAN_ID)
+        try:
+            qrej = db.read("trip_decisions", {"plan_id": PLAN_ID})
+            qrej = set(qrej[qrej.decision == "rejected"].to_number) if len(qrej) else set()
+        except Exception:  # noqa: BLE001
+            qrej = set()
+        if qrej and len(orders):
+            orders = orders[~orders.to_number.isin(qrej)]
+            st.caption(f"{len(qrej)} trips rejected in the regional queues (Operations tab) are left out.")
     t_ok = tr[tr.to_number.isin(set(orders.to_number))] if len(orders) else tr.iloc[0:0]
     with st.container(border=True):
         kpis([("Approved", f"{len(t_ok)} of {len(tr)} trips", f"{int(orders.qty.sum()) if len(orders) else 0:,} pieces in {len(orders):,} lines"),
@@ -852,7 +1014,7 @@ with T[3]:
               ("Net gain", M(t_ok.net_benefit.sum()), "of approved trips, before line changes", GREEN)])
         if can_ok:
             a, b = st.columns(2)
-            a.download_button("⬇️ Transfer orders (CSV)", orders.to_csv(index=False).encode(), f"transfer_orders_{pl.run:%Y-%m-%d}.csv",
+            a.download_button("⬇️ Transfer orders (CSV)", safety.csv(orders), f"transfer_orders_{pl.run:%Y-%m-%d}.csv",
                               type="primary", width="stretch",
                               on_click=lambda: log("orders.download", PLAN_ID, orders=int(orders.to_number.nunique()), lines=len(orders)))
             if b.button("📤 Release & send WhatsApp alerts", width="stretch", disabled=orders.empty or not can_do("release")):
@@ -863,6 +1025,10 @@ with T[3]:
                 st.session_state.released = orders.copy()
                 st.session_state.wa_sent = False
                 st.success(f"Released {orders.to_number.nunique()} transfer orders. Record receipts on the Track tab.")
+                if erp_on():
+                    ok_, m_ = erp.export_orders(orders, PLAN_ID, USER, SECRETS)
+                    log("erp.export", PLAN_ID, ok=ok_, orders=int(orders.to_number.nunique()), message=m_[:200])
+                    (st.success if ok_ else st.warning)(m_)
             if IN_BROWSER:
                 with st.expander("Download blocked here? Copy the transfer orders instead"):
                     st.code(orders.to_csv(index=False), language=None)
@@ -919,7 +1085,7 @@ with T[5]:
     for title, df in (("⬇️ Coming in", tr[tr.to_id == s]), ("⬆️ Going out", tr[tr.from_id == s])):
         with st.expander(f"{title} · {len(df)} trips"):
             for r in df.itertuples():
-                st.markdown(f"**{r.to_number}** {r.from_id} → {r.to_id} · {r.pieces} pcs  \n<span style='color:{MUTED}'>{html.escape(r.reason)}</span>",
+                st.markdown(f"**{html.escape(str(r.to_number))}** {html.escape(str(r.from_id))} → {html.escape(str(r.to_id))} · {r.pieces} pcs  \n<span style='color:{MUTED}'>{html.escape(r.reason)}</span>",
                             unsafe_allow_html=True)
 
 # ---- track
@@ -954,116 +1120,119 @@ def step_html(label, when, state):
 
 
 with T[6]:
-    tz = cfg["brand"].get("timezone", "Asia/Kolkata")
-    sec("Where is the stock?")
-    st.caption("Every released transfer order is followed from release, to leaving the sender, to arriving at the receiver. "
-               "Mark each step here, or upload files from your warehouse system.")
-    if st.session_state.get("mv_alerts"):
-        with st.container(border=True):
-            st.markdown("**💬 Tell them on WhatsApp**")
-            for rec in st.session_state.mv_alerts:
-                a, b = st.columns([4, 1.4])
-                a.markdown(f"**{rec['who']}** · {rec['role']}  \n<span style='color:{MUTED};font-size:.86rem'>{html.escape(rec['text'])}</span>",
-                           unsafe_allow_html=True)
-                b.link_button("Send", notify.wa_link(rec["phone"], rec["text"]), width="stretch")
-            if st.button("Done", key="mv_done"):
-                st.session_state.mv_alerts = None
-                st.rerun()
-    tro, trl = fb.tracking()
-    if tro.empty:
-        st.info("Nothing to track yet. Approve and release trips on the Approve tab.")
+    if GUEST:
+        st.info("Transfer tracking shows live data, so it needs an account. Sign in to follow released transfers.")
     else:
-        if SCOPE:
-            tro = tro[tro.from_location.isin(SCOPE) | tro.to_location.isin(SCOPE)]
-        cnt = tro.status.value_counts()
-        kpis([("Not left yet", int(cnt.get("Waiting to leave", 0) + cnt.get("Late leaving", 0)), f"{int(cnt.get('Late leaving', 0))} late", MUTED),
-              ("On the road", int(cnt.get("In transit", 0) + cnt.get("Late arriving", 0)), f"{int(cnt.get('Late arriving', 0))} overdue", TEAL),
-              ("Arrived", int(cnt.get("Received", 0) + cnt.get("Received short", 0) + cnt.get("Received over", 0)),
-               f"{int(cnt.get('Received short', 0) + cnt.get('Received over', 0))} with a different count", GREEN),
-              ("Pieces still out", f"{int((tro.sent - tro.received).clip(lower=0)[tro.sent > 0].sum()):,}", "left but not received", SAFFRON)])
-        groups = {"All": None, "Not left": ["Waiting to leave", "Late leaving"], "On the road": ["In transit", "Late arriving"],
-                  "Arrived": ["Received", "Received short", "Received over"],
-                  "Needs attention": ["Late leaving", "Late arriving", "Received short", "Received over"]}
-        a, b = st.columns([3, 2])
-        f = a.pills("Show", list(groups), default="All", key="trk_f", label_visibility="collapsed")
-        q = b.text_input("Find", placeholder="🔍 TO number or store", key="trk_q", label_visibility="collapsed")
-        view = tro if not groups.get(f or "All") else tro[tro.status.isin(groups[f])]
-        if q:
-            view = view[view.apply(lambda r: q.lower() in f"{r.to_number} {r.from_location} {r.to_location}".lower(), axis=1)]
-        st.caption(f"{len(view)} transfer orders")
-        for r in view.head(60).itertuples():
-            left_state = "done" if r.sent_lines > 0 else ("late" if r.status == "Late leaving" else "todo")
-            arr_state = "done" if r.got_lines > 0 else ("late" if r.status == "Late arriving" else "todo")
-            got = f" · received {int(r.received):,}" if r.got_lines > 0 else ""
-            sent = f" · sent {int(r.sent):,}" if r.sent_lines > 0 else ""
-            days = f" · {r.days_on_road:g} days on the road" if r.days_on_road == r.days_on_road else ""
+        tz = cfg["brand"].get("timezone", "Asia/Kolkata")
+        sec("Where is the stock?")
+        st.caption("Every released transfer order is followed from release, to leaving the sender, to arriving at the receiver. "
+                   "Mark each step here, or upload files from your warehouse system.")
+        if st.session_state.get("mv_alerts"):
             with st.container(border=True):
-                st.markdown(
-                    f'<div class="r" style="display:flex;flex-wrap:wrap;gap:.4rem .6rem;align-items:center"><b>{html.escape(r.from_location)} → '
-                    f'{html.escape(r.to_location)}</b><span style="color:{MUTED};font-size:.8rem;font-weight:600">{r.to_number}</span>'
-                    f'<span class="chip" style="color:{SCOL[r.status]}">{r.status}</span>'
-                    f'<span style="margin-left:auto;font-size:.85rem;font-variant-numeric:tabular-nums">planned {int(r.planned):,}{sent}{got}{days}</span></div>'
-                    f'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-top:.6rem">'
-                    + step_html("Released", str(r.released_at)[:16], "done")
-                    + step_html(f"Left {html.escape(r.from_location)}", r.left_at if r.sent_lines > 0 else f"due {pd.Timestamp(r.ship_date):%d %b}"
-                                if left_state != "late" else None, left_state)
-                    + step_html(f"At {html.escape(r.to_location)}", r.arrived_at if r.got_lines > 0 else f"due {pd.Timestamp(r.expected):%d %b}"
-                                if arr_state != "late" else None, arr_state) + "</div>", unsafe_allow_html=True)
-                ln = trl[trl.to_number == r.to_number][["sku_id", "planned", "sent", "received"]]
-                if r.sent_lines == 0 and can_mark(r.from_location):
-                    c1, c2 = st.columns([1, 1])
-                    if c1.button("🚚 Mark as left", key=f"left_{r.to_number}", type="primary", width="stretch"):
-                        fb.mark_dispatched(r.to_number, USER, tz=tz)
-                        log("move.dispatched", r.to_number, qty=int(r.planned), route=f"{r.from_location}>{r.to_location}")
-                        row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
-                        movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
-                        st.rerun()
-                    with c2.popover("Sent a different quantity?", width="stretch"):
-                        ed = st.data_editor(ln[["sku_id", "planned"]].rename(columns={"planned": "sent"}), key=f"eds_{r.to_number}",
-                                            hide_index=True, disabled=["sku_id"], width="stretch")
-                        if st.button("Save what was sent", key=f"sv_s_{r.to_number}"):
-                            fb.mark_dispatched(r.to_number, USER, dict(zip(ed.sku_id, ed.sent.astype(int))), "edited", tz)
-                            log("move.dispatched", r.to_number, qty=int(ed.sent.sum()), planned=int(r.planned), edited=True)
+                st.markdown("**💬 Tell them on WhatsApp**")
+                for rec in st.session_state.mv_alerts:
+                    a, b = st.columns([4, 1.4])
+                    a.markdown(f"**{rec['who']}** · {rec['role']}  \n<span style='color:{MUTED};font-size:.86rem'>{html.escape(rec['text'])}</span>",
+                               unsafe_allow_html=True)
+                    b.link_button("Send", notify.wa_link(rec["phone"], rec["text"]), width="stretch")
+                if st.button("Done", key="mv_done"):
+                    st.session_state.mv_alerts = None
+                    st.rerun()
+        tro, trl = fb.tracking()
+        if tro.empty:
+            st.info("Nothing to track yet. Approve and release trips on the Approve tab.")
+        else:
+            if SCOPE:
+                tro = tro[tro.from_location.isin(SCOPE) | tro.to_location.isin(SCOPE)]
+            cnt = tro.status.value_counts()
+            kpis([("Not left yet", int(cnt.get("Waiting to leave", 0) + cnt.get("Late leaving", 0)), f"{int(cnt.get('Late leaving', 0))} late", MUTED),
+                  ("On the road", int(cnt.get("In transit", 0) + cnt.get("Late arriving", 0)), f"{int(cnt.get('Late arriving', 0))} overdue", TEAL),
+                  ("Arrived", int(cnt.get("Received", 0) + cnt.get("Received short", 0) + cnt.get("Received over", 0)),
+                   f"{int(cnt.get('Received short', 0) + cnt.get('Received over', 0))} with a different count", GREEN),
+                  ("Pieces still out", f"{int((tro.sent - tro.received).clip(lower=0)[tro.sent > 0].sum()):,}", "left but not received", SAFFRON)])
+            groups = {"All": None, "Not left": ["Waiting to leave", "Late leaving"], "On the road": ["In transit", "Late arriving"],
+                      "Arrived": ["Received", "Received short", "Received over"],
+                      "Needs attention": ["Late leaving", "Late arriving", "Received short", "Received over"]}
+            a, b = st.columns([3, 2])
+            f = a.pills("Show", list(groups), default="All", key="trk_f", label_visibility="collapsed")
+            q = b.text_input("Find", placeholder="🔍 TO number or store", key="trk_q", label_visibility="collapsed")
+            view = tro if not groups.get(f or "All") else tro[tro.status.isin(groups[f])]
+            if q:
+                view = view[view.apply(lambda r: q.lower() in f"{r.to_number} {r.from_location} {r.to_location}".lower(), axis=1)]
+            st.caption(f"{len(view)} transfer orders")
+            for r in view.head(60).itertuples():
+                left_state = "done" if r.sent_lines > 0 else ("late" if r.status == "Late leaving" else "todo")
+                arr_state = "done" if r.got_lines > 0 else ("late" if r.status == "Late arriving" else "todo")
+                got = f" · received {int(r.received):,}" if r.got_lines > 0 else ""
+                sent = f" · sent {int(r.sent):,}" if r.sent_lines > 0 else ""
+                days = f" · {r.days_on_road:g} days on the road" if r.days_on_road == r.days_on_road else ""
+                with st.container(border=True):
+                    st.markdown(
+                        f'<div class="r" style="display:flex;flex-wrap:wrap;gap:.4rem .6rem;align-items:center"><b>{html.escape(r.from_location)} → '
+                        f'{html.escape(r.to_location)}</b><span style="color:{MUTED};font-size:.8rem;font-weight:600">{r.to_number}</span>'
+                        f'<span class="chip" style="color:{SCOL[r.status]}">{r.status}</span>'
+                        f'<span style="margin-left:auto;font-size:.85rem;font-variant-numeric:tabular-nums">planned {int(r.planned):,}{sent}{got}{days}</span></div>'
+                        f'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-top:.6rem">'
+                        + step_html("Released", str(r.released_at)[:16], "done")
+                        + step_html(f"Left {html.escape(r.from_location)}", r.left_at if r.sent_lines > 0 else f"due {pd.Timestamp(r.ship_date):%d %b}"
+                                    if left_state != "late" else None, left_state)
+                        + step_html(f"At {html.escape(r.to_location)}", r.arrived_at if r.got_lines > 0 else f"due {pd.Timestamp(r.expected):%d %b}"
+                                    if arr_state != "late" else None, arr_state) + "</div>", unsafe_allow_html=True)
+                    ln = trl[trl.to_number == r.to_number][["sku_id", "planned", "sent", "received"]]
+                    if r.sent_lines == 0 and can_mark(r.from_location):
+                        c1, c2 = st.columns([1, 1])
+                        if c1.button("🚚 Mark as left", key=f"left_{r.to_number}", type="primary", width="stretch"):
+                            fb.mark_dispatched(r.to_number, USER, tz=tz)
+                            log("move.dispatched", r.to_number, qty=int(r.planned), route=f"{r.from_location}>{r.to_location}")
                             row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
                             movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
                             st.rerun()
-                elif r.sent_lines > 0 and r.got_lines == 0 and can_mark(r.to_location):
-                    c1, c2 = st.columns([1, 1])
-                    if c1.button("📦 Mark as received (all of it)", key=f"rcv_{r.to_number}", type="primary", width="stretch"):
-                        fb.mark_received(r.to_number, USER, tz=tz)
-                        log("move.received", r.to_number, qty=int(r.sent), route=f"{r.from_location}>{r.to_location}")
-                        st.rerun()
-                    with c2.popover("Received a different quantity?", width="stretch"):
-                        ed = st.data_editor(ln[["sku_id", "sent"]].assign(received=ln.sent), key=f"edr_{r.to_number}",
-                                            hide_index=True, disabled=["sku_id", "sent"], width="stretch")
-                        if st.button("Save what arrived", key=f"sv_r_{r.to_number}"):
-                            fb.mark_received(r.to_number, USER, dict(zip(ed.sku_id, ed.received.astype(int))), "counted", tz)
-                            log("move.received", r.to_number, qty=int(ed.received.sum()), sent=int(r.sent), counted=True)
-                            row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
-                            if int(row.received) != int(row.sent):
-                                movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "received")
+                        with c2.popover("Sent a different quantity?", width="stretch"):
+                            ed = st.data_editor(ln[["sku_id", "planned"]].rename(columns={"planned": "sent"}), key=f"eds_{r.to_number}",
+                                                hide_index=True, disabled=["sku_id"], width="stretch")
+                            if st.button("Save what was sent", key=f"sv_s_{r.to_number}"):
+                                fb.mark_dispatched(r.to_number, USER, dict(zip(ed.sku_id, ed.sent.astype(int))), "edited", tz)
+                                log("move.dispatched", r.to_number, qty=int(ed.sent.sum()), planned=int(r.planned), edited=True)
+                                row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
+                                movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
+                                st.rerun()
+                    elif r.sent_lines > 0 and r.got_lines == 0 and can_mark(r.to_location):
+                        c1, c2 = st.columns([1, 1])
+                        if c1.button("📦 Mark as received (all of it)", key=f"rcv_{r.to_number}", type="primary", width="stretch"):
+                            fb.mark_received(r.to_number, USER, tz=tz)
+                            log("move.received", r.to_number, qty=int(r.sent), route=f"{r.from_location}>{r.to_location}")
                             st.rerun()
-                elif r.status in ("Received short", "Received over"):
-                    with st.expander("See the lines that differ"):
-                        st.dataframe(ln[ln.received != ln.sent.where(ln.sent > 0, ln.planned)], hide_index=True, width="stretch")
-        if len(view) > 60:
-            st.caption(f"Showing 60 of {len(view)}. Use the filter or search.")
-        st.download_button("⬇️ Tracking report (CSV)", trl.to_csv(index=False).encode(), "stock_movement_tracking.csv", width="stretch")
-    if can_do("track_all"):
-        with st.expander("📥 Upload from your warehouse system (many orders at once)"):
-            st.caption("Dispatch file: to_number, sku_id, qty_shipped (optional dispatched_on). "
-                       "Receipt file: to_number, sku_id, qty_received (optional received_on).")
-            a, b = st.columns(2)
-            df_ = a.file_uploader("What left (CSV)", type=["csv"], key="up_disp")
-            rf_ = b.file_uploader("What arrived (CSV)", type=["csv"], key="up_rcpt")
-            if st.button("Record uploads", type="primary", disabled=not (df_ or rf_)):
-                try:
-                    n1 = fb.add_dispatches(pd.read_csv(df_, dtype=str), USER) if df_ else 0
-                    n2 = fb.add_receipts(pd.read_csv(rf_, dtype=str), USER) if rf_ else 0
-                    log("move.upload", "tracking files", dispatch_lines=n1, receipt_lines=n2)
-                    st.success(f"Recorded {n1} dispatch lines and {n2} receipt lines.")
-                except ValueError as e:
-                    st.error(str(e))
+                        with c2.popover("Received a different quantity?", width="stretch"):
+                            ed = st.data_editor(ln[["sku_id", "sent"]].assign(received=ln.sent), key=f"edr_{r.to_number}",
+                                                hide_index=True, disabled=["sku_id", "sent"], width="stretch")
+                            if st.button("Save what arrived", key=f"sv_r_{r.to_number}"):
+                                fb.mark_received(r.to_number, USER, dict(zip(ed.sku_id, ed.received.astype(int))), "counted", tz)
+                                log("move.received", r.to_number, qty=int(ed.received.sum()), sent=int(r.sent), counted=True)
+                                row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
+                                if int(row.received) != int(row.sent):
+                                    movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "received")
+                                st.rerun()
+                    elif r.status in ("Received short", "Received over"):
+                        with st.expander("See the lines that differ"):
+                            st.dataframe(ln[ln.received != ln.sent.where(ln.sent > 0, ln.planned)], hide_index=True, width="stretch")
+            if len(view) > 60:
+                st.caption(f"Showing 60 of {len(view)}. Use the filter or search.")
+            st.download_button("⬇️ Tracking report (CSV)", safety.csv(trl), "stock_movement_tracking.csv", width="stretch")
+        if can_do("track_all"):
+            with st.expander("📥 Upload from your warehouse system (many orders at once)"):
+                st.caption("Dispatch file: to_number, sku_id, qty_shipped (optional dispatched_on). "
+                           "Receipt file: to_number, sku_id, qty_received (optional received_on).")
+                a, b = st.columns(2)
+                df_ = a.file_uploader("What left (CSV)", type=["csv"], key="up_disp")
+                rf_ = b.file_uploader("What arrived (CSV)", type=["csv"], key="up_rcpt")
+                if st.button("Record uploads", type="primary", disabled=not (df_ or rf_)):
+                    try:
+                        n1 = fb.add_dispatches(pd.read_csv(df_, dtype=str), USER) if df_ else 0
+                        n2 = fb.add_receipts(pd.read_csv(rf_, dtype=str), USER) if rf_ else 0
+                        log("move.upload", "tracking files", dispatch_lines=n1, receipt_lines=n2)
+                        st.success(f"Recorded {n1} dispatch lines and {n2} receipt lines.")
+                    except ValueError as e:
+                        st.error(str(e))
 
 # ---- ask
 with T[7]:
@@ -1146,7 +1315,7 @@ with T[8]:
             if b.button("↩️ Back to standard settings", width="stretch"):
                 fb.reset_settings(USER)
                 log("settings.reset", "overrides")
-    if not runs.empty:
+    if not runs.empty and not GUEST:
         with st.expander(f"Run history ({len(runs)})"):
             st.dataframe(runs[::-1], hide_index=True, width="stretch")
 
@@ -1255,7 +1424,7 @@ with TABS["Inventory"]:
             fig = px.imshow(hm.T, aspect="auto", color_continuous_scale=["#C2413A", "#F6E7C8", "#1E5C61"], zmin=0, zmax=120,
                             labels=dict(color="days", x="", y=""), title="Cover by store and category (red = running out, dark = overstocked)")
             plot(fig, 120 + 28 * hm.shape[1], False)
-        st.download_button("⬇️ Store comparison (CSV)", cmpf.to_csv(index=False).encode(), "store_comparison.csv", width="stretch")
+        st.download_button("⬇️ Store comparison (CSV)", safety.csv(cmpf), "store_comparison.csv", width="stretch")
 
 # ---- audit trail
 if "Audit" in TABS:
@@ -1282,7 +1451,7 @@ if "Audit" in TABS:
                   ("Failed sign-ins", int(view.action.isin(["login.failed", "login.locked"]).sum()), "watch for lockouts", RED)])
             st.dataframe(view.drop(columns="action").assign(at=view["at"].dt.strftime("%Y-%m-%d %H:%M:%S")), hide_index=True,
                          width="stretch", height=480, column_config={"details": st.column_config.TextColumn(width="large")})
-            st.download_button("⬇️ Audit trail (CSV)", view.to_csv(index=False).encode(), "audit_trail.csv", width="stretch")
+            st.download_button("⬇️ Audit trail (CSV)", safety.csv(view), "audit_trail.csv", width="stretch")
 
 # ---- admin: users, database, secrets
 if "Admin" in TABS:
@@ -1326,9 +1495,13 @@ if "Admin" in TABS:
             nu = st.text_input("User name")
             nr = st.selectbox("Role", ["viewer", "store", "approver", "admin"])
             ns = st.multiselect("Limit to stores (optional)", list(stores.index))
-            npw = st.text_input("Temporary password (they change it at first sign-in)", type="password")
+            npw = st.text_input("Temporary password (they change it at first sign-in)" +
+                                (" — leave blank for company sign-in (user name = work email)" if sso_providers() else ""), type="password")
             if st.form_submit_button("Create user", type="primary", width="stretch"):
                 try:
+                    if not npw and sso_providers() and "@" in nu:
+                        import secrets as _sec
+                        npw = _sec.token_urlsafe(24) + "9a"           # unusable password: this user signs in through SSO only
                     auth.create_user(nu, npw, nr, ", ".join(ns), USER, must_change=True)
                     log("user.create", nu.strip(), role=nr, stores=", ".join(ns))
                     st.success(f"Created {nu.strip()}.")
@@ -1360,3 +1533,310 @@ if "Admin" in TABS:
                                 auth.update_user(eu, **vals)
                                 log("user.update", eu, role=er, stores=es, active=ea, password_reset=bool(epw))
                                 st.success("Saved.")
+
+
+# ============================================================================= operations layer
+def trip_region(fr, to):
+    z = stores.zone.to_dict()
+    return z.get(to) or z.get(fr) or "Warehouse"
+
+
+def queue_frame():
+    """Today's trips with region, decision (regional queue) and release state."""
+    q = tr.copy()
+    q["region"] = [trip_region(a, b) for a, b in zip(q.from_id, q.to_id)]
+    q["priority"] = (q.urgent > 0).map({True: "Urgent", False: "Routine"}) if "urgent" in q else "Routine"
+    try:
+        d = db.read("trip_decisions", {"plan_id": PLAN_ID}) if PLAN_ID else pd.DataFrame()
+    except Exception:  # noqa: BLE001
+        d = pd.DataFrame()
+    dd = d.set_index("to_number") if len(d) else pd.DataFrame(columns=["decision", "by", "at", "note"])
+    q["decision"] = q.to_number.map(dd.decision).fillna("pending") if len(dd) else "pending"
+    q["decided_by"] = q.to_number.map(dd["by"]).fillna("") if len(dd) else ""
+    q["queue_note"] = q.to_number.map(dd.note).fillna("") if len(dd) else ""
+    rel = fb.released()
+    done = set(rel[rel.run_id == PLAN_ID].to_number) if len(rel) and "run_id" in rel else set()
+    q["released"] = q.to_number.isin(done)
+    q["state"] = q.released.map({True: "released", False: ""}).where(q.released, q.decision)
+    return q
+
+
+def release_trips(numbers, where):
+    """Release the given trips (line decisions applied), send them to the ERP/WMS if configured. Returns a message."""
+    o = R["orders"]
+    o = o[o.to_number.isin(numbers)] if len(o) else o
+    if PLAN_ID:
+        o = plans.apply_decisions(o, PLAN_ID)
+    if o is None or o.empty:
+        return False, "Nothing to release."
+    fb.release_orders(o, USER, PLAN_ID)
+    log("orders.release", PLAN_ID, orders=int(o.to_number.nunique()), lines=len(o), pieces=int(o.qty.sum()), via=where)
+    msg = f"Released {o.to_number.nunique()} transfer orders ({int(o.qty.sum()):,} pieces)."
+    if erp_on():
+        ok, m = erp.export_orders(o, PLAN_ID, USER, SECRETS)
+        log("erp.export", PLAN_ID, ok=ok, orders=int(o.to_number.nunique()), message=m[:200])
+        msg += " " + m
+    st.session_state.released = o.copy()
+    return True, msg
+
+
+if "Operations" in TABS:
+    with TABS["Operations"]:
+        q = queue_frame()
+        regions = sorted(q.region.unique())
+        mine = sorted({trip_region(s_, s_) for s_ in SCOPE}) if SCOPE else regions
+        xs = XQ.summary()
+        jb = jobs.recent(30)
+        kpis([("Waiting for a decision", f"{int((q.state == 'pending').sum())} trips", f"{int(q[q.state == 'pending'].pieces.sum()):,} pieces"),
+              ("Approved, not released", f"{int((q.state == 'approved').sum())}", "ready to release", TEAL),
+              ("Released today", f"{int(q.released.sum())} of {len(q)}", "transfer orders out", GREEN),
+              ("Open exceptions", f"{xs['open']}", f"{xs['high']} high · oldest {xs['oldest_days']} days", RED if xs["high"] else SAFFRON)])
+        sec("Regional approval queues")
+        st.caption("Each trip sits in the queue of the region it serves (the receiving store's zone; returns to a warehouse go to the "
+                   "sender's zone). Approvers limited to some stores see their regions only. A trip rejected here is left out of the "
+                   "transfer orders everywhere, including the Approve tab.")
+        summ = q.groupby("region").agg(trips=("to_number", "size"), pending=("state", lambda x: int((x == "pending").sum())),
+                                       approved=("state", lambda x: int((x == "approved").sum())),
+                                       rejected=("state", lambda x: int((x == "rejected").sum())), released=("released", "sum"),
+                                       pieces=("pieces", "sum"), net=("net_benefit", "sum"),
+                                       urgent_pending=("priority", lambda x: int(((x == "Urgent") & (q.loc[x.index, "state"] == "pending")).sum())))
+        st.dataframe(summ.reset_index().assign(net=lambda d: d.net.map(M)), hide_index=True, width="stretch")
+        pick = st.pills("Queue", [r_ for r_ in regions if r_ in mine], selection_mode="single", default=(mine[0] if mine else None), key="q_reg")
+        if pick:
+            qq = q[q.region == pick].sort_values(["released", "priority", "net_benefit"], ascending=[True, False, False])
+            can_q = can_do("approve") and (not SCOPE or bool(set(qq.from_id) | set(qq.to_id)) & bool(SCOPE))
+            ed_in = pd.DataFrame({"trip": qq.to_number, "route": qq.from_id + " → " + qq.to_id, "reason": qq.reason,
+                                  "pieces": qq.pieces, "net": qq.net_benefit.round(0), "priority": qq.priority,
+                                  "decision": qq.decision, "note": qq.queue_note, "by": qq.decided_by, "released": qq.released})
+            ed = st.data_editor(ed_in, hide_index=True, width="stretch", key=f"q_ed_{PLAN_ID}_{pick}",
+                                disabled=["trip", "route", "reason", "pieces", "net", "priority", "by", "released"] if can_q else True,
+                                column_config={"decision": st.column_config.SelectboxColumn(options=["pending", "approved", "rejected"]),
+                                               "reason": st.column_config.TextColumn(width="large"), "net": st.column_config.NumberColumn(format="%d")})
+            if can_q:
+                a, b, c = st.columns(3)
+                if a.button("💾 Save queue decisions", type="primary", width="stretch", key="q_save"):
+                    n = 0
+                    for r_ in ed.itertuples():
+                        old = qq[qq.to_number == r_.trip].iloc[0]
+                        if r_.released or (r_.decision == old.decision and (r_.note or "") == (old.queue_note or "")):
+                            continue
+                        if SCOPE and not ({old.from_id, old.to_id} & set(SCOPE)):
+                            continue
+                        db.delete_rows("trip_decisions", {"plan_id": PLAN_ID, "to_number": r_.trip})
+                        db.insert_rows("trip_decisions", [dict(plan_id=PLAN_ID, to_number=r_.trip, region=pick, decision=r_.decision,
+                                                               by=USER, at=datetime.now(), note=r_.note or "")])
+                        log("queue.decide", f"{PLAN_ID}/{r_.trip}", region=pick, before=old.decision, after=r_.decision, note=r_.note or "")
+                        n += 1
+                    st.success(f"Saved {n} decisions.")
+                    st.rerun()
+                if b.button("Approve all pending in this queue", width="stretch", key="q_all"):
+                    for r_ in qq[(qq.state == "pending")].itertuples():
+                        db.delete_rows("trip_decisions", {"plan_id": PLAN_ID, "to_number": r_.to_number})
+                        db.insert_rows("trip_decisions", [dict(plan_id=PLAN_ID, to_number=r_.to_number, region=pick, decision="approved",
+                                                               by=USER, at=datetime.now(), note="bulk")])
+                    log("queue.decide", f"{PLAN_ID}/{pick}", region=pick, after="approved", trips=int((qq.state == "pending").sum()), bulk=True)
+                    st.rerun()
+                ready = qq[(qq.decision == "approved") & ~qq.released]
+                if c.button(f"📤 Release {len(ready)} approved trips", width="stretch", key="q_rel", disabled=ready.empty or not can_do("release")):
+                    ok, m = release_trips(set(ready.to_number), f"queue:{pick}")
+                    (st.success if ok else st.warning)(m)
+            else:
+                st.caption("You can see this queue but not decide on it.")
+
+        sec("Transfer status by region")
+        tk, _ = fb.tracking()
+        if tk is None or len(tk) == 0:
+            st.info("No transfers released yet.")
+        else:
+            locs = XQ.locations()
+            tk["region"] = [(locs.get(t_) or {}).get("zone") or (locs.get(f_) or {}).get("zone") or "—" for f_, t_ in zip(tk.from_location, tk.to_location)]
+            if SCOPE:
+                tk = tk[tk.from_location.isin(SCOPE) | tk.to_location.isin(SCOPE)]
+            pv = tk.pivot_table(index="region", columns="status", values="to_number", aggfunc="count", fill_value=0)
+            pv = pv[[c_ for c_ in fb.STATUS_ORDER if c_ in pv.columns]]
+            st.dataframe(pv, width="stretch")
+            late = tk[tk.status.isin(["Late leaving", "Late arriving", "Received short", "Received over"])]
+            if len(late):
+                st.markdown(f"**Needs attention ({len(late)})**")
+                st.dataframe(late[["to_number", "region", "from_location", "to_location", "status", "planned", "sent", "received", "ship_date",
+                                   "expected"]], hide_index=True, width="stretch")
+        sec("ERP / WMS exchange")
+        ec = erp.conf(SECRETS)
+        st.caption(("Connected: " if erp_on() else "Not configured in secrets; using the local folder ") + erp.describe(ec) +
+                   ". Released orders are sent automatically; dispatch and receipt confirmations are picked up below and by the daily run.")
+        a, b = st.columns(2)
+        if a.button("📥 Pick up confirmations now", width="stretch", key="erp_poll", disabled=not can_do("track_all")):
+            r_ = erp.poll(USER, SECRETS)
+            log("erp.poll", "inbox", **{k: v for k, v in r_.items() if k != "errors"})
+            XQ.sync_transfers(USER)
+            (st.success if r_.get("ok") else st.error)(f"{r_.get('files', 0)} files · {r_.get('dispatched', 0)} dispatch and "
+                                                        f"{r_.get('received', 0)} receipt lines" + (f" · {r_['error']}" if r_.get("error") else ""))
+        rel = fb.released()
+        sent = erp.log(500)
+        sent_ok = set(sent[(sent.direction == "out") & (sent.status == "ok")].file) if len(sent) else set()
+        if b.button("🔁 Re-send today's released orders", width="stretch", key="erp_resend", disabled=not can_do("release") or rel.empty):
+            o_ = rel[rel.run_id == PLAN_ID] if "run_id" in rel else rel.iloc[0:0]
+            ok, m = erp.export_orders(o_, PLAN_ID, USER, SECRETS)
+            log("erp.export", PLAN_ID, ok=ok, resend=True, message=m[:200])
+            (st.success if ok else st.error)(m)
+        if len(sent):
+            with st.expander(f"Exchange log ({len(sent)})"):
+                st.dataframe(sent.drop(columns=["checksum"], errors="ignore"), hide_index=True, width="stretch")
+        sec("Automation and background jobs")
+        auto = jb[jb.kind == "daily"] if len(jb) else jb
+        last = auto.iloc[0] if len(auto) else None
+        st.markdown("**Daily run:** " + (f"last {pd.Timestamp(last.requested_at):%d %b %H:%M} — {last.status}"
+                                           + (f" ({html.escape(str(last.error)[:120])})" if last.status == "failed" else "") if last is not None
+                                           else "has not run yet") + f" · scheduled {html.escape(str((db.get_setting('automation', {}) or {}).get('run_at', '06:30')))} daily")
+        if can_do("settings") and st.button("▶️ Run the daily plan now", key="daily_now"):
+            import daily
+            sec_ = SECRETS
+            jid = jobs.submit("daily", lambda p_: daily.run_daily(USER, None, False, True, p_, dict(sec_) if sec_ is not None else {}),
+                              USER, label="Daily run (manual)")
+            log("automation.run", jid, manual=True)
+            st.success("Started. Progress shows below; the new plan appears in 'Pick up where you left off'.")
+        if len(jb):
+            st.dataframe(jb[["requested_at", "kind", "status", "step", "progress", "requested_by", "plan_id", "error"]], hide_index=True,
+                         width="stretch", column_config={"progress": st.column_config.ProgressColumn(min_value=0, max_value=1, format="percent")})
+
+if "Exceptions" in TABS:
+    with TABS["Exceptions"]:
+        sec("Exceptions")
+        st.caption("Data-quality problems from the files, stock-data problems the planner found, and transfers that are late or arrived "
+                   "short. Each stays open until resolved; problems that disappear from the data are closed automatically.")
+        if st.button("🔄 Re-check transfers", key="x_sync"):
+            r_ = XQ.sync_transfers(USER)
+            st.toast(f"{r_['new']} new · {r_['cleared']} cleared")
+        show_all = st.toggle("Include resolved and cleared", False, key="x_all")
+        xt = XQ.table(None if show_all else ("open", "assigned"))
+        if SCOPE and len(xt):
+            locs_ = XQ.locations()
+            zones_ = {(locs_.get(s_) or {}).get("zone") for s_ in SCOPE}
+            xt = xt[xt.location.isin(SCOPE) | xt.region.isin(zones_) | (xt.location == "")]
+        if xt.empty:
+            st.success("No open exceptions.")
+        else:
+            a, b, c = st.columns(3)
+            fk = a.multiselect("Type", sorted(xt.kind.unique()), format_func=lambda k: XQ.KINDS.get(k, k), key="x_k", placeholder="All types")
+            fs = b.multiselect("Severity", ["high", "medium", "low"], key="x_s", placeholder="All")
+            fr = c.multiselect("Region", sorted(x_ for x_ in xt.region.dropna().unique() if x_), key="x_r", placeholder="All regions")
+            v_ = xt
+            if fk:
+                v_ = v_[v_.kind.isin(fk)]
+            if fs:
+                v_ = v_[v_.severity.isin(fs)]
+            if fr:
+                v_ = v_[v_.region.isin(fr)]
+            age = (pd.Timestamp.now() - pd.to_datetime(v_.first_seen)).dt.days
+            kpis([("Open", f"{int(v_.status.isin(['open', 'assigned']).sum())}", f"{len(v_)} shown"),
+                  ("High", f"{int((v_.severity == 'high').sum())}", "fix before approving", RED),
+                  ("Oldest", f"{int(age.max()) if len(age) else 0} days", "since first seen", SAFFRON),
+                  ("Seen repeatedly", f"{int((v_.seen_count > 1).sum())}", "came back on later runs", PLUM)])
+            ed_in = pd.DataFrame({"pick": False, "id": v_.id, "severity": v_.severity, "type": v_.kind.map(XQ.KINDS).fillna(v_.kind),
+                                  "region": v_.region, "where": v_.location, "title": v_.title, "detail": v_.detail,
+                                  "days_open": age.values, "seen": v_.seen_count, "status": v_.status, "owner": v_.owner,
+                                  "resolution": v_.resolution})
+            ed = st.data_editor(ed_in, hide_index=True, width="stretch", key="x_ed", disabled=[c_ for c_ in ed_in.columns if c_ != "pick"],
+                                column_config={"id": None, "pick": st.column_config.CheckboxColumn("✓"),
+                                               "detail": st.column_config.TextColumn(width="large")})
+            chosen = list(ed[ed.pick].id)
+            if can_do("resolve"):
+                a, b = st.columns(2)
+                with a.form("x_resolve", clear_on_submit=True):
+                    nt = st.text_input("What was done", placeholder="e.g. GRN posted in ERP; stock corrected")
+                    if st.form_submit_button(f"✅ Resolve {len(chosen)} selected", width="stretch", type="primary"):
+                        if not chosen or not nt.strip():
+                            st.warning("Tick the exceptions and say what was done.")
+                        else:
+                            XQ.resolve(chosen, USER, nt.strip())
+                            log("exception.resolve", ",".join(map(str, chosen))[:200], count=len(chosen), note=nt.strip()[:200])
+                            st.rerun()
+                with b.form("x_assign", clear_on_submit=True):
+                    who = st.selectbox("Assign to", sorted(auth.all_users(SECRETS)))
+                    if st.form_submit_button(f"👤 Assign {len(chosen)} selected", width="stretch"):
+                        if chosen:
+                            XQ.assign(chosen, who)
+                            log("exception.assign", ",".join(map(str, chosen))[:200], owner=who, count=len(chosen))
+                            st.rerun()
+            st.download_button("⬇️ Exceptions (CSV)", safety.csv(ed_in.drop(columns="pick")), "exceptions.csv", width="stretch")
+
+if "Integrations" in TABS:
+    with TABS["Integrations"]:
+        sec("Column mapping profiles")
+        st.caption("Upload one export from your POS, ERP or warehouse system. StockFlow recognises the sheet and suggests a column for each "
+                   "field; correct any it got wrong and save. Every later file with the same headers, from uploads or the daily run, "
+                   "is read the same way.")
+        smp = st.file_uploader("Sample export (CSV or Excel)", type=["csv", "xlsx", "xls", "txt", "tsv"], key="map_up")
+        profiles = ingest.load_profiles()
+        if smp is not None:
+            tmpd = Path(tempfile.mkdtemp(prefix="stockflow_map_"))
+            (tmpd / smp.name).write_bytes(smp.getvalue())
+            raw = {k_: v_ for k_, v_ in ingest.read_raw(tmpd).items() if not isinstance(v_, Exception)}
+            shutil.rmtree(tmpd, ignore_errors=True)
+            if not raw:
+                st.error("That file could not be read.")
+            else:
+                nm, df_ = next(iter(raw.items()))
+                df_ = ingest._header_row(df_)
+                guess = ingest.detect_sheet(nm.split("#")[-1], df_.columns)
+                sheets_ = list(schema.TABLES)
+                sh = st.selectbox("This file is", sheets_, index=sheets_.index(guess) if guess in sheets_ else 0, key="map_sheet")
+                sugg = ingest.suggest_mapping(sh, df_.columns, profiles.get(sh))
+                inv = {v_: k_ for k_, v_ in sugg.items()}
+                opts = ["— not in this file —"] + list(map(str, df_.columns))
+                cols_ = st.columns(3)
+                chosen_map = {}
+                for i_, (c_, need_, meaning_, _) in enumerate(schema.TABLES[sh][2]):
+                    cur_ = inv.get(c_)
+                    chosen_map[c_] = cols_[i_ % 3].selectbox(f"{c_}{' *' if need_ == schema.R else ''}", opts,
+                                                             index=opts.index(str(cur_)) if cur_ is not None and str(cur_) in opts else 0,
+                                                             help=meaning_, key=f"map_{sh}_{c_}")
+                mapping_ = {v_: k_ for k_, v_ in chosen_map.items() if v_ != opts[0]}
+                clean_, notes_ = ingest.standardise(df_.head(2000), sh, mapping_)
+                miss_ = [c_ for c_ in ingest.required(sh) if c_ not in clean_]
+                (st.error if miss_ else st.success)(("Still missing required: " + ", ".join(miss_)) if miss_ else
+                                                     f"All required columns found. {' · '.join(notes_)}")
+                st.dataframe(clean_.head(20), hide_index=True, width="stretch")
+                if st.button("💾 Save mapping profile", type="primary", key="map_save"):
+                    ingest.save_profile(sh, {k_: v_ for k_, v_ in chosen_map.items() if v_ != opts[0]}, USER)
+                    log("mapping.save", sh, columns=len(mapping_), file=smp.name[:80])
+                    st.success(f"Saved. Files recognised as {sh} will use it.")
+        if profiles:
+            st.markdown("**Saved profiles:** " + " · ".join(f"{k_} ({len(v_)} columns)" for k_, v_ in profiles.items()))
+        try:
+            ig = db.read("ingestions", order=["-at"], limit=300)
+        except Exception:  # noqa: BLE001
+            ig = pd.DataFrame()
+        if len(ig):
+            with st.expander(f"Ingestion log ({len(ig)} files)"):
+                st.dataframe(ig.drop(columns=["id", "mapping"], errors="ignore"), hide_index=True, width="stretch")
+        sec("Daily automation")
+        st.caption("The daily run fetches the day's exports, standardises them, builds the plan and saves it for approval. Nothing is "
+                   "released automatically. Credentials (SFTP password, API token) go in secrets under [automation], never here.")
+        au = dict(db.get_setting("automation", {}) or {})
+        with st.form("auto_form"):
+            a, b = st.columns(2)
+            src_ = a.selectbox("Source", ["folder", "sftp", "url"], index=["folder", "sftp", "url"].index(au.get("source", "folder")))
+            at_ = b.text_input("Run at (24h, local time)", au.get("run_at", "06:30"))
+            path_ = st.text_input("Folder path (folder) or remote folder (SFTP)", au.get("path", "") or au.get("remote_dir", ""))
+            urls_ = st.text_area("File URLs, one per line (url)", "\n".join(au.get("urls", []) if isinstance(au.get("urls"), list) else []))
+            host_ = st.text_input("SFTP host (password or key in secrets)", au.get("host", ""))
+            prof_ = st.selectbox("Settings profile", [""] + [b_.stem for b_ in BRANDS],
+                                 index=([""] + [b_.stem for b_ in BRANDS]).index(au.get("brand_profile", "")) if au.get("brand_profile", "") in [b_.stem for b_ in BRANDS] else 0)
+            if st.form_submit_button("Save automation settings", type="primary"):
+                if not re.match(r"^\d{1,2}:\d{2}$", at_.strip()):
+                    st.error("Use HH:MM for the time.")
+                else:
+                    new_ = dict(source=src_, run_at=at_.strip(), path=path_.strip() if src_ == "folder" else "",
+                                remote_dir=path_.strip() if src_ == "sftp" else "", host=host_.strip(),
+                                urls=[u_.strip() for u_ in urls_.splitlines() if u_.strip()], brand_profile=prof_)
+                    db.upsert_setting("automation", new_, USER)
+                    log("automation.settings", "automation", **{k_: (v_ if k_ != "urls" else len(v_)) for k_, v_ in new_.items()})
+                    st.success("Saved.")
+        st.markdown("Schedule it with the included GitHub Actions workflow (`.github/workflows/daily-plan.yml`), with cron "
+                    "(`30 6 * * * cd stock_mover && python daily.py`), or Windows Task Scheduler (`run_daily.ps1`).")
+        sec("ERP / WMS connection")
+        ec = erp.conf(SECRETS)
+        st.markdown(f"**Channel:** {html.escape(erp.describe(ec))} · format **{ec.get('format')}** · "
+                    + ("custom field names" if ec.get("fields") else "standard field names")
+                    + ("" if erp_on() else " · ⚠️ not configured in secrets (local folder only)"))

@@ -32,8 +32,8 @@ PERMS = {
     "guest":    {"view", "approve"},   # demo without sign-in: demo data only, line decisions, nothing released or tracked
     "viewer":   {"view"},
     "store":    {"view", "track_own"},                       # mark dispatch / receipt for its own stores
-    "approver": {"view", "track_own", "track_all", "approve", "release", "audit"},
-    "admin":    {"view", "track_own", "track_all", "approve", "release", "audit", "settings", "users"},
+    "approver": {"view", "track_own", "track_all", "approve", "release", "audit", "resolve"},
+    "admin":    {"view", "track_own", "track_all", "approve", "release", "audit", "resolve", "settings", "users"},
 }
 LOCK_AFTER, LOCK_MINUTES, IDLE_MINUTES = 5, 15, 30
 
@@ -109,6 +109,8 @@ def create_user(username, pw, role, stores="", by="", must_change=True):
     import db
     from datetime import datetime
     username = username.strip()
+    if "@" in username:
+        username = username.lower()            # work emails match company sign-in case-insensitively
     if not re.fullmatch(r"[A-Za-z0-9_.@-]{3,60}", username or ""):
         raise ValueError("User name: 3-60 letters, numbers or . _ @ -")
     if role not in PERMS:

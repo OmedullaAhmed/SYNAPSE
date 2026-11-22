@@ -223,3 +223,29 @@ def movement_recipients(R, t, kind):
             if targets & {x.strip() for x in str(m.get("stores", "")).split(",")}:
                 add(str(m.get("name", mid)), "Area manager", m.get("whatsapp"))
     return out
+
+
+# ---------------------------------------------------------------- team channel webhook (Microsoft Teams, Slack, Google Chat)
+def webhook_url(st_secrets=None):
+    import os
+    try:
+        if st_secrets is not None and "alerts" in st_secrets and st_secrets["alerts"].get("webhook_url"):
+            return st_secrets["alerts"]["webhook_url"]
+    except Exception:  # noqa: BLE001
+        pass
+    return os.environ.get("STOCKFLOW_ALERTS_WEBHOOK", "")
+
+
+def post_webhook(url, text):
+    """Post a plain message. Works with Slack and Google Chat ({"text"}) and Teams workflows/incoming webhooks. Never raises."""
+    import json as _json
+    import urllib.request as _u
+    if not url:
+        return False
+    try:
+        body = _json.dumps({"text": text}).encode()
+        req = _u.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+        with _u.urlopen(req, timeout=15) as r:   # noqa: S310 - URL comes from the admin's secrets
+            return r.status < 300
+    except Exception:  # noqa: BLE001
+        return False

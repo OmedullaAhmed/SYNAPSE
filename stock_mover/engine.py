@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import poisson
 
+import safety
 import schema
 
 HERE = Path(__file__).resolve().parent
@@ -38,6 +39,41 @@ G_AGE, G_REUNITE, G_PULL, G_CLEAR = ("Old stock to faster-selling stores", "Reun
                                      "Return slow stock to warehouse", "Clear end-of-season / dead stock")
 GROUPS = [G_URGENT, G_PEAK, G_SET, G_DISP, G_TOPUP, G_AGE, G_REUNITE, G_PULL, G_CLEAR]
 INF = 10 ** 9
+
+
+class Row(dict):
+    """A dict row with attribute access (r.pos as well as r["pos"]): much faster than a pandas row lookup."""
+    __slots__ = ()
+
+    def __getattr__(self, k):
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(k) from None
+
+
+class LazyRow(Row):
+    """Row holding only the fields the planner reads often; anything else is fetched from the frame on first use."""
+    __slots__ = ("_g", "_k")
+
+    def __missing__(self, k):
+        v = self._g.at[self._k, k]
+        self[k] = v
+        return v
+
+
+ROW_FIELDS = ["L", "age", "dcat", "eoss", "fd", "fd30", "is_core", "need", "oh", "option", "pos", "set_fill", "size", "style",
+              "suspect", "transit", "mrp"]
+
+
+def _lazy_rows(g):
+    out = {}
+    cols = [c for c in ROW_FIELDS if c in g.columns]
+    for k, r in zip(g.index, g[cols].to_dict("records")):
+        x = LazyRow(r)
+        x._g, x._k = g, k
+        out[k] = x
+    return out
 
 
 class DataError(Exception):
@@ -506,7 +542,7 @@ class Season:
     def __init__(self, D, P):
         st, sales, cfg = P["stores"], P["sales"], P["cfg"]["season"]
         self.peak, self.event = cfg["peak_label"], cfg["event_label"]
-        self.today, self.idx, self.lift, self.typ = P["today"], {}, {}, {}
+        self.today, self.idx, self.lift, self.typ, self.memo = P["today"], {}, {}, {}, {}
         self.base_from = self.today - pd.Timedelta(days=83)
         cal = D.get("calendar")
         self.on = cal is not None and len(cal) > 0
@@ -538,6 +574,13 @@ class Season:
     def mult(self, region, start, n):
         if not self.on or region not in self.idx:
             return 1.0
+        ck = ("m", region, start, n)
+        if ck in self.memo:
+            return self.memo[ck]
+        self.memo[ck] = v = self._mult(region, start, n)
+        return v
+
+    def _mult(self, region, start, n):
         i = self.idx[region]
         fwd = i.reindex(pd.date_range(start, periods=n)).fillna(1.0).mean()
         back = i[self.base_from:self.today].mean()
@@ -546,6 +589,12 @@ class Season:
     def next_event(self, region, start, n):
         if not self.on or region not in self.typ:
             return ""
+        ck = ("e", region, start, n)
+        if ck not in self.memo:
+            self.memo[ck] = self._next_event(region, start, n)
+        return self.memo[ck]
+
+    def _next_event(self, region, start, n):
         t = self.typ[region].reindex(pd.date_range(start, periods=n)).fillna("normal")
         out = []
         f = t[t.str.contains(self.event, regex=False)]
@@ -610,10 +659,12 @@ class Planner:
         self.cat_pos = g.groupby(["store_id", "dcat"]).pos.sum().to_dict()
         self.opt_fd = g.groupby(["store_id", "option"]).fd30.sum().to_dict()
         self.opt_skus = it.groupby("option").apply(lambda x: list(x.index)).to_dict()
-        self.row = {k: r for k, r in zip(self.g.index, self.g.to_dict("records"))}   # fast row access
+        self.row = _lazy_rows(self.g)   # fast row access (common fields; the rest on demand)
+        self.tier_of, self.home_of, self.region_of = st.tier.to_dict(), st.home_wh.to_dict(), st.region.to_dict()
         self.inc, self.out = defaultdict(int), defaultdict(int)
         self.sty_out, self.cat_in, self.cat_out = defaultdict(int), defaultdict(int), defaultdict(int)
-        self.room = {s: int(min(st.cap[s], INF) - g[g.store_id == s].pos.sum()) for s in st.index}
+        held = g.groupby("store_id").pos.sum()
+        self.room = {s: int(min(st.cap[s], INF) - held.get(s, 0)) for s in st.index}
         self.trips = defaultdict(set)   # store -> destinations it already ships to today
         # warehouse supply: (warehouse, sku) -> [(date, qty)]
         whs = snap[snap.location_id.isin(self.whs)].groupby(["location_id", "sku_id"]).oh.sum()
@@ -639,10 +690,10 @@ class Planner:
         return self.lanes.lead(a, b)
 
     def cur(self, s, k):
-        return int(self.g.at[(s, k), "pos"]) + self.inc[(s, k)] - self.out[(s, k)]
+        return int(self.row[(s, k)]["pos"]) + self.inc[(s, k)] - self.out[(s, k)]
 
     def cover(self, s, k, col="fd30"):
-        fd = self.g.at[(s, k), col]
+        fd = self.row[(s, k)][col]
         return self.cur(s, k) / fd if fd > 1e-9 else float("inf")
 
     def opt_sizes_left(self, s, opt, skip=None):
@@ -666,7 +717,7 @@ class Planner:
         sfd = max(self.sty_fd30[(d, row["style"])], self.sty_give.get((d, row["style"]), 0))
         spos = self.sty_pos[(d, row["style"])] - self.sty_out[(d, row["style"])]
         g2 = math.floor(spos - pc["donor_min_cover"] * pc["donor_margin"] * sfd + 1e-9) if sfd > 1e-9 and not row["eoss"] else INF
-        minimum = self.P["md"].get((self.st.tier[d], row["dcat"]), 0)
+        minimum = self.P["md"].get((self.tier_of[d], row["dcat"]), 0)
         g3 = self.cat_pos[(d, row["dcat"])] + self.cat_in[(d, row["dcat"])] - self.cat_out[(d, row["dcat"])] - minimum
         return max(0, min(g1, g2, g3))
 
@@ -674,14 +725,14 @@ class Planner:
         if qty <= 0:
             return
         if frm in self.st.index:
-            row = self.g.loc[(frm, k)]
+            row = self.row[(frm, k)]
             self.out[(frm, k)] += qty
             self.sty_out[(frm, row["style"])] += qty
             self.cat_out[(frm, row["dcat"])] += qty   # freed shelf space is not re-used today: safe if the line is dropped later
             if to in self.st.index:
                 self.trips[frm].add(to)
         if to in self.st.index:
-            row = self.g.loc[(to, k)]
+            row = self.row[(to, k)]
             self.inc[(to, k)] += qty
             self.cat_in[(to, row["dcat"])] += qty
             self.room[to] -= qty
@@ -690,14 +741,14 @@ class Planner:
                                reason=reason, group=group, mandatory=mandatory))
 
     def prio(self, s, k, L):
-        c = self.g.at[(s, k), "pos"] / max(self.g.at[(s, k), "fd"], 1e-9)
+        c = self.row[(s, k)]["pos"] / max(self.row[(s, k)]["fd"], 1e-9)
         return "High" if c < L else "Medium" if c < L + 14 else "Low"
 
     def ev(self, s, L):
-        return self.season.next_event(self.st.region[s], self.run, L + self.cfg["planning"]["cover_days"])
+        return self.season.next_event(self.region_of[s], self.run, L + self.cfg["planning"]["cover_days"])
 
     def refill_group(self, s, k, prio, L):
-        if self.g.at[(s, k), "set_fill"]:
+        if self.row[(s, k)]["set_fill"]:
             return G_SET
         if prio == "High":
             return G_URGENT
@@ -713,12 +764,13 @@ class Planner:
         needy = g[g.need > 0].reset_index()
         order = needy.assign(val=needy.need * needy.mrp).groupby("sku_id").val.sum().sort_values(ascending=False)
         rank = self.P["tier_rank"]
+        by_sku = dict(tuple(needy.groupby("sku_id")))
         for k in order.index:
             ws = [w for w in self.wh_sku.get(k, []) if self.supply[(w, k)]]
             if not ws:
                 continue
-            cands = needy[needy.sku_id == k]
-            heap = [(r.pos / max(r.fd, 1e-9), rank.get(self.st.tier[r.store_id], 99), r.store_id) for r in cands.itertuples()]
+            cands = by_sku[k]
+            heap = [(r.pos / max(r.fd, 1e-9), rank.get(self.tier_of[r.store_id], 99), r.store_id) for r in cands.itertuples()]
             heapq.heapify(heap)
             got = defaultdict(lambda: defaultdict(int))
             while heap:
@@ -729,18 +781,18 @@ class Planner:
                 if not live:
                     heapq.heappush(heap, (c, t, s))
                     break
-                w = min(live, key=lambda x: (x != self.st.home_wh[s], self.lead(x, s)))
+                w = min(live, key=lambda x: (x != self.home_of[s], self.lead(x, s)))
                 d, q = self.supply[(w, k)][0]
                 got[s][(w, d)] += 1
                 self.supply[(w, k)][0] = (d, q - 1)
                 if q - 1 == 0:
                     self.supply[(w, k)].pop(0)
                 n = sum(got[s].values())
-                if n < g.at[(s, k), "need"]:
-                    heapq.heappush(heap, ((g.at[(s, k), "pos"] + n) / max(g.at[(s, k), "fd"], 1e-9), t, s))
+                if n < self.row[(s, k)]["need"]:
+                    heapq.heappush(heap, ((self.row[(s, k)]["pos"] + n) / max(self.row[(s, k)]["fd"], 1e-9), t, s))
             short = len(heap)
             for s, by in got.items():
-                r = g.loc[(s, k)]
+                r = self.row[(s, k)]
                 L = int(r.L)
                 tot = sum(by.values())
                 cov = r.pos / r.fd if r.fd > 1e-9 else float("inf")
@@ -761,7 +813,7 @@ class Planner:
         for (s, c), pos in self.cat_pos.items():
             if s in self.outlets:
                 continue
-            m = self.P["md"].get((self.st.tier[s], c), 0)
+            m = self.P["md"].get((self.tier_of[s], c), 0)
             have = pos + self.cat_in[(s, c)] - self.cat_out[(s, c)]
             if have < m:
                 gaps[(s, c)] = m - have
@@ -772,7 +824,7 @@ class Planner:
             rows = self.g.loc[s]
             skus = rows[(rows.dcat == c) & ~rows.eoss].sort_values("fd", ascending=False).index
             sent = defaultdict(int)
-            m = self.P["md"][(self.st.tier[s], c)]
+            m = self.P["md"][(self.tier_of[s], c)]
             while gap > 0 and self.room[s] - sum(sent.values()) > 0:
                 progress = False
                 for k in skus:
@@ -781,7 +833,7 @@ class Planner:
                     live = [w for w in self.wh_sku.get(k, []) if self.supply[(w, k)]]
                     if not live:
                         continue
-                    w = min(live, key=lambda x: (x != self.st.home_wh[s], self.lead(x, s)))
+                    w = min(live, key=lambda x: (x != self.home_of[s], self.lead(x, s)))
                     d, q = self.supply[(w, k)][0]
                     self.supply[(w, k)][0] = (d, q - 1)
                     if q - 1 == 0:
@@ -792,7 +844,7 @@ class Planner:
                 if not progress:
                     break
             for (w, k, d), q in sent.items():
-                self.add(T_DISP, w, s, k, q, d, f"{s} {c} display is below the tier {self.st.tier[s]} minimum of {m}; "
+                self.add(T_DISP, w, s, k, q, d, f"{s} {c} display is below the tier {self.tier_of[s]} minimum of {m}; "
                                                 f"topping up with its best-selling sizes.", "High", G_DISP, mandatory=True)
 
     # --- B. store -> store
@@ -803,7 +855,7 @@ class Planner:
                 continue
             cap = self.give_cap(d, k)
             if cap > 0:
-                age = self.g.at[(d, k), "age"]
+                age = self.row[(d, k)]["age"]
                 aged = 0 if (age == age and age >= self.cfg["ageing"]["age_days"]) else 1
                 # an existing trip to the same store counts as 2 days closer: fewer, fuller trips
                 eff = self.lead(d, s) + (0 if s in self.trips[d] else 2)
@@ -825,7 +877,7 @@ class Planner:
                 q = min(unmet, self.room[s], self.give_cap(d, k))
                 if q <= 0:
                     continue
-                r = g.loc[(s, k)]
+                r = self.row[(s, k)]
                 L = self.lead(d, s)
                 dc_before = self.cover(d, k)
                 pr = self.prio(s, k, L)
@@ -843,14 +895,14 @@ class Planner:
         for (s, c), gap in self.display_gaps().items():
             rows_ = self.g.loc[s]
             skus = rows_[(rows_.dcat == c) & ~rows_.eoss].sort_values("fd", ascending=False).index
-            m = self.P["md"][(self.st.tier[s], c)]
+            m = self.P["md"][(self.tier_of[s], c)]
             for k in skus:
                 if gap <= 0 or self.room[s] <= 0:
                     break
                 for *_, d, _ in self.donors(s, k):
                     q = min(gap, 1, self.give_cap(d, k), self.room[s])
                     if q > 0:
-                        self.add(T_DISP, d, s, k, q, self.run, f"{s} {c} display below the tier {self.st.tier[s]} minimum of {m} "
+                        self.add(T_DISP, d, s, k, q, self.run, f"{s} {c} display below the tier {self.tier_of[s]} minimum of {m} "
                                                                f"and no warehouse stock; {d} can spare it.", "High", G_DISP, mandatory=True)
                         gap -= q
                         break
@@ -862,7 +914,7 @@ class Planner:
         if outs:
             o = min(outs, key=lambda x: self.lead(s, x))
             return o, T_OUT, G_CLEAR
-        return self.st.home_wh[s], T_PULL, G_CLEAR
+        return self.home_of[s], T_PULL, G_CLEAR
 
     def ageing(self):
         g, ac, sc = self.g, self.cfg["ageing"], self.cfg["size_sets"]
@@ -922,7 +974,7 @@ class Planner:
                     for k in held:
                         q = self.give_cap(s, k, aged=True, whole_option=True)
                         if q > 0:
-                            pulls.append((1, q * orow.at[k, "mrp"] * (1 + (orow.at[k, "age"] or 0) / 365), s, k, q, self.st.home_wh[s],
+                            pulls.append((1, q * orow.at[k, "mrp"] * (1 + (orow.at[k, "age"] or 0) / 365), s, k, q, self.home_of[s],
                                           T_PULL, G_PULL, f"Broken run of {opt} at {s} ({opos} pcs, {days(ocov)} of stock) that no store "
                                                           f"can use; return the whole run so it can be re-sized centrally."))
                 continue
@@ -940,7 +992,7 @@ class Planner:
                 for r in recip_order:
                     if self.out[(r, k)] > 0 or self.room[r] <= 0 or not self.can_dispatch(s, r):
                         continue
-                    rr = g.loc[(r, k)]
+                    rr = self.row[(r, k)]
                     if rr.fd < 1 / 30:
                         continue
                     want = math.ceil(rr.fd * ac["sell_within"]) - self.cur(r, k)
@@ -950,7 +1002,7 @@ class Planner:
                     q = min(spare, want, self.room[r], self.give_cap(s, k, aged=True))
                     if q <= 0:
                         continue
-                    rr = g.loc[(r, k)]
+                    rr = self.row[(r, k)]
                     self.add(T_AGE, s, r, k, q, self.run,
                              f"Held {int(orow.at[k, 'age'])} days at {s}, which sells {orow.at[k, 'fd30']:.2f}/day ({days(cov)} of stock); "
                              f"{r} sells {rr.fd:.2f}/day and will clear it within {ac['sell_within']} days.", "Low", G_AGE)
@@ -967,7 +1019,7 @@ class Planner:
                     dest, typ, grp_ = self._clear_dest(s, k)
                     why = f"No store has sold it in {self.cfg['planning']['history_weeks']} weeks; send {q} to {dest} for clearance."
                 else:
-                    dest, typ, grp_ = self.st.home_wh[s], T_PULL, G_PULL
+                    dest, typ, grp_ = self.home_of[s], T_PULL, G_PULL
                     why = f"no store can sell it within {ac['sell_within']} days; return {q} to {dest} (keeps 1 on display)."
                     why = f"Held {int(orow.at[k, 'age'])} days at {s} ({days(self.cover(s, k))} of stock) and " + why
                 pulls.append((0 if dead else 1, q * orow.at[k, "mrp"] * (1 + orow.at[k, "age"] / 365), s, k, q, dest, typ, grp_, why))
@@ -1015,21 +1067,22 @@ def value_moves(mv, pl):
     run_pos = {}
     out_tot = mv[mv.from_id.isin(pl.st.index)].groupby(["from_id", "sku_id"]).qty.sum().to_dict()
     rows = []
+    irow = {k: Row(r) for k, r in zip(it.index, it.to_dict("records"))}
     for m in mv.itertuples():
         k, q = m.sku_id, m.qty
-        I = it.loc[k]
+        I = irow[k]
         lane = lanes.get(m.from_id, m.to_id)
         var_cost = q * (lane["cost_per_unit"] + ec["handling_per_unit"])
         dest_gain = src_loss = markdown = holding = recovery = 0.0
         src_cover = 0.0
         if m.from_id in pl.st.index:
-            r = g.loc[(m.from_id, k)]
+            r = pl.row[(m.from_id, k)]
             final = int(r.pos) - out_tot.get((m.from_id, k), 0)
             mu = r.fd30 * ec["horizon_days"]
             src_loss = _gain(final, q, mu) if not r.eoss else 0.0
             src_cover = (r.pos / r.fd30) if r.fd30 > 1e-9 else 999
         if m.to_id in pl.st.index and m.to_id not in pl.outlets:
-            r = g.loc[(m.to_id, k)]
+            r = pl.row[(m.to_id, k)]
             p0 = run_pos.get((m.to_id, k), int(r.pos))
             T = (int(r.L) + H) if m.type in (T_WH, T_DISP, T_S2S) else ac["sell_within"]
             T = min(T, ec["horizon_days"] + int(r.L))
@@ -1123,7 +1176,7 @@ def validate(m, pl):
     out = m[m.from_id.isin(st.index)].groupby(["from_id", "sku_id"]).qty.sum()
     inn = m[m.to_id.isin(st.index)].groupby(["to_id", "sku_id"]).qty.sum()
     rule("Stores only give stock they physically hold (not in transit, not suspect counts)",
-         [k for k, q in out.items() if q > g.at[k, "oh"] or g.at[k, "suspect"]], len(out))
+         [k for k, q in out.items() if q > pl.row[k]["oh"] or pl.row[k]["suspect"]], len(out))
     wh = m[m.from_id.isin(pl.whs)].groupby(["from_id", "sku_id"]).qty.sum()
     rule("Warehouses never send more than on hand + inbound due", [k for k, q in wh.items() if q > pl.wh_start.get(k, 0)], len(wh))
     final = g.pos.add(inn.rename_axis(["store_id", "sku_id"]), fill_value=0).sub(out.rename_axis(["store_id", "sku_id"]), fill_value=0)
@@ -1140,19 +1193,19 @@ def validate(m, pl):
          [f"{s} {c}" for (s, c), v in cat.items() if s in givers and v < P["md"].get((st.tier[s], c), 0) and v < catb[(s, c)]], len(givers))
     rule("Protected styles are never given away",
          [f"{r.from_id} {r.sku_id}" for r in m.itertuples() if r.from_id in st.index
-          and g.at[(r.from_id, r.sku_id), "style"] in P["prot"].get(r.from_id, set())], int(m.from_id.isin(P["prot"]).sum()))
+          and pl.row[(r.from_id, r.sku_id)]["style"] in P["prot"].get(r.from_id, set())], int(m.from_id.isin(P["prot"]).sum()))
     s2s = m[(m.type == T_S2S)]
     sty = gf.groupby([gf.index.get_level_values(0), "style"]).agg(final=("final", "sum"), fd30=("fd30", "sum"))
     bad = []
     for d, sku in set(zip(s2s.from_id, s2s.sku_id)):
-        r = sty.loc[(d, g.at[(d, sku), "style"])]
+        r = sty.loc[(d, pl.row[(d, sku)]["style"])]
         if r.fd30 > 1e-9 and r.final / r.fd30 < pc["donor_min_cover"] - 1e-6:
             bad.append(f"{d} {sku}: {r.final / r.fd30:.1f} days")
     rule(f"No store-to-store refill leaves the giver under {pc['donor_min_cover']} days of style cover", bad, len(s2s))
     repl = m[m.type == T_WH]
     over = repl.groupby(["to_id", "sku_id"]).qty.sum()
     rule("Stock in transit is counted: nothing is sent beyond need",
-         [f"{s} {k}" for (s, k), q in over.items() if q > g.at[(s, k), "need"]], len(repl))
+         [f"{s} {k}" for (s, k), q in over.items() if q > pl.row[(s, k)]["need"]], len(repl))
     both = set(out.index) & set(inn.index)
     rule("No store both gives and receives the same SKU", sorted(both), len(out) + len(inn))
     big = m[m.value_mrp > pc["approval_value"]]
@@ -1169,7 +1222,7 @@ def validate(m, pl):
     bad = []
     fin_opt = gf.reset_index()
     for r in s2s.itertuples():
-        row = g.loc[(r.from_id, r.sku_id)]
+        row = pl.row[(r.from_id, r.sku_id)]
         if not row.is_core:
             continue
         o = fin_opt[(fin_opt.store_id == r.from_id) & (fin_opt.option == row.option)]
@@ -1178,7 +1231,7 @@ def validate(m, pl):
             bad.append(f"{r.from_id} {r.sku_id}")
     rule("Refills never strip the last core size from a giver's active option", bad, len(s2s))
     rule("Nothing is refilled after its season ends", m[m.type.isin([T_WH, T_S2S, T_DISP]).values &
-                                                       np.array([bool(g.at[(t, k), "eoss"]) if t in st.index else False for t, k in zip(m.to_id, m.sku_id)], dtype=bool)].move_id.tolist(), len(m))
+                                                       np.array([bool(pl.row[(t, k)]["eoss"]) if t in st.index else False for t, k in zip(m.to_id, m.sku_id)], dtype=bool)].move_id.tolist(), len(m))
     rule("Outlets are never refilled or used as donors",
          m[(m.to_id.isin(pl.outlets) & (m.type != T_OUT)) | m.from_id.isin(pl.outlets)].move_id.tolist(), len(m))
     return pd.DataFrame(res)
@@ -1432,18 +1485,18 @@ def write(out_dir, R):
             f"Still at risk after the plan (no safe stock anywhere): {money(O['still_at_risk'], cfg)} of margin",
             f"Old stock still in stores costs about {money(O['aged_cost_per_month'], cfg)} a month to keep",
             f"Rule checks: {(val.status == 'PASS').sum()} of {len(val)} passed · data issues: {len(ex)}"]})
-        head.to_excel(w, sheet_name="Summary", index=False)
-        O["by_group"].round(0).to_excel(w, sheet_name="Summary", index=False, startrow=10)
-        approval_pack(trips, cfg).round(0).drop(columns="to_numbers").assign(**{"approve (Y/N)": "Y"}).to_excel(w, sheet_name="Approve first", index=False)
-        tv.to_excel(w, sheet_name="Trips", index=False)
-        view.to_excel(w, sheet_name="Moves", index=False)
-        R["orders"].to_excel(w, sheet_name="Transfer orders", index=False)
-        skv.to_excel(w, sheet_name="Not worth moving", index=False)
-        pd.DataFrame(pl.queued).to_excel(w, sheet_name="Returns queued", index=False)
-        ex.to_excel(w, sheet_name="Data issues", index=False)
-        alerts.to_excel(w, sheet_name="Manager alerts", index=False)
-        val.to_excel(w, sheet_name="Rule checks", index=False)
-        vel.to_excel(w, sheet_name="Velocity", index=False)
+        safety.frame(head).to_excel(w, sheet_name="Summary", index=False)
+        safety.frame(O["by_group"].round(0)).to_excel(w, sheet_name="Summary", index=False, startrow=10)
+        safety.frame(approval_pack(trips, cfg).round(0).drop(columns="to_numbers").assign(**{"approve (Y/N)": "Y"})).to_excel(w, sheet_name="Approve first", index=False)
+        safety.frame(tv).to_excel(w, sheet_name="Trips", index=False)
+        safety.frame(view).to_excel(w, sheet_name="Moves", index=False)
+        safety.frame(R["orders"]).to_excel(w, sheet_name="Transfer orders", index=False)
+        safety.frame(skv).to_excel(w, sheet_name="Not worth moving", index=False)
+        safety.frame(pd.DataFrame(pl.queued)).to_excel(w, sheet_name="Returns queued", index=False)
+        safety.frame(ex).to_excel(w, sheet_name="Data issues", index=False)
+        safety.frame(alerts).to_excel(w, sheet_name="Manager alerts", index=False)
+        safety.frame(val).to_excel(w, sheet_name="Rule checks", index=False)
+        safety.frame(vel).to_excel(w, sheet_name="Velocity", index=False)
         for ws in w.book.worksheets:
             if ws.title != "Summary":
                 ws.freeze_panes = "A2"
@@ -1451,19 +1504,25 @@ def write(out_dir, R):
             for col in ws.columns:
                 width = max(len(str(c.value)) if c.value is not None else 0 for c in col[:200])
                 ws.column_dimensions[col[0].column_letter].width = min(max(10, width + 2), 100)
-    view.to_csv(out_dir / f"moves_{run:%Y-%m-%d}.csv", index=False)
-    R["orders"].to_csv(out_dir / f"transfer_orders_{run:%Y-%m-%d}.csv", index=False)
-    ex.to_csv(out_dir / f"data_issues_{run:%Y-%m-%d}.csv", index=False)
-    val.to_csv(out_dir / f"rule_checks_{run:%Y-%m-%d}.csv", index=False)
+    safety.frame(view).to_csv(out_dir / f"moves_{run:%Y-%m-%d}.csv", index=False)
+    safety.frame(R["orders"]).to_csv(out_dir / f"transfer_orders_{run:%Y-%m-%d}.csv", index=False)
+    safety.frame(ex).to_csv(out_dir / f"data_issues_{run:%Y-%m-%d}.csv", index=False)
+    safety.frame(val).to_csv(out_dir / f"rule_checks_{run:%Y-%m-%d}.csv", index=False)
     return xl
 
 
-def run(source, out_dir=None, cfg=None):
+def run(source, out_dir=None, cfg=None, progress=None):
+    """progress(step, share_done) is called between stages (used by background jobs to show where a run is)."""
+    say = progress or (lambda *_: None)
     cfg = cfg or schema.load_config()
+    say("Reading and checking the sheets", 0.02)
     D = load(source, cfg)
+    say("Preparing stock, lanes and season", 0.12)
     P = prep(D, cfg)
+    say("Measuring selling speed", 0.25)
     vel, weekly = velocity(D, P)
     season = Season(D, P)
+    say("Planning moves", 0.4)
     pl = Planner(D, P, vel, season)
     pl.synthetic = P.get("weekly_synthetic", False)
     pl.hits = sold_out_hits(P, weekly) if not pl.synthetic else pd.DataFrame()
@@ -1475,6 +1534,7 @@ def run(source, out_dir=None, cfg=None):
     mv["colour"] = mv.sku_id.map(it.colour)
     mv["size"] = mv.sku_id.map(it["size"])
     mv["value_mrp"] = (mv.qty * mv.sku_id.map(it.mrp)).astype(float)
+    say("Pricing every move", 0.75)
     mv = value_moves(mv, pl)
     mv, skipped = batch(mv, pl)
     mv["approval"] = np.where(mv.value_mrp > cfg["planning"]["approval_value"], "Needs approval", "")
@@ -1485,6 +1545,7 @@ def run(source, out_dir=None, cfg=None):
     trips = trips_table(mv, pl, cfg)
     if len(trips):
         mv.loc[mv.trip_key.isin(trips[trips.needs_approval].trip_key) & (mv.approval == ""), "approval"] = "Trip sign-off"
+    say("Re-checking every rule", 0.88)
     val = validate(mv, pl)
     findings(P, pl, weekly, mv, skipped)
     ex = pd.DataFrame(P["ex"])
@@ -1498,6 +1559,7 @@ def run(source, out_dir=None, cfg=None):
     R["orders"] = transfer_orders(mv, trips) if len(trips) else pd.DataFrame()
     R["opportunity"] = opportunity(R)
     R["xlsx"] = write(Path(out_dir), R) if out_dir else None
+    say("Done", 1.0)
     return R
 
 

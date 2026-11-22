@@ -73,6 +73,29 @@ T["users"] = Table("users", md, Column("username", String(80), primary_key=True)
 T["audit"] = Table("audit", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("at", DateTime), Column("user", String(80)),
                    Column("role", String(20)), Column("action", String(60)), Column("object", String(200)), Column("details", JSON))
 
+# operations layer
+T["ingestions"] = Table("ingestions", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("at", DateTime),
+                        Column("by", String(80)), Column("source", String(200)), Column("profile", String(80)), Column("sheet", String(40)),
+                        Column("file", String(300)), Column("rows_in", Integer), Column("rows_out", Integer), Column("rejected", Integer),
+                        Column("mapping", JSON), Column("issues", JSON), Column("status", String(12)))
+T["exceptions"] = Table("exceptions", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("key", String(200)),
+                        Column("kind", String(30)), Column("severity", String(10)), Column("region", String(80)), Column("location", String(40)),
+                        Column("ref", String(120)), Column("title", Text), Column("detail", Text), Column("value", Float),
+                        Column("first_seen", DateTime), Column("last_seen", DateTime), Column("seen_count", Integer, default=1),
+                        Column("status", String(12), default="open"), Column("owner", String(80)), Column("resolved_by", String(80)),
+                        Column("resolved_at", DateTime), Column("resolution", Text), Column("source", String(40)))
+T["jobs"] = Table("jobs", md, Column("job_id", String(40), primary_key=True), Column("kind", String(30)), Column("status", String(12)),
+                  Column("requested_by", String(80)), Column("requested_at", DateTime), Column("started_at", DateTime),
+                  Column("finished_at", DateTime), Column("step", String(120)), Column("progress", Float), Column("plan_id", String(40)),
+                  Column("error", Text), Column("log", Text), Column("host", String(80)))
+T["trip_decisions"] = Table("trip_decisions", md, Column("plan_id", String(40), primary_key=True), Column("to_number", String(30), primary_key=True),
+                            Column("region", String(80)), Column("decision", String(12)), Column("by", String(80)), Column("at", DateTime),
+                            Column("note", Text))
+T["erp_exchange"] = Table("erp_exchange", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("at", DateTime),
+                          Column("direction", String(4)), Column("channel", String(20)), Column("target", String(300)), Column("kind", String(30)),
+                          Column("file", String(300)), Column("records", Integer), Column("status", String(12)), Column("error", Text),
+                          Column("by", String(80)), Column("checksum", String(64)))
+
 _ENGINE = None
 _URL = None
 
@@ -121,7 +144,8 @@ def describe():
     """Safe description for the UI: never shows the password."""
     u = url()
     if u.startswith("sqlite"):
-        return "SQLite file in ./workspace"
+        p = Path(u.split("///", 1)[-1])
+        return f"SQLite file {p.name} in {'./workspace' if p.parent == WORK else p.parent}"
     try:
         from sqlalchemy.engine import make_url
         x = make_url(u)
