@@ -39,6 +39,7 @@ Every selling location. Outlet stores take end-of-season stock and are never ref
 | `store_type` | optional | store (default) or outlet | store |
 | `home_warehouse` | optional | Warehouse that normally serves it; default = quickest lane | WH-NORTH |
 | `manager_id` | optional | Area manager; joins to managers | AM-01 |
+| `whatsapp` | optional | Store's WhatsApp number for approval alerts | +91 98xxxxxx10 |
 
 Also accepted: `stock_capacity_units` for `capacity_units`, `state` for `region`, `area_manager_id` for `manager_id`
 
@@ -51,6 +52,7 @@ Warehouses. If missing, any stock location that is not a store is a warehouse.
 | `warehouse_id` | required | Warehouse code as used in stock_snapshot.location_id | WH-NORTH |
 | `city` | optional | City | Delhi |
 | `zone` | optional | Zone | North |
+| `whatsapp` | optional | Warehouse WhatsApp number: gets the day's pick list when trips are released | +91 98xxxxxx20 |
 
 Also accepted: `location_id` for `warehouse_id`
 
@@ -183,6 +185,7 @@ Area managers who receive alerts.
 | `name` | required | Name | A. Sharma |
 | `stores` | required | Store ids, comma separated | DEL-01, DEL-02 |
 | `max_alerts_per_week` | optional | How many alerts they will read | 5 |
+| `whatsapp` | optional | WhatsApp number: gets a message when trips for their stores are approved | +91 98xxxxxx30 |
 
 Also accepted: `area_manager_id` for `manager_id`
 
@@ -219,3 +222,8 @@ Any of these sections, only the values you want to change:
 ```
 
 All settings and their defaults are in `schema.py` (DEFAULTS).
+
+## Tracking files (optional uploads on the Track tab)
+
+- **What left**: `to_number, sku_id, qty_shipped` (+ optional `dispatched_on`)
+- **What arrived**: `to_number, sku_id, qty_received` (+ optional `received_on`)

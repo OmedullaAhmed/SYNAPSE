@@ -114,7 +114,7 @@ def suggested_settings(cfg):
 
 # ---- transfer orders released to the warehouse / ERP, and what was received
 def release_orders(orders, user, run_id):
-    o = orders.assign(released_at=datetime.now().strftime("%Y-%m-%d %H:%M"), released_by=user, run_id=run_id)
+    o = orders.assign(released_at=_now().strftime("%Y-%m-%d %H:%M"), released_by=user, run_id=run_id)
     _append(ORDERS, o.to_dict("records"))
 
 
@@ -125,30 +125,120 @@ def released():
     return o
 
 
-def add_receipts(df, user):
+EVENTS = DIR / "movements.csv"   # one row per SKU line per event: dispatched (left the source) or received
+STATUS_ORDER = ["Waiting to leave", "Late leaving", "In transit", "Late arriving", "Received short", "Received over", "Received"]
+
+
+def _now(tz="Asia/Kolkata"):
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo(tz))
+    except Exception:  # noqa: BLE001
+        return datetime.now()
+
+
+def events():
+    e = _read(EVENTS)
+    if len(e):
+        e["qty"] = pd.to_numeric(e.qty, errors="coerce").fillna(0).astype(int)
+    old = _read(RECEIPTS)       # receipts uploaded before movement tracking existed
+    if len(old) and "qty_received" in old:
+        old = old.rename(columns={"qty_received": "qty", "recorded_at": "at", "recorded_by": "by"}).assign(event="received", note="")
+        old["qty"] = pd.to_numeric(old.qty, errors="coerce").fillna(0).astype(int)
+        e = pd.concat([e, old[["to_number", "sku_id", "event", "qty", "at", "by", "note"]]], ignore_index=True)
+    return e
+
+
+def _record(event, to_number, user, lines=None, note="", tz="Asia/Kolkata", at=None):
+    """lines: {sku_id: qty}; None = every line of the order at its planned (or dispatched) quantity."""
+    o = released()
+    o = o[o.to_number == to_number]
+    if o.empty:
+        raise ValueError(f"{to_number} has not been released.")
+    if lines is None:
+        base = o.groupby("sku_id").qty.sum()
+        if event == "received":
+            d = events()
+            d = d[(d.to_number == to_number) & (d.event == "dispatched")]
+            if len(d):
+                base = d.groupby("sku_id").qty.sum()
+        lines = base.to_dict()
+    when = at or _now(tz).strftime("%Y-%m-%d %H:%M")
+    _append(EVENTS, [dict(to_number=to_number, sku_id=k, event=event, qty=int(q), at=when, by=user, note=note)
+                     for k, q in lines.items()])
+
+
+def mark_dispatched(to_number, user, lines=None, note="", tz="Asia/Kolkata"):
+    _record("dispatched", to_number, user, lines, note, tz)
+
+
+def mark_received(to_number, user, lines=None, note="", tz="Asia/Kolkata"):
+    _record("received", to_number, user, lines, note, tz)
+
+
+def _upload(df, user, event, qty_col):
     df = df.copy()
     df.columns = [c.strip().lower() for c in df.columns]
-    need = {"to_number", "sku_id", "qty_received"}
+    need = {"to_number", "sku_id", qty_col}
     if not need <= set(df.columns):
-        raise ValueError(f"Receipts file needs columns: {', '.join(sorted(need))}")
-    df["recorded_by"] = user
-    df["recorded_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-    _append(RECEIPTS, df.to_dict("records"))
+        raise ValueError(f"The file needs columns: {', '.join(sorted(need))}")
+    df["qty"] = pd.to_numeric(df[qty_col], errors="coerce").fillna(0).astype(int)
+    date_col = next((c for c in ("dispatched_on", "received_on", "date", "at") if c in df.columns), None)
+    when = df[date_col].astype(str) if date_col else _now().strftime("%Y-%m-%d %H:%M")
+    out = pd.DataFrame({"to_number": df.to_number.astype(str).str.strip(), "sku_id": df.sku_id.astype(str).str.strip(),
+                        "event": event, "qty": df.qty, "at": when, "by": user, "note": "uploaded"})
+    _append(EVENTS, out.to_dict("records"))
+    return len(out)
+
+
+def add_dispatches(df, user):
+    return _upload(df, user, "dispatched", "qty_shipped" if "qty_shipped" in [c.strip().lower() for c in df.columns] else "qty")
+
+
+def add_receipts(df, user):
+    return _upload(df, user, "received", "qty_received" if "qty_received" in [c.strip().lower() for c in df.columns] else "qty")
+
+
+def tracking(today=None):
+    """(orders, lines): one row per transfer order with its journey and status, and one per SKU line."""
+    o = released()
+    if o.empty:
+        return pd.DataFrame(), pd.DataFrame()
+    today = pd.Timestamp(today or _now().date())
+    e = events()
+    lines = o.groupby(["to_number", "from_location", "to_location", "sku_id", "ship_date", "expected_receipt"]).qty.sum() \
+        .rename("planned").reset_index()
+    for ev, col in (("dispatched", "sent"), ("received", "received")):
+        if len(e):
+            x = e[e.event == ev].groupby(["to_number", "sku_id"]).agg(**{col: ("qty", "sum"), f"{col}_at": ("at", "max")})
+            lines = lines.merge(x, on=["to_number", "sku_id"], how="left")
+        else:
+            lines[col], lines[f"{col}_at"] = 0, None
+    lines[["sent", "received"]] = lines[["sent", "received"]].fillna(0).astype(int)
+    lines["gap"] = lines.received - lines.sent.where(lines.sent > 0, lines.planned)
+    rel = o.groupby("to_number").released_at.min()
+    t = lines.groupby(["to_number", "from_location", "to_location"]).agg(
+        planned=("planned", "sum"), sent=("sent", "sum"), received=("received", "sum"), lines=("sku_id", "size"),
+        ship_date=("ship_date", "first"), expected=("expected_receipt", "first"),
+        left_at=("sent_at", "max"), arrived_at=("received_at", "max"),
+        sent_lines=("sent_at", lambda x: int(x.notna().sum())), got_lines=("received_at", lambda x: int(x.notna().sum()))).reset_index()
+    t["released_at"] = t.to_number.map(rel)
+    ship, exp = pd.to_datetime(t.ship_date), pd.to_datetime(t.expected)
+
+    def status(r, sd, ed):
+        if r.got_lines > 0:
+            base = r.sent if r.sent > 0 else r.planned
+            return "Received short" if r.received < base else "Received over" if r.received > base else "Received"
+        if r.sent_lines > 0:
+            return "Late arriving" if ed < today else "In transit"
+        return "Late leaving" if sd < today else "Waiting to leave"
+    t["status"] = [status(r, sd, ed) for r, sd, ed in zip(t.itertuples(), ship, exp)]
+    la, aa = pd.to_datetime(t.left_at, errors="coerce"), pd.to_datetime(t.arrived_at, errors="coerce")
+    t["days_on_road"] = ((aa.fillna(pd.Timestamp(today)) - la).dt.total_seconds() / 86400).round(1).where(la.notna())
+    t["planned_days"] = (exp - ship).dt.days
+    t["status_rank"] = t.status.map({s: i for i, s in enumerate(STATUS_ORDER)})
+    return t.sort_values(["status_rank", "to_number"]).drop(columns="status_rank").reset_index(drop=True), lines
 
 
 def reconciliation():
-    o, r = released(), _read(RECEIPTS)
-    if o.empty:
-        return pd.DataFrame()
-    sent = o.groupby(["to_number", "from_location", "to_location", "sku_id", "expected_receipt"]).qty.sum().rename("shipped").reset_index()
-    if r.empty:
-        sent["received"] = 0
-    else:
-        r["qty_received"] = pd.to_numeric(r.qty_received, errors="coerce").fillna(0)
-        got = r.groupby(["to_number", "sku_id"]).qty_received.sum().rename("received")
-        sent = sent.merge(got, on=["to_number", "sku_id"], how="left").fillna({"received": 0})
-    sent["variance"] = sent.received - sent.shipped
-    late = pd.to_datetime(sent.expected_receipt) < pd.Timestamp.now().normalize()
-    sent["status"] = ["Received" if v == 0 else "Over-received" if v > 0 else ("Late / short" if l else "In transit")
-                      for v, l in zip(sent.variance, late)]
-    return sent
+    return tracking()[1]

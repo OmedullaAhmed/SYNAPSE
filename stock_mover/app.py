@@ -21,6 +21,7 @@ import chat
 import engine as E
 import feedback as fb
 import insights as ins
+import notify
 import schema
 
 HERE = Path(__file__).parent
@@ -296,6 +297,74 @@ def demo_button(key, label="✨  Try the demo brand", primary=True):
         start(DEMO, schema.load_config(HERE / "brands" / "demo.json", fb.load_settings()), "Demo Threads (fictional brand)")
 
 
+def whatsapp_panel(released, approved):
+    """WhatsApp alerts after release: sent automatically when the Business API is set up, else one tap per person."""
+    W = notify.configured(st.secrets if hasattr(st, "secrets") else None)
+    sec("💬 WhatsApp alerts")
+    if released is None:
+        st.caption("When you release, area managers, stores and warehouses with a WhatsApp number get their part of the plan."
+                   + (" Sending is automatic (WhatsApp Business API is set up)." if W else " You send each message with one tap."))
+        preview = notify.recipients(R, approved)
+        if preview:
+            with st.expander(f"Preview · {len(preview)} people will be told"):
+                for rec in preview:
+                    st.markdown(f"**{rec['who']}** · {rec['role']}  \n<span style='color:{MUTED}'>{html.escape(rec['text'])}</span>",
+                                unsafe_allow_html=True)
+    else:
+        recs = notify.recipients(R, released)
+        if not recs:
+            note("Nobody to alert: add a <b>whatsapp</b> column to managers.csv, stores.csv or warehouses.csv "
+                 "(numbers like +91 98765 43210). You can still send a test below.", "ok")
+        elif W:
+            if not st.session_state.get("wa_sent"):
+                with st.spinner(f"Sending {len(recs)} WhatsApp messages…"):
+                    st.session_state.wa_result = notify.send_all(W, recs, USER)
+                st.session_state.wa_sent = True
+            res = st.session_state.get("wa_result", pd.DataFrame())
+            okn = int((res.status == "sent").sum()) if len(res) else 0
+            (st.success if okn == len(res) else st.warning)(f"WhatsApp: {okn} of {len(res)} messages sent.")
+            if len(res):
+                st.dataframe(res[["to", "role", "number", "status", "error"]], hide_index=True, width="stretch")
+            if okn < len(res) and st.button("🔁 Try the failed ones again"):
+                failed = set(res[res.status != "sent"].to)
+                st.session_state.wa_result = notify.send_all(W, [r_ for r_ in recs if r_["who"] in failed], USER)
+                st.rerun()
+        else:
+            st.caption("Tap to open WhatsApp with the message ready, then press send.")
+            for i, rec in enumerate(recs):
+                with st.container(border=True):
+                    a, b = st.columns([4, 1.4])
+                    a.markdown(f"**{rec['who']}** · {rec['role']} · …{rec['phone'][-4:]}  \n"
+                               f"<span style='color:{MUTED};font-size:.88rem'>{html.escape(rec['text'])}</span>", unsafe_allow_html=True)
+                    b.link_button("Send on WhatsApp", notify.wa_link(rec["phone"], rec["text"]), width="stretch")
+    with st.expander("Send a test message to my own number"):
+        num = st.text_input("Your WhatsApp number", placeholder="+91 98765 43210", key="wa_test")
+        ph = notify.phone(num, str(cfg.get("whatsapp", {}).get("default_country_code", "91")))
+        sample = notify.recipients(R, approved)
+        text = sample[0]["text"] if sample else (f"StockFlow · {cfg['brand']['name']}: plan for {pl.run:%d %b} approved: "
+                                                 f"{len(tr)} trips, {int(tr.pieces.sum()):,} pcs. Open StockFlow for details.")
+        if num and not ph:
+            st.error("That doesn't look like a mobile number.")
+        elif ph:
+            st.link_button("Open WhatsApp with a sample alert", notify.wa_link(ph, text), width="stretch")
+    if not W:
+        with st.expander("Send automatically (WhatsApp Business API)"):
+            st.markdown("Add this to the app's **Settings → Secrets** and alerts go out by themselves on release:")
+            st.code('''[whatsapp]
+provider = "meta"                 # Meta WhatsApp Cloud API
+token = "EAAG..."                 # permanent system-user token
+phone_number_id = "1234567890"
+template = "stockflow_approved"   # approved utility template: {{1}} = name, {{2}} = summary
+language = "en"
+# or: provider = "twilio", account_sid, auth_token, from = "whatsapp:+1...", content_sid''', language="toml")
+            st.caption("WhatsApp only lets a business start a chat with an approved template. Numbers are used only for these "
+                       "alerts; the send log keeps the last 4 digits.")
+    lg = notify.log()
+    if len(lg):
+        with st.expander(f"Alert history ({len(lg)})"):
+            st.dataframe(lg[::-1], hide_index=True, width="stretch")
+
+
 # ============================================================================= landing
 if "R" not in st.session_state:
     css()
@@ -479,13 +548,17 @@ with T[3]:
             a, b = st.columns(2)
             a.download_button("⬇️ Transfer orders (CSV)", orders.to_csv(index=False).encode(), f"transfer_orders_{pl.run:%Y-%m-%d}.csv",
                               type="primary", width="stretch")
-            if b.button("📤 Release to warehouse", width="stretch", disabled=orders.empty):
+            if b.button("📤 Release & send WhatsApp alerts", width="stretch", disabled=orders.empty):
                 fb.release_orders(orders, USER, st.session_state.run_id)
+                st.session_state.released = orders.copy()
+                st.session_state.wa_sent = False
                 st.success(f"Released {orders.to_number.nunique()} transfer orders. Record receipts on the Track tab.")
             if IN_BROWSER:
                 with st.expander("Download blocked here? Copy the transfer orders instead"):
                     st.code(orders.to_csv(index=False), language=None)
             st.caption("One transfer order per trip, in a generic format most ERPs and warehouse systems can import.")
+    if can_ok:
+        whatsapp_panel(st.session_state.get("released"), orders)
 
 # ---- issues
 with T[4]:
@@ -540,26 +613,141 @@ with T[5]:
                             unsafe_allow_html=True)
 
 # ---- track
-with T[6]:
-    sec("Did the stock arrive?")
-    st.caption("Released transfer orders are tracked here. Upload what stores received (to_number, sku_id, qty_received).")
-    if auth.can(ROLE, "approver"):
-        rc = st.file_uploader("Receipts file (CSV)", type=["csv"], key="rcpt")
-        if rc is not None and st.button("Record receipts", type="primary"):
-            try:
-                fb.add_receipts(pd.read_csv(rc, dtype=str), USER)
-                st.success("Receipts recorded.")
-            except ValueError as e:
-                st.error(str(e))
-    rec = fb.reconciliation()
-    if rec.empty:
-        st.info("No transfer orders released yet. Release them from the Approve tab.")
+SCOL = {"Waiting to leave": MUTED, "Late leaving": RED, "In transit": TEAL, "Late arriving": RED,
+        "Received short": SAFFRON, "Received over": SAFFRON, "Received": GREEN}
+
+
+def can_mark(loc):
+    return auth.can(ROLE, "approver") or (bool(SCOPE) and loc in SCOPE)
+
+
+def movement_alert(t, kind):
+    """Tell the people at both ends; automatic with the WhatsApp API, else queue one-tap buttons."""
+    recs = notify.movement_recipients(R, t, kind)
+    if not recs:
+        return
+    W = notify.configured(st.secrets if hasattr(st, "secrets") else None)
+    if W:
+        res = notify.send_all(W, recs, USER)
+        st.toast(f"WhatsApp: {int((res.status == 'sent').sum())} of {len(res)} alerts sent")
     else:
-        s_ = rec.groupby("status").agg(lines=("sku_id", "size"), pieces=("shipped", "sum")).reset_index()
-        kcol = {"Received": GREEN, "In transit": TEAL, "Late / short": RED, "Over-received": SAFFRON}
-        kpis([(r.status, f"{int(r.lines)} lines", f"{int(r.pieces)} pieces", kcol.get(r.status, TEAL)) for r in s_.itertuples()])
-        st.dataframe(rec, hide_index=True, width="stretch", height=380)
-        st.download_button("⬇️ Receipt differences (CSV)", rec.to_csv(index=False).encode(), "receipt_variance.csv")
+        st.session_state.mv_alerts = recs
+
+
+def step_html(label, when, state):
+    col = {"done": GREEN, "late": RED, "todo": "#C9C4BB"}[state]
+    w = html.escape(str(when)) if when else ("overdue" if state == "late" else "pending")
+    return (f'<div style="display:flex;gap:.45rem;align-items:flex-start;min-width:0"><span style="flex:none;width:12px;height:12px;'
+            f'border-radius:50%;margin-top:.3rem;background:{col}"></span><div style="line-height:1.25"><b style="font-size:.86rem">{label}</b>'
+            f'<br><span style="color:{MUTED};font-size:.78rem">{w}</span></div></div>')
+
+
+with T[6]:
+    tz = cfg["brand"].get("timezone", "Asia/Kolkata")
+    sec("Where is the stock?")
+    st.caption("Every released transfer order is followed from release, to leaving the sender, to arriving at the receiver. "
+               "Mark each step here, or upload files from your warehouse system.")
+    if st.session_state.get("mv_alerts"):
+        with st.container(border=True):
+            st.markdown("**💬 Tell them on WhatsApp**")
+            for rec in st.session_state.mv_alerts:
+                a, b = st.columns([4, 1.4])
+                a.markdown(f"**{rec['who']}** · {rec['role']}  \n<span style='color:{MUTED};font-size:.86rem'>{html.escape(rec['text'])}</span>",
+                           unsafe_allow_html=True)
+                b.link_button("Send", notify.wa_link(rec["phone"], rec["text"]), width="stretch")
+            if st.button("Done", key="mv_done"):
+                st.session_state.mv_alerts = None
+                st.rerun()
+    tro, trl = fb.tracking()
+    if tro.empty:
+        st.info("Nothing to track yet. Approve and release trips on the Approve tab.")
+    else:
+        if SCOPE:
+            tro = tro[tro.from_location.isin(SCOPE) | tro.to_location.isin(SCOPE)]
+        cnt = tro.status.value_counts()
+        kpis([("Not left yet", int(cnt.get("Waiting to leave", 0) + cnt.get("Late leaving", 0)), f"{int(cnt.get('Late leaving', 0))} late", MUTED),
+              ("On the road", int(cnt.get("In transit", 0) + cnt.get("Late arriving", 0)), f"{int(cnt.get('Late arriving', 0))} overdue", TEAL),
+              ("Arrived", int(cnt.get("Received", 0) + cnt.get("Received short", 0) + cnt.get("Received over", 0)),
+               f"{int(cnt.get('Received short', 0) + cnt.get('Received over', 0))} with a different count", GREEN),
+              ("Pieces still out", f"{int((tro.sent - tro.received).clip(lower=0)[tro.sent > 0].sum()):,}", "left but not received", SAFFRON)])
+        groups = {"All": None, "Not left": ["Waiting to leave", "Late leaving"], "On the road": ["In transit", "Late arriving"],
+                  "Arrived": ["Received", "Received short", "Received over"],
+                  "Needs attention": ["Late leaving", "Late arriving", "Received short", "Received over"]}
+        a, b = st.columns([3, 2])
+        f = a.pills("Show", list(groups), default="All", key="trk_f", label_visibility="collapsed")
+        q = b.text_input("Find", placeholder="🔍 TO number or store", key="trk_q", label_visibility="collapsed")
+        view = tro if not groups.get(f or "All") else tro[tro.status.isin(groups[f])]
+        if q:
+            view = view[view.apply(lambda r: q.lower() in f"{r.to_number} {r.from_location} {r.to_location}".lower(), axis=1)]
+        st.caption(f"{len(view)} transfer orders")
+        for r in view.head(60).itertuples():
+            left_state = "done" if r.sent_lines > 0 else ("late" if r.status == "Late leaving" else "todo")
+            arr_state = "done" if r.got_lines > 0 else ("late" if r.status == "Late arriving" else "todo")
+            got = f" · received {int(r.received):,}" if r.got_lines > 0 else ""
+            sent = f" · sent {int(r.sent):,}" if r.sent_lines > 0 else ""
+            days = f" · {r.days_on_road:g} days on the road" if r.days_on_road == r.days_on_road else ""
+            with st.container(border=True):
+                st.markdown(
+                    f'<div class="r" style="display:flex;flex-wrap:wrap;gap:.4rem .6rem;align-items:center"><b>{html.escape(r.from_location)} → '
+                    f'{html.escape(r.to_location)}</b><span style="color:{MUTED};font-size:.8rem;font-weight:600">{r.to_number}</span>'
+                    f'<span class="chip" style="color:{SCOL[r.status]}">{r.status}</span>'
+                    f'<span style="margin-left:auto;font-size:.85rem;font-variant-numeric:tabular-nums">planned {int(r.planned):,}{sent}{got}{days}</span></div>'
+                    f'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-top:.6rem">'
+                    + step_html("Released", str(r.released_at)[:16], "done")
+                    + step_html(f"Left {html.escape(r.from_location)}", r.left_at if r.sent_lines > 0 else f"due {pd.Timestamp(r.ship_date):%d %b}"
+                                if left_state != "late" else None, left_state)
+                    + step_html(f"At {html.escape(r.to_location)}", r.arrived_at if r.got_lines > 0 else f"due {pd.Timestamp(r.expected):%d %b}"
+                                if arr_state != "late" else None, arr_state) + "</div>", unsafe_allow_html=True)
+                ln = trl[trl.to_number == r.to_number][["sku_id", "planned", "sent", "received"]]
+                if r.sent_lines == 0 and can_mark(r.from_location):
+                    c1, c2 = st.columns([1, 1])
+                    if c1.button("🚚 Mark as left", key=f"left_{r.to_number}", type="primary", width="stretch"):
+                        fb.mark_dispatched(r.to_number, USER, tz=tz)
+                        row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
+                        movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
+                        st.rerun()
+                    with c2.popover("Sent a different quantity?", width="stretch"):
+                        ed = st.data_editor(ln[["sku_id", "planned"]].rename(columns={"planned": "sent"}), key=f"eds_{r.to_number}",
+                                            hide_index=True, disabled=["sku_id"], width="stretch")
+                        if st.button("Save what was sent", key=f"sv_s_{r.to_number}"):
+                            fb.mark_dispatched(r.to_number, USER, dict(zip(ed.sku_id, ed.sent.astype(int))), "edited", tz)
+                            row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
+                            movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
+                            st.rerun()
+                elif r.sent_lines > 0 and r.got_lines == 0 and can_mark(r.to_location):
+                    c1, c2 = st.columns([1, 1])
+                    if c1.button("📦 Mark as received (all of it)", key=f"rcv_{r.to_number}", type="primary", width="stretch"):
+                        fb.mark_received(r.to_number, USER, tz=tz)
+                        st.rerun()
+                    with c2.popover("Received a different quantity?", width="stretch"):
+                        ed = st.data_editor(ln[["sku_id", "sent"]].assign(received=ln.sent), key=f"edr_{r.to_number}",
+                                            hide_index=True, disabled=["sku_id", "sent"], width="stretch")
+                        if st.button("Save what arrived", key=f"sv_r_{r.to_number}"):
+                            fb.mark_received(r.to_number, USER, dict(zip(ed.sku_id, ed.received.astype(int))), "counted", tz)
+                            row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
+                            if int(row.received) != int(row.sent):
+                                movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "received")
+                            st.rerun()
+                elif r.status in ("Received short", "Received over"):
+                    with st.expander("See the lines that differ"):
+                        st.dataframe(ln[ln.received != ln.sent.where(ln.sent > 0, ln.planned)], hide_index=True, width="stretch")
+        if len(view) > 60:
+            st.caption(f"Showing 60 of {len(view)}. Use the filter or search.")
+        st.download_button("⬇️ Tracking report (CSV)", trl.to_csv(index=False).encode(), "stock_movement_tracking.csv", width="stretch")
+    if auth.can(ROLE, "approver"):
+        with st.expander("📥 Upload from your warehouse system (many orders at once)"):
+            st.caption("Dispatch file: to_number, sku_id, qty_shipped (optional dispatched_on). "
+                       "Receipt file: to_number, sku_id, qty_received (optional received_on).")
+            a, b = st.columns(2)
+            df_ = a.file_uploader("What left (CSV)", type=["csv"], key="up_disp")
+            rf_ = b.file_uploader("What arrived (CSV)", type=["csv"], key="up_rcpt")
+            if st.button("Record uploads", type="primary", disabled=not (df_ or rf_)):
+                try:
+                    n1 = fb.add_dispatches(pd.read_csv(df_, dtype=str), USER) if df_ else 0
+                    n2 = fb.add_receipts(pd.read_csv(rf_, dtype=str), USER) if rf_ else 0
+                    st.success(f"Recorded {n1} dispatch lines and {n2} receipt lines.")
+                except ValueError as e:
+                    st.error(str(e))
 
 # ---- ask
 with T[7]:

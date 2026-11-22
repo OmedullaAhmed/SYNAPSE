@@ -21,7 +21,9 @@ python engine.py --data <folder or workbook> [--config brands/x.json] --out outp
 | Plan | **Warehouse → store** from any number of warehouses (home warehouse first). **Size-set completion**: an option on display that is missing a core size gets it. **Minimum display** top-ups. **Store → store** transfers, preferring stores that already have a trip to the same destination. **Old stock by option**: broken size runs move together to one store or come back together. **Capped returns** per store (pieces and value), with the rest queued. **End of season**: no refill lands after it; leftovers go to an outlet or the warehouse. |
 | Money | Every line is valued: expected extra sales × margin (net of real discount, tax and cost), plus markdown and holding cost avoided, minus freight, handling and a share of the trip cost. Lines and trips that don't pay are dropped. Rule-driven display top-ups always stay. |
 | Approve | About 25 decisions cover the day. One-line clubbed reasons: *Refill before it runs out · Stock up for the peak ahead · Complete broken size sets · Fill minimum display · Top up to normal cover · Old stock to faster-selling stores · Reunite broken size runs · Return slow stock · Clear end-of-season / dead stock*. |
-| Hand-off | Generic transfer-order CSV, one TO per trip, for any ERP or WMS. Release and receipt tracking, with variance by TO line. |
+| Hand-off | Generic transfer-order CSV, one TO per trip, for any ERP or WMS. |
+| WhatsApp | On release, area managers, stores and warehouses with a `whatsapp` number get their part of the plan. When an order leaves, the receiving end is told; when it arrives short or over, both ends are. Sent automatically with the WhatsApp Business API (Meta or Twilio, set in secrets), otherwise one tap per person. |
+| Tracking | Every transfer order goes Released → Left → Received, with times. Mark it in the app (or the quantity that really moved), or upload dispatch and receipt files. Late leaving, late arriving and short/over receipts are flagged. |
 | Check | 17 rules are re-checked on the final plan, and the run fails if any breaks. |
 
 ## Data

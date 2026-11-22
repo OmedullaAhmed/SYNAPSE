@@ -71,6 +71,9 @@ DEFAULTS = {
         "peak_label": "peak day",          # what calendar.is_peak_day means for this brand (e.g. "wedding date")
         "event_label": "event week",       # the 7 days up to a calendar event (e.g. "festival week")
     },
+    "whatsapp": {
+        "default_country_code": "91",      # added to 10-digit numbers
+    },
     "privacy": {
         "drop_columns": ["customer_id", "customer_name", "mobile", "phone", "email", "salesperson_id"],
     },
@@ -119,11 +122,13 @@ TABLES = {
         ("store_type", OPT, "store (default) or outlet", "store"),
         ("home_warehouse", OPT, "Warehouse that normally serves it; default = quickest lane", "WH-NORTH"),
         ("manager_id", OPT, "Area manager; joins to managers", "AM-01"),
+        ("whatsapp", OPT, "Store's WhatsApp number for approval alerts", "+91 98xxxxxx10"),
     ], {"stock_capacity_units": "capacity_units", "state": "region", "area_manager_id": "manager_id"}),
     "warehouses": (OPT, "Warehouses. If missing, any stock location that is not a store is a warehouse.", [
         ("warehouse_id", R, "Warehouse code as used in stock_snapshot.location_id", "WH-NORTH"),
         ("city", OPT, "City", "Delhi"),
         ("zone", OPT, "Zone", "North"),
+        ("whatsapp", OPT, "Warehouse WhatsApp number: gets the day's pick list when trips are released", "+91 98xxxxxx20"),
     ], {"location_id": "warehouse_id"}),
     "items": (R, "One row per SKU (style + colour + size).", [
         ("sku_id", R, "SKU code", "KRT-014-MAR-L"),
@@ -196,6 +201,7 @@ TABLES = {
         ("name", R, "Name", "A. Sharma"),
         ("stores", R, "Store ids, comma separated", "DEL-01, DEL-02"),
         ("max_alerts_per_week", OPT, "How many alerts they will read", "5"),
+        ("whatsapp", OPT, "WhatsApp number: gets a message when trips for their stores are approved", "+91 98xxxxxx30"),
     ], {"area_manager_id": "manager_id"}),
     "size_sets": (OPT, "Core sizes per category. If missing they are worked out from sales.", [
         ("category", R, "Category", "Kurta Set"),
