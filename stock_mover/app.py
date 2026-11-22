@@ -4,6 +4,7 @@ Start:  streamlit run app.py
 """
 import io
 import json
+import sys
 import shutil
 import tempfile
 import zipfile
@@ -23,6 +24,7 @@ import schema
 HERE = Path(__file__).parent
 BRANDS = sorted((HERE / "brands").glob("*.json"))
 DEMO = HERE / "data" / "demo"
+IN_BROWSER = sys.platform == "emscripten"   # running as a static web page (stlite): no server, no file downloads
 st.set_page_config(page_title="StockFlow · stock planning for apparel retail", page_icon="📦", layout="wide",
                    initial_sidebar_state="collapsed")
 
@@ -87,7 +89,7 @@ if USERS and "user" not in st.session_state:
     st.stop()
 USER = st.session_state.get("user", "demo")
 ROLE = st.session_state.get("role", "admin" if not USERS else "viewer")
-OPEN = not USERS
+OPEN = not USERS and not IN_BROWSER
 
 
 # ----------------------------------------------------------------------------- data in
@@ -208,6 +210,9 @@ if "R" not in st.session_state:
     if OPEN:
         st.markdown('<div class="warn">🔓 <b>Open demo mode</b>: no sign-in is configured. Use the demo brand, or set up users '
                     '(see auth.py) before uploading real data.</div>', unsafe_allow_html=True)
+    if IN_BROWSER:
+        st.markdown('<div class="warn">🔒 This copy runs entirely in your browser: files you upload never leave this device. '
+                    'Ratings and receipts are kept only until you close the page.</div>', unsafe_allow_html=True)
     st.markdown("### Right stock, right store, right size: every morning")
     st.markdown("Upload yesterday's sales and stock. StockFlow returns a short list of **trips** to approve: refills before stores run out, "
                 "broken size sets completed, old stock moved to where it sells, and slow stock brought back a few pieces at a time. "
@@ -372,6 +377,9 @@ with T[5]:
         a, b = st.columns(2)
         a.download_button("⬇️ Transfer orders for your ERP / WMS (CSV)", orders.to_csv(index=False).encode(),
                           f"transfer_orders_{pl.run:%Y-%m-%d}.csv", type="primary", width="stretch")
+        if IN_BROWSER:
+            with st.expander("Download blocked here? Copy the transfer orders instead"):
+                st.code(orders.to_csv(index=False), language=None)
         if b.button("📤 Release to warehouse & track receipts", width="stretch", disabled=orders.empty):
             fb.release_orders(orders, USER, st.session_state.run_id)
             st.success(f"Released {orders.to_number.nunique()} transfer orders. Record receipts on the Track tab.")
