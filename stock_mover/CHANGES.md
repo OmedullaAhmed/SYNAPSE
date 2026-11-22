@@ -23,3 +23,11 @@ giving more than it physically holds, no warehouse over-sending, and no protecte
 - Direct API push into a specific ERP or WMS. The CSV format is generic; each ERP needs its own connector.
 - Calibrating the economics (holding rates, markdown per month, recovery uplift) against a brand's actual results.
 - Replacing the hackathon sample pack: that data belongs to Vedant Fashions and is not in this package. Use the fictional demo pack for sales demos.
+
+## Enterprise release (Nov 2026)
+
+Added without removing anything: PostgreSQL storage (SQLite fallback) for plans, recommendations, line decisions,
+released orders, movements, settings, users and audit; mandatory sign-in with database users, a fourth "store" role,
+a permission matrix, lockout, idle timeout and forced password change; an append-only audit trail with an Audit tab;
+line-level approve, reject and quantity edits feeding transfer orders; a chain-wide Inventory dashboard with store
+comparison; plans saved with their inputs so they can be reopened after a restart, with tracking kept in the database.

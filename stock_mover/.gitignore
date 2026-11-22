@@ -2,3 +2,5 @@
 workspace/
 output/
 __pycache__/
+*.db
+*.db-journal

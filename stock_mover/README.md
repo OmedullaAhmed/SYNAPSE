@@ -31,13 +31,50 @@ python engine.py --data <folder or workbook> [--config brands/x.json] --out outp
 See **DATA_GUIDE.md**. You can also open the **Data guide** tab in the app, which has downloadable blank templates.
 The minimum is four sheets: stores, items, sales, stock_snapshot.
 
-## Sign-in and roles
+## Database, sign-in and audit
 
-Users go in `.streamlit/secrets.toml` (see `secrets.example.toml`). Make a password hash with `python auth.py`.
-There are three roles. Viewers see the plan. Approvers can also approve trips, release transfer orders and record
-receipts. Admins can also change settings and accept feedback-tuned settings. A user can be limited to some stores.
-With no users configured, the app shows an "open demo mode" warning on every page. Configure users before loading
-a brand's real data.
+**Database.** Plans, every recommended line, line decisions, released transfer orders, dispatch and receipt events,
+settings, users and the audit trail are stored in PostgreSQL. Put the URL in the app's secrets:
+
+```toml
+[database]
+url = "postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
+```
+
+A free Neon (neon.tech) or Supabase database is enough for a small chain. The tables are created on first start, and
+any CSV history from older versions is imported once. Without a URL the app falls back to a local SQLite file and
+says so on every page and in the Admin tab; Streamlit Community Cloud wipes that file on restart.
+
+**Recovery after a restart.** Each plan stores its input files (up to 60 MB) and settings. "Pick up where you left off"
+on the start page reopens any saved plan: the engine is deterministic, so it rebuilds the same lines, and the saved
+line decisions, releases and tracking come back with it.
+
+**Sign-in is mandatory.** With no users anywhere, the first visitor creates the admin account. Admins add users in the
+Admin tab with a temporary password, which must be changed at first sign-in (10+ characters, letters and numbers, not
+the user name). Users can also be listed in secrets with hashed passwords (`python auth.py`); those win and can't be
+edited in the app. Five wrong passwords lock an account for 15 minutes; 30 idle minutes sign a user out.
+
+| Role | Can |
+|---|---|
+| viewer | see plans and dashboards |
+| store | + mark dispatch and receipt for its own stores |
+| approver | + approve, reject or reduce lines, release orders, track all stores, read the audit trail |
+| admin | + settings, users |
+
+A user can be limited to some stores. Secrets (database URL, API keys, WhatsApp token) live only in Streamlit secrets
+or environment variables; the Admin tab shows whether each is set, never its value.
+
+**Audit trail.** Sign-ins (and failures), plan builds and reopens, each line decision with before and after quantity,
+bulk decisions, releases, downloads, dispatches, receipts, uploads, settings changes, WhatsApp sends and feedback are
+recorded with user, role and timestamp. The Audit tab filters and exports them; the app has no way to edit or delete them.
+
+**Line-level approval.** On the Approve tab, "Line by line" lists every recommended line. Untick to reject, lower the
+quantity (it can't go above the recommendation), add a note, and save. Transfer orders and the release then use the
+edited lines. Trip-level toggles still work as before.
+
+**Inventory dashboard.** The Inventory tab shows chain-wide pieces and value (stores, warehouses, in transit), cover,
+size availability and old stock, by category, and a store-by-store comparison (shelf used, cover, sizes on shelf,
+old stock, hidden stockouts, pieces in and out in today's plan) with zone, tier and category filters and a CSV export.
 
 ## AI answers (optional)
 

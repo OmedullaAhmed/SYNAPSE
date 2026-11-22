@@ -10,18 +10,22 @@ import shutil
 import sys
 import tempfile
 import zipfile
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+import audit
 import auth
 import chat
+import db
 import engine as E
 import feedback as fb
 import insights as ins
 import notify
+import plans
 import schema
 
 HERE = Path(__file__).parent
@@ -148,27 +152,130 @@ def topbar(cfg, extra=""):
                 f'<div class="sf-chip">{html.escape(extra or cfg["brand"]["name"])}</div></div>', unsafe_allow_html=True)
 
 
-# ----------------------------------------------------------------------------- sign in
-USERS = auth.users(st.secrets if hasattr(st, "secrets") else None)
-if USERS and "user" not in st.session_state:
+# ----------------------------------------------------------------------------- sign in (mandatory)
+SECRETS = st.secrets if hasattr(st, "secrets") else None
+USERS = auth.users(SECRETS)            # secrets users (kept from earlier versions)
+
+
+def _set_session(name, rec):
+    st.session_state.user, st.session_state.role = name, rec.get("role", "viewer")
+    st.session_state.scope = [s_.strip() for s_ in str(rec.get("stores", "")).split(",") if s_.strip()]
+    st.session_state.must_change = bool(rec.get("must_change")) and rec.get("source") == "database"
+    st.session_state.last_active = datetime.now()
+
+
+def sign_out(reason="logout"):
+    audit.log(reason, st.session_state.get("user", ""), {}, st.session_state.get("user", ""), st.session_state.get("role", ""))
+    for k in list(st.session_state.keys()):
+        del st.session_state[k]
+
+
+def login_gate():
+    """No page is shown without a signed-in user (except the single-device browser build)."""
+    if IN_BROWSER:
+        return
+    try:
+        everyone = auth.all_users(SECRETS)
+    except Exception as e:  # noqa: BLE001
+        css()
+        topbar(schema.DEFAULTS, "Unavailable")
+        st.error(f"The database is not reachable ({type(e).__name__}). Check the database URL in the app's secrets.")
+        st.stop()
+    if "user" in st.session_state:
+        last = st.session_state.get("last_active", datetime.now())
+        if datetime.now() - last > timedelta(minutes=auth.IDLE_MINUTES):
+            sign_out("session.timeout")
+            st.session_state.timed_out = True
+            st.rerun()
+        st.session_state.last_active = datetime.now()
+        if st.session_state.get("must_change"):
+            css()
+            topbar(schema.DEFAULTS, st.session_state.user)
+            st.markdown('<div class="hero"><h1>Choose your own password</h1><p>Your account was created with a temporary password.</p></div>',
+                        unsafe_allow_html=True)
+            _, mid, _ = st.columns([1, 2, 1])
+            with mid, st.form("chpw"):
+                p1 = st.text_input("New password", type="password")
+                p2 = st.text_input("Repeat it", type="password")
+                if st.form_submit_button("Save password", type="primary", width="stretch"):
+                    probs = auth.password_problems(p1, st.session_state.user)
+                    if p1 != p2:
+                        st.error("The two passwords differ.")
+                    elif probs:
+                        st.error("Password needs " + ", ".join(probs) + ".")
+                    else:
+                        auth.update_user(st.session_state.user, password=p1, must_change=False)
+                        audit.log("user.password", st.session_state.user, {"self": True}, st.session_state.user, st.session_state.role)
+                        st.session_state.must_change = False
+                        st.rerun()
+            st.stop()
+        return
     css()
+    if not everyone:
+        topbar(schema.DEFAULTS, "First-time setup")
+        st.markdown('<div class="hero"><h1>Create the first admin account</h1><p>Sign-in is required. This account can add other users '
+                    'from the Admin tab.</p></div>', unsafe_allow_html=True)
+        _, mid, _ = st.columns([1, 2, 1])
+        with mid, st.form("setup"):
+            u = st.text_input("Admin user name")
+            p1 = st.text_input("Password (10+ characters, letters and numbers)", type="password")
+            p2 = st.text_input("Repeat password", type="password")
+            if st.form_submit_button("Create admin and sign in", type="primary", width="stretch"):
+                if p1 != p2:
+                    st.error("The two passwords differ.")
+                else:
+                    try:
+                        auth.create_user(u, p1, "admin", "", "setup", must_change=False)
+                        audit.log("user.create", u.strip(), {"role": "admin", "first_admin": True}, u.strip(), "admin")
+                        _set_session(u.strip(), {"role": "admin", "source": "database"})
+                        audit.log("login.ok", u.strip(), {}, u.strip(), "admin")
+                        st.rerun()
+                    except ValueError as e:
+                        st.error(str(e))
+        st.stop()
     topbar(schema.DEFAULTS, "Sign in")
     st.markdown('<div class="hero"><h1>Welcome back</h1><p>Sign in to see today\'s stock plan.</p></div>', unsafe_allow_html=True)
+    if st.session_state.pop("timed_out", False):
+        note(f"You were signed out after {auth.IDLE_MINUTES} minutes without activity.", "ok")
     _, mid, _ = st.columns([1, 2, 1])
     with mid, st.form("login"):
         u = st.text_input("User name")
         p = st.text_input("Password", type="password")
         if st.form_submit_button("Sign in", type="primary", width="stretch"):
-            rec = USERS.get(u.strip())
-            if rec and auth.check_password(p, rec.get("password", "")):
-                st.session_state.user, st.session_state.role = u.strip(), rec.get("role", "viewer")
-                st.session_state.scope = [s.strip() for s in str(rec.get("stores", "")).split(",") if s.strip()]
+            ok, rec, msg = auth.attempt(u, p, SECRETS)
+            if ok:
+                _set_session(u.strip(), rec)
+                audit.log("login.ok", u.strip(), {"source": rec.get("source")}, u.strip(), rec.get("role", ""))
                 st.rerun()
-            st.error("User name or password not recognised.")
+            audit.log("login.locked" if "locked" in msg else "login.failed", u.strip(), {}, u.strip(), "")
+            st.error(msg)
     st.stop()
+
+
+login_gate()
 USER = st.session_state.get("user", "demo")
-ROLE = st.session_state.get("role", "admin" if not USERS else "viewer")
-OPEN = not USERS and not IN_BROWSER
+ROLE = st.session_state.get("role", "admin" if IN_BROWSER else "viewer")
+OPEN = False                               # sign-in is now mandatory; kept for code that still reads it
+
+
+def can_do(perm):
+    return IN_BROWSER or auth.allowed(ROLE, perm)
+
+
+def log(action, obj="", **details):
+    audit.log(action, obj, details, USER, ROLE)
+
+
+def account_bar():
+    if IN_BROWSER:
+        return
+    name, is_pg = db.backend()
+    a, b = st.columns([5, 1])
+    a.caption(f"Signed in as **{USER}** ({ROLE}) · data stored in {name}"
+              + ("" if is_pg else " — set a PostgreSQL URL in secrets so history survives restarts"))
+    if b.button("Sign out", key="signout", width="stretch"):
+        sign_out()
+        st.rerun()
 
 
 # ----------------------------------------------------------------------------- data in
@@ -230,7 +337,7 @@ def run_engine(source, cfg):
 
 
 def settings_panel(base):
-    dis = not auth.can(ROLE, "admin")
+    dis = not can_do("settings")
     a, b, c = st.columns(3)
     base["brand"]["name"] = a.text_input("Brand name", base["brand"]["name"], disabled=dis)
     base["brand"]["number_style"] = b.selectbox("Numbers", ["indian", "international"],
@@ -255,18 +362,32 @@ def settings_panel(base):
                + (" Only an admin can change these." if dis else ""))
 
 
-def start(source, cfg, label):
+def start(source, cfg, label, reopen=None):
+    """Build a plan. source None = the uploaded files; reopen = plan_id of a saved plan being rebuilt (not saved again)."""
     tmp = None
+    pack, kind = None, "demo" if source == DEMO else "upload"
     try:
         if source is None:
             tmp = Path(tempfile.mkdtemp(prefix="stockflow_in_"))
             over = unpack(st.session_state.ups, tmp)
             cfg = schema.merge(cfg, over) if over else cfg
+            pack = plans.pack_uploads(st.session_state.ups)
             source = tmp
         with st.spinner("Checking your data, measuring selling speed, planning and pricing every move…"):
             R = run_engine(source, cfg)
         st.session_state.R, st.session_state.label = R, label
-        st.session_state.run_id = fb.log_run(R, label, USER)
+        if reopen:
+            st.session_state.run_id = reopen
+            log("plan.reopen", reopen, trips=len(R["trips"]))
+        else:
+            st.session_state.run_id = fb.log_run(R, label, USER)
+            try:
+                plans.save_plan(R, st.session_state.run_id, label, USER, kind, pack, cfg)
+            except Exception as e:  # noqa: BLE001  (plan still usable in this session)
+                st.session_state.save_error = f"{type(e).__name__}: {e}"
+            log("plan.build", st.session_state.run_id, data=label[:80], trips=len(R["trips"]), lines=len(R["moves"]),
+                net=round(float(R["opportunity"]["net"])), stored_inputs=pack is not None or kind == "demo")
+        st.session_state.pop("released", None)
         st.session_state.chat = []
         st.session_state.pop("ctx", None)
         st.rerun()
@@ -297,6 +418,62 @@ def demo_button(key, label="✨  Try the demo brand", primary=True):
         start(DEMO, schema.load_config(HERE / "brands" / "demo.json", fb.load_settings()), "Demo Threads (fictional brand)")
 
 
+def reopen(plan_id):
+    """Rebuild a saved plan after a restart: same input pack + same settings give the same plan (the engine is deterministic)."""
+    row = plans.get(plan_id)
+    if row is None:
+        st.error("That plan is no longer in the database.")
+        return
+    cfg_ = row.settings or schema.load_config()
+    if row.source == "demo":
+        start(DEMO, cfg_, row.data_label, reopen=plan_id)
+        return
+    if row.input_pack is None:
+        st.error("The input files of that plan were too large to store, so it can't be rebuilt. Upload them again.")
+        return
+    tmp = Path(tempfile.mkdtemp(prefix="stockflow_re_"))
+    try:
+        with zipfile.ZipFile(io.BytesIO(bytes(row.input_pack))) as z:
+            for m in z.infolist():
+                p_ = Path(m.filename)
+                if m.is_dir() or p_.is_absolute() or ".." in p_.parts:
+                    continue
+                (tmp / p_.name).write_bytes(z.read(m))
+        for zf in list(tmp.glob("*.zip")):                 # a zip that was uploaded as such
+            with zipfile.ZipFile(zf) as z:
+                for m in z.infolist():
+                    p_ = Path(m.filename)
+                    if m.is_dir() or p_.is_absolute() or ".." in p_.parts or p_.suffix.lower() not in (".csv", ".xlsx", ".xlsm"):
+                        continue
+                    out = tmp / "zip" / p_
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    out.write_bytes(z.read(m))
+            zf.unlink()
+        for j in tmp.glob("*.json"):
+            j.unlink()
+        start(tmp, cfg_, row.data_label, reopen=plan_id)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def recent_plans(key):
+    try:
+        rp = plans.recent(8)
+    except Exception:  # noqa: BLE001
+        return
+    if rp.empty:
+        return
+    sec("Pick up where you left off")
+    st.caption("Plans are saved with their input files, so they can be reopened after the app restarts, with every decision intact.")
+    for r_ in rp.itertuples():
+        a, b = st.columns([5, 1.3])
+        a.markdown(f"**{r_.plan_date}** · {html.escape(str(r_.brand))} · {r_.trips} trips · built by {r_.created_by} "
+                   f"{pd.Timestamp(r_.created_at):%d %b %H:%M}  \n<span style='color:{MUTED};font-size:.85rem'>{html.escape(str(r_.data_label))}</span>",
+                   unsafe_allow_html=True)
+        if b.button("Reopen", key=f"re_{key}_{r_.plan_id}", width="stretch"):
+            reopen(r_.plan_id)
+
+
 def whatsapp_panel(released, approved):
     """WhatsApp alerts after release: sent automatically when the Business API is set up, else one tap per person."""
     W = notify.configured(st.secrets if hasattr(st, "secrets") else None)
@@ -320,6 +497,8 @@ def whatsapp_panel(released, approved):
                 with st.spinner(f"Sending {len(recs)} WhatsApp messages…"):
                     st.session_state.wa_result = notify.send_all(W, recs, USER)
                 st.session_state.wa_sent = True
+                res_ = st.session_state.wa_result
+                log("whatsapp.send", st.session_state.get("run_id", ""), kind="release", sent=int((res_.status == "sent").sum()), total=len(res_))
             res = st.session_state.get("wa_result", pd.DataFrame())
             okn = int((res.status == "sent").sum()) if len(res) else 0
             (st.success if okn == len(res) else st.warning)(f"WhatsApp: {okn} of {len(res)} messages sent.")
@@ -369,6 +548,7 @@ language = "en"
 if "R" not in st.session_state:
     css()
     topbar(schema.DEFAULTS, "Demo" if OPEN or IN_BROWSER else USER)
+    account_bar()
     st.markdown("""<div class="hero"><h1>The right stock in the right store, in the right size, every morning.</h1>
 <p>Upload yesterday's sales and stock. StockFlow gives you a short list of trips to approve, with what each one earns and what it costs to move.</p>
 <div class="meta"><span>👗 Built for apparel & ethnic wear</span><span>🏬 5–100 stores</span><span>🔒 Your data stays yours</span></div></div>""",
@@ -390,6 +570,7 @@ if "R" not in st.session_state:
                     unsafe_allow_html=True)
     with right:
         data_panel("landing")
+    recent_plans("landing")
     sec("Why brands use it")
     st.markdown("""<div class="grid">
 <div class="card"><div class="ic">💰</div><h4>Every move is priced</h4><p>Expected extra sales against freight and handling. Moves that don't pay are left out.</p></div>
@@ -413,6 +594,9 @@ if SCOPE:  # a user limited to some stores sees only their trips
     tr = tr[tr.from_id.isin(SCOPE) | tr.to_id.isin(SCOPE)]
 L = ins.leadership(R)
 topbar(cfg, f"{USER} · {ROLE}")
+account_bar()
+if st.session_state.get("save_error"):
+    note(f"⚠️ This plan could not be saved to the database ({html.escape(st.session_state.save_error)}). It works for this session only.")
 allp = bool((val.status == "PASS").all())
 st.markdown(f"""<div class="hero sm"><h1>Plan for {pl.run:%A, %d %b %Y}</h1>
 <p>{html.escape(cfg['brand']['name'])} · stock as of {P['today']:%d %b} · {len(stores)} stores · warehouses {html.escape(', '.join(pl.whs))}</p>
@@ -423,8 +607,15 @@ if OPEN:
 with st.expander("📂  New data or settings"):
     data_panel("results")
     demo_button("results", "✨  Reload the demo brand", primary=False)
+    recent_plans("results")
 
-T = st.tabs(["Overview", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"])
+TAB_NAMES = ["Overview", "Inventory", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]
+if can_do("audit"):
+    TAB_NAMES.append("Audit")
+if can_do("users"):
+    TAB_NAMES.append("Admin")
+TABS = dict(zip(TAB_NAMES, st.tabs(TAB_NAMES)))
+T = [TABS[n] for n in ["Overview", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]]
 
 # ---- overview
 with T[0]:
@@ -519,7 +710,7 @@ with T[2]:
 
 # ---- approve
 with T[3]:
-    can_ok = auth.can(ROLE, "approver")
+    can_ok = can_do("approve")
     pack = E.approval_pack(tr, cfg)
     sec(f"Approve the day in {len(pack)} decisions")
     st.caption(f"They cover all {len(tr)} trips. Everything starts switched on; switch off what you don't want."
@@ -539,17 +730,85 @@ with T[3]:
                            unsafe_allow_html=True)
                 if on:
                     ok_to.update(r.to_numbers.split(","))
+    PLAN_ID = st.session_state.get("run_id")
+    saved = bool(PLAN_ID) and not st.session_state.get("save_error") and not IN_BROWSER
+    # ---- line by line (approve / reject / change quantity), saved in the database with who and when
+    dec = plans.decisions(PLAN_ID) if saved else pd.DataFrame()
+    n_rej = int((dec.decision == "rejected").sum()) if len(dec) else 0
+    n_edit = int(((dec.approved_qty < dec.qty) & (dec.decision != "rejected")).sum()) if len(dec) else 0
+    with st.expander(f"✏️  Line by line: approve, reject or change quantities · {n_rej} rejected · {n_edit} changed", expanded=False):
+        if not saved:
+            st.info("Line decisions need the plan to be saved in the database." if not IN_BROWSER else "Not available in the browser-only copy.")
+        else:
+            st.caption("Lines you reject or reduce here are taken out of the transfer orders. A quantity can be lowered but not raised: "
+                       "the recommended quantity is the most the rules allow. Every change is saved with your name and the time.")
+            view = dec.merge(tr[["to_number", "from_id", "to_id"]].rename(columns={"from_id": "f", "to_id": "t"}), on="to_number", how="inner")
+            a, b, c = st.columns([2, 2, 2])
+            trips_opts = ["All trips"] + list(tr.to_number)
+            pick_to = a.selectbox("Trip", trips_opts, format_func=lambda x: x if x == "All trips" else
+                                  f"{x} · {tr.set_index('to_number').at[x, 'from_id']} → {tr.set_index('to_number').at[x, 'to_id']}", key="ln_trip")
+            pick_grp = b.selectbox("Reason", ["All reasons"] + [g_ for g_ in E.GROUPS if g_ in set(view.grp)], key="ln_grp")
+            q_ = c.text_input("Search", placeholder="SKU, store or item", key="ln_q")
+            if pick_to != "All trips":
+                view = view[view.to_number == pick_to]
+            if pick_grp != "All reasons":
+                view = view[view.grp == pick_grp]
+            if q_:
+                ql = q_.lower()
+                view = view[view.apply(lambda r: ql in f"{r.sku_id} {r.from_id} {r.to_id} {r.style_name}".lower(), axis=1)]
+            st.caption(f"{len(view):,} lines" + (" · showing the first 400; narrow the filter to see the rest" if len(view) > 400 else ""))
+            view = view.head(400)
+            ed_in = pd.DataFrame({"move_id": view.move_id, "trip": view.to_number, "from": view.from_id, "to": view.to_id, "item": view.style_name,
+                                  "size": view["size"], "recommended": view.qty.astype(int), "approve": view.decision != "rejected",
+                                  "qty": view.approved_qty.fillna(view.qty).astype(int), "note": view.note.fillna(""),
+                                  "net": view.net_benefit.round(0), "why": view.reason, "by": view.decided_by.fillna("")})
+            ed = st.data_editor(ed_in, hide_index=True, width="stretch", key=f"ln_ed_{PLAN_ID}_{pick_to}_{pick_grp}_{q_}",
+                                disabled=["move_id", "trip", "from", "to", "item", "size", "recommended", "net", "why", "by"] if can_ok else True,
+                                column_config={"move_id": None, "approve": st.column_config.CheckboxColumn("✓"),
+                                               "qty": st.column_config.NumberColumn("qty", min_value=0, step=1),
+                                               "why": st.column_config.TextColumn(width="large"), "net": st.column_config.NumberColumn(format="%d")})
+            if can_ok:
+                a, b, c = st.columns(3)
+                if a.button("💾 Save line changes", type="primary", width="stretch", key="ln_save"):
+                    ch = pd.DataFrame({"move_id": ed.move_id, "decision": ed.approve.map({True: "approved", False: "rejected"}),
+                                       "approved_qty": ed.qty.fillna(0).astype(int), "note": ed.note})
+                    over = ed[ed.qty > ed.recommended]
+                    changed = plans.set_decisions(PLAN_ID, ch, USER)
+                    for c_ in changed:
+                        log("decision.line", f"{PLAN_ID}/{c_['move_id']}", **c_)
+                    if len(over):
+                        st.warning(f"{len(over)} quantities were above the recommendation and were capped at it.")
+                    st.success(f"Saved {len(changed)} changed lines.")
+                    st.rerun()
+                if b.button("Reject all lines shown", width="stretch", key="ln_rej"):
+                    ch = pd.DataFrame({"move_id": ed.move_id, "decision": "rejected", "approved_qty": 0, "note": ed.note})
+                    changed = plans.set_decisions(PLAN_ID, ch, USER)
+                    log("decision.bulk", PLAN_ID, decision="rejected", lines=len(changed), filter=f"{pick_to}|{pick_grp}|{q_}")
+                    st.rerun()
+                if c.button("Reset lines shown to recommended", width="stretch", key="ln_reset"):
+                    ch = pd.DataFrame({"move_id": ed.move_id, "decision": "approved", "approved_qty": ed.recommended, "note": ""})
+                    changed = plans.set_decisions(PLAN_ID, ch, USER)
+                    log("decision.bulk", PLAN_ID, decision="reset", lines=len(changed), filter=f"{pick_to}|{pick_grp}|{q_}")
+                    st.rerun()
     orders = R["orders"]
     orders = orders[orders.to_number.isin(ok_to) & orders.to_number.isin(tr.to_number)] if len(orders) else orders
-    t_ok = tr[tr.to_number.isin(ok_to)]
+    if saved:
+        orders = plans.apply_decisions(orders, PLAN_ID)
+    t_ok = tr[tr.to_number.isin(set(orders.to_number))] if len(orders) else tr.iloc[0:0]
     with st.container(border=True):
-        kpis([("Approved", f"{len(t_ok)} of {len(tr)} trips", f"{int(t_ok.pieces.sum()):,} pieces"), ("Net gain", M(t_ok.net_benefit.sum()), "of approved trips", GREEN)])
+        kpis([("Approved", f"{len(t_ok)} of {len(tr)} trips", f"{int(orders.qty.sum()) if len(orders) else 0:,} pieces in {len(orders):,} lines"),
+              ("Changed lines", f"{n_rej + n_edit}", f"{n_rej} rejected · {n_edit} reduced", SAFFRON),
+              ("Net gain", M(t_ok.net_benefit.sum()), "of approved trips, before line changes", GREEN)])
         if can_ok:
             a, b = st.columns(2)
             a.download_button("⬇️ Transfer orders (CSV)", orders.to_csv(index=False).encode(), f"transfer_orders_{pl.run:%Y-%m-%d}.csv",
-                              type="primary", width="stretch")
-            if b.button("📤 Release & send WhatsApp alerts", width="stretch", disabled=orders.empty):
+                              type="primary", width="stretch",
+                              on_click=lambda: log("orders.download", PLAN_ID, orders=int(orders.to_number.nunique()), lines=len(orders)))
+            if b.button("📤 Release & send WhatsApp alerts", width="stretch", disabled=orders.empty or not can_do("release")):
                 fb.release_orders(orders, USER, st.session_state.run_id)
+                log("orders.release", PLAN_ID, orders=int(orders.to_number.nunique()), lines=len(orders), pieces=int(orders.qty.sum()),
+                    rejected_lines=n_rej, reduced_lines=n_edit, decisions_off=int(len(pack) - sum(1 for k_ in st.session_state
+                                                                                                   if str(k_).startswith("ap_") and st.session_state[k_])))
                 st.session_state.released = orders.copy()
                 st.session_state.wa_sent = False
                 st.success(f"Released {orders.to_number.nunique()} transfer orders. Record receipts on the Track tab.")
@@ -618,7 +877,7 @@ SCOL = {"Waiting to leave": MUTED, "Late leaving": RED, "In transit": TEAL, "Lat
 
 
 def can_mark(loc):
-    return auth.can(ROLE, "approver") or (bool(SCOPE) and loc in SCOPE)
+    return can_do("track_all") or (can_do("track_own") and bool(SCOPE) and loc in SCOPE) or auth.can(ROLE, "approver")
 
 
 def movement_alert(t, kind):
@@ -629,6 +888,7 @@ def movement_alert(t, kind):
     W = notify.configured(st.secrets if hasattr(st, "secrets") else None)
     if W:
         res = notify.send_all(W, recs, USER)
+        log("whatsapp.send", t.to_number, kind=kind, sent=int((res.status == "sent").sum()), total=len(res))
         st.toast(f"WhatsApp: {int((res.status == 'sent').sum())} of {len(res)} alerts sent")
     else:
         st.session_state.mv_alerts = recs
@@ -703,6 +963,7 @@ with T[6]:
                     c1, c2 = st.columns([1, 1])
                     if c1.button("🚚 Mark as left", key=f"left_{r.to_number}", type="primary", width="stretch"):
                         fb.mark_dispatched(r.to_number, USER, tz=tz)
+                        log("move.dispatched", r.to_number, qty=int(r.planned), route=f"{r.from_location}>{r.to_location}")
                         row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
                         movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
                         st.rerun()
@@ -711,6 +972,7 @@ with T[6]:
                                             hide_index=True, disabled=["sku_id"], width="stretch")
                         if st.button("Save what was sent", key=f"sv_s_{r.to_number}"):
                             fb.mark_dispatched(r.to_number, USER, dict(zip(ed.sku_id, ed.sent.astype(int))), "edited", tz)
+                            log("move.dispatched", r.to_number, qty=int(ed.sent.sum()), planned=int(r.planned), edited=True)
                             row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
                             movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "left")
                             st.rerun()
@@ -718,12 +980,14 @@ with T[6]:
                     c1, c2 = st.columns([1, 1])
                     if c1.button("📦 Mark as received (all of it)", key=f"rcv_{r.to_number}", type="primary", width="stretch"):
                         fb.mark_received(r.to_number, USER, tz=tz)
+                        log("move.received", r.to_number, qty=int(r.sent), route=f"{r.from_location}>{r.to_location}")
                         st.rerun()
                     with c2.popover("Received a different quantity?", width="stretch"):
                         ed = st.data_editor(ln[["sku_id", "sent"]].assign(received=ln.sent), key=f"edr_{r.to_number}",
                                             hide_index=True, disabled=["sku_id", "sent"], width="stretch")
                         if st.button("Save what arrived", key=f"sv_r_{r.to_number}"):
                             fb.mark_received(r.to_number, USER, dict(zip(ed.sku_id, ed.received.astype(int))), "counted", tz)
+                            log("move.received", r.to_number, qty=int(ed.received.sum()), sent=int(r.sent), counted=True)
                             row = fb.tracking()[0].set_index("to_number").loc[r.to_number]
                             if int(row.received) != int(row.sent):
                                 movement_alert(pd.Series({**row.to_dict(), "to_number": r.to_number}), "received")
@@ -734,7 +998,7 @@ with T[6]:
         if len(view) > 60:
             st.caption(f"Showing 60 of {len(view)}. Use the filter or search.")
         st.download_button("⬇️ Tracking report (CSV)", trl.to_csv(index=False).encode(), "stock_movement_tracking.csv", width="stretch")
-    if auth.can(ROLE, "approver"):
+    if can_do("track_all"):
         with st.expander("📥 Upload from your warehouse system (many orders at once)"):
             st.caption("Dispatch file: to_number, sku_id, qty_shipped (optional dispatched_on). "
                        "Receipt file: to_number, sku_id, qty_received (optional received_on).")
@@ -745,6 +1009,7 @@ with T[6]:
                 try:
                     n1 = fb.add_dispatches(pd.read_csv(df_, dtype=str), USER) if df_ else 0
                     n2 = fb.add_receipts(pd.read_csv(rf_, dtype=str), USER) if rf_ else 0
+                    log("move.upload", "tracking files", dispatch_lines=n1, receipt_lines=n2)
                     st.success(f"Recorded {n1} dispatch lines and {n2} receipt lines.")
                 except ValueError as e:
                     st.error(str(e))
@@ -761,7 +1026,7 @@ with T[7]:
             if cols[i].button(qq, width="stretch", key=f"qq{i}"):
                 st.session_state.chat = [{"role": "user", "content": qq}, {"role": "assistant", "content": chat.quick_answer(qq, R)}]
                 st.rerun()
-    if auth.can(ROLE, "admin") and not ai:
+    if can_do("settings") and not ai:
         with st.expander("Turn on AI answers"):
             st.caption("Sends the plan report (trips, moves, issues, stock figures; never customer or staff data) to the AI provider. "
                        "Check your data-processing agreement covers this first.")
@@ -770,6 +1035,7 @@ with T[7]:
                 if k:
                     st.session_state.api_key = k.strip()
                 st.session_state.ai_ok = True
+                log("ai.enable", "chat", own_key=bool(k))
                 st.rerun()
     st.session_state.setdefault("chat", [])
     for m in st.session_state.chat:
@@ -806,6 +1072,7 @@ with T[8]:
                 st.warning("Please pick a star rating.")
             else:
                 fb.add_rating(st.session_state.run_id, stars + 1, right, easy, time_, changes, comment, USER)
+                log("feedback.rate", st.session_state.run_id, stars=stars + 1)
                 st.success("Thank you!")
     if not r.empty:
         kpis([("Average rating", f"{r.stars.mean():.1f} ★", f"{len(r)} reviews", SAFFRON), ("Moves right", f"{r.moves_right.mean():.1f}/5", ""),
@@ -814,17 +1081,20 @@ with T[8]:
     if len(sug):
         sec("Suggested settings from feedback")
         st.dataframe(sug.drop(columns="setting"), hide_index=True, width="stretch")
-        if auth.can(ROLE, "admin"):
+        if can_do("settings"):
             a, b = st.columns(2)
             if a.button("✅ Use these from the next run", type="primary", width="stretch"):
                 over = fb.load_settings()
                 for row in sug.itertuples():
                     s1, k1 = row.setting.split(".")
                     over.setdefault(s1, {})[k1] = int(row.suggested)
-                fb.save_settings(over)
+                fb.save_settings(over, USER)
+                log("settings.accept", "overrides", **{k.replace(".", "_"): v for k, v in
+                                                       {f"{a_}.{b_}": v for a_, d_ in over.items() for b_, v in d_.items()}.items()})
                 st.success("Saved.")
             if b.button("↩️ Back to standard settings", width="stretch"):
-                fb.reset_settings()
+                fb.reset_settings(USER)
+                log("settings.reset", "overrides")
     if not runs.empty:
         with st.expander(f"Run history ({len(runs)})"):
             st.dataframe(runs[::-1], hide_index=True, width="stretch")
@@ -851,3 +1121,191 @@ with T[10]:
         lift = pd.DataFrame(pl.season.lift).T.reset_index(names="region").melt("region", var_name="day", value_name="vs normal")
         plot(px.bar(lift, x="day", y="vs normal", color="region", barmode="group", title="Sales on special days (1.0 = a normal day)",
                     color_discrete_sequence=[TEAL, SAFFRON, PLUM, "#3E4C59", GREEN]).add_hline(y=1, line_dash="dot"), 320)
+
+# ---- inventory dashboard (chain-wide)
+with TABS["Inventory"]:
+    it_ = pl.it
+    inv = g.reset_index()
+    inv = inv.assign(zone=inv.store_id.map(stores.zone), tier=inv.store_id.map(stores.tier), city=inv.store_id.map(stores.city),
+                     cost=inv.sku_id.map(it_.cost), value=inv.oh * inv.mrp)
+    if SCOPE:
+        inv = inv[inv.store_id.isin(SCOPE)]
+    a, b, c = st.columns(3)
+    fz = a.multiselect("Zone", sorted(stores.zone.unique()), key="inv_z", placeholder="All zones")
+    ft = b.multiselect("Tier", sorted(stores.tier.unique()), key="inv_t", placeholder="All tiers")
+    fc = c.multiselect("Category", sorted(inv.dcat.unique()), key="inv_c", placeholder="All categories")
+    if fz:
+        inv = inv[inv.zone.isin(fz)]
+    if ft:
+        inv = inv[inv.tier.isin(ft)]
+    if fc:
+        inv = inv[inv.dcat.isin(fc)]
+    snap_all = P["snap"]
+    wh_stock = snap_all[snap_all.location_id.isin(pl.whs)].copy()
+    wh_stock["value"] = wh_stock.oh * wh_stock.sku_id.map(it_.mrp)
+    if fc:
+        wh_stock = wh_stock[wh_stock.sku_id.map(it_.disp_cat).isin(fc)]
+    selling = inv.fd30 >= 0.03
+    aged = inv.age >= cfg["ageing"]["age_days"]
+    st_pcs, wh_pcs = int(inv.oh.sum()), int(wh_stock.oh.sum())
+    sales_day = float(inv.fd30.sum())
+    kpis([("Pieces in the chain", f"{st_pcs + wh_pcs:,}", f"{st_pcs:,} in stores · {wh_pcs:,} in warehouses"),
+          ("Value at MRP", M(float(inv.value.sum() + wh_stock.value.sum())), f"at cost {M(float((inv.oh * inv.cost).sum()))} in stores", PLUM),
+          ("Store cover", f"{st_pcs / sales_day:.0f} days" if sales_day > 0 else "—", f"selling {sales_day:,.0f} pieces a day", TEAL),
+          ("Sizes on the shelf", f"{(inv[selling].pos > 0).mean():.0%}" if selling.any() else "—", "of sizes that sell", GREEN),
+          ("Old stock", f"{inv[aged].oh.sum() / max(st_pcs, 1):.0%}", f"of store pieces older than {cfg['ageing']['age_days']} days", RED),
+          ("In transit", f"{int(inv.transit.sum()):,}", "pieces on the way to stores", SAFFRON)])
+    sec("Where the stock is")
+    loc = pd.concat([pd.DataFrame({"location": ["All stores"], "pieces": [st_pcs]}),
+                     wh_stock.groupby("location_id").oh.sum().rename("pieces").reset_index().rename(columns={"location_id": "location"})])
+    plot(px.bar(loc, x="pieces", y="location", orientation="h", color_discrete_sequence=[TEAL], title="Pieces by location",
+                labels={"location": ""}), 80 + 40 * len(loc), False)
+    sec("By category")
+    cat = inv.groupby("dcat").agg(pieces=("oh", "sum"), value=("value", "sum"), sells_day=("fd30", "sum"))
+    cat["cover_days"] = (cat.pieces / cat.sells_day).where(cat.sells_day > 0).round(0)
+    cat["sizes_on_shelf"] = inv[selling].groupby("dcat").pos.apply(lambda x: (x > 0).mean())
+    cat["old_share"] = inv[aged].groupby("dcat").oh.sum() / cat.pieces
+    cat["warehouse_pieces"] = wh_stock.groupby(wh_stock.sku_id.map(it_.disp_cat)).oh.sum()
+    cat = cat.fillna(0).reset_index().rename(columns={"dcat": "category"})
+    st.dataframe(cat.assign(value=cat.value.map(M)), hide_index=True, width="stretch",
+                 column_config={"sells_day": st.column_config.NumberColumn("sells/day", format="%.1f"),
+                                "sizes_on_shelf": st.column_config.ProgressColumn("sizes on shelf", format="percent", min_value=0, max_value=1),
+                                "old_share": st.column_config.ProgressColumn("old stock", format="percent", min_value=0, max_value=1)})
+    sec("Store comparison")
+    hs_ = E.hidden_stockouts(pl, R["weekly"], P["today"]).groupby("store_id").size()
+    inn_ = mv[mv.to_id.isin(stores.index)].groupby("to_id").qty.sum()
+    out_ = mv[mv.from_id.isin(stores.index)].groupby("from_id").qty.sum()
+    cmpf = inv.groupby("store_id").agg(city=("city", "first"), zone=("zone", "first"), tier=("tier", "first"), pieces=("oh", "sum"),
+                                       value=("value", "sum"), sells_day=("fd30", "sum"))
+    cmpf["capacity_used"] = (cmpf.pieces / stores.cap.reindex(cmpf.index).clip(upper=10 ** 8)).where(stores.cap.reindex(cmpf.index) < 10 ** 8)
+    cmpf["cover_days"] = (cmpf.pieces / cmpf.sells_day).where(cmpf.sells_day > 0).round(0)
+    cmpf["sizes_on_shelf"] = inv[selling].groupby("store_id").pos.apply(lambda x: (x > 0).mean())
+    cmpf["old_share"] = (inv[aged].groupby("store_id").oh.sum() / cmpf.pieces).fillna(0)
+    cmpf["hidden_stockouts"] = hs_.reindex(cmpf.index).fillna(0).astype(int)
+    cmpf["plan_in"] = inn_.reindex(cmpf.index).fillna(0).astype(int)
+    cmpf["plan_out"] = out_.reindex(cmpf.index).fillna(0).astype(int)
+    cmpf = cmpf.reset_index().rename(columns={"store_id": "store"})
+    st.dataframe(cmpf, hide_index=True, width="stretch", height=min(520, 40 + 35 * len(cmpf)),
+                 column_config={"value": st.column_config.NumberColumn("value (MRP)", format="%d"),
+                                "sells_day": st.column_config.NumberColumn("sells/day", format="%.1f"),
+                                "capacity_used": st.column_config.ProgressColumn("shelf used", format="percent", min_value=0, max_value=1.2),
+                                "sizes_on_shelf": st.column_config.ProgressColumn("sizes on shelf", format="percent", min_value=0, max_value=1),
+                                "old_share": st.column_config.ProgressColumn("old stock", format="percent", min_value=0, max_value=1)})
+    if len(cmpf):
+        med = float(cmpf.cover_days.median())
+        fig = px.bar(cmpf.sort_values("cover_days"), x="store", y="cover_days", color="tier", title=f"Days of cover by store (median {med:.0f})",
+                     labels={"cover_days": "days", "store": ""}, color_discrete_sequence=[TEAL, SAFFRON, PLUM, "#3E4C59", GREEN])
+        fig.add_hline(y=med, line_dash="dot")
+        plot(fig, 340)
+        top = cmpf.sort_values("sells_day", ascending=False).head(40).store
+        hm = inv[inv.store_id.isin(top)].groupby(["store_id", "dcat"]).agg(p=("oh", "sum"), f=("fd30", "sum"))
+        hm = (hm.p / hm.f).where(hm.f > 0).unstack().reindex(top).clip(upper=180)
+        if hm.notna().any().any():
+            fig = px.imshow(hm.T, aspect="auto", color_continuous_scale=["#C2413A", "#F6E7C8", "#1E5C61"], zmin=0, zmax=120,
+                            labels=dict(color="days", x="", y=""), title="Cover by store and category (red = running out, dark = overstocked)")
+            plot(fig, 120 + 28 * hm.shape[1], False)
+        st.download_button("⬇️ Store comparison (CSV)", cmpf.to_csv(index=False).encode(), "store_comparison.csv", width="stretch")
+
+# ---- audit trail
+if "Audit" in TABS:
+    with TABS["Audit"]:
+        sec("Who did what, and when")
+        st.caption("Every sign-in, plan, line decision, release, dispatch, receipt, settings change and alert is recorded. "
+                   "Entries cannot be edited or deleted from the app.")
+        ad = audit.as_frame(20000)
+        if ad.empty:
+            st.info("Nothing recorded yet.")
+        else:
+            ad["at"] = pd.to_datetime(ad["at"])
+            a, b, c = st.columns(3)
+            fu = a.multiselect("User", sorted(ad.user.dropna().unique()), key="au_u", placeholder="All users")
+            fa = b.multiselect("Action", sorted(ad.what.unique()), key="au_a", placeholder="All actions")
+            fd = c.date_input("From", value=ad["at"].min().date(), key="au_d")
+            view = ad[ad["at"].dt.date >= fd]
+            if fu:
+                view = view[view.user.isin(fu)]
+            if fa:
+                view = view[view.what.isin(fa)]
+            kpis([("Entries", f"{len(view):,}", f"of {len(ad):,}"), ("Users", view.user.nunique(), "active in this view"),
+                  ("Line decisions", int(view.action.str.startswith("decision").sum()), "approve / reject / quantity", PLUM),
+                  ("Failed sign-ins", int(view.action.isin(["login.failed", "login.locked"]).sum()), "watch for lockouts", RED)])
+            st.dataframe(view.drop(columns="action").assign(at=view["at"].dt.strftime("%Y-%m-%d %H:%M:%S")), hide_index=True,
+                         width="stretch", height=480, column_config={"details": st.column_config.TextColumn(width="large")})
+            st.download_button("⬇️ Audit trail (CSV)", view.to_csv(index=False).encode(), "audit_trail.csv", width="stretch")
+
+# ---- admin: users, database, secrets
+if "Admin" in TABS:
+    with TABS["Admin"]:
+        name, is_pg = db.backend()
+        sec("System")
+        kpis([("Database", name, db.describe(), GREEN if is_pg else RED),
+              ("Plans saved", f"{len(plans.recent(10 ** 6)):,}", "can be reopened after a restart"),
+              ("Sign-in", "Required", f"lock after {auth.LOCK_AFTER} wrong tries · sign-out after {auth.IDLE_MINUTES} min idle")])
+        if not is_pg:
+            note("⚠️ No PostgreSQL URL is set, so data is in a local SQLite file. On Streamlit Community Cloud that file is wiped on every "
+                 "restart. Add <code>[database] url = \"postgresql://…\"</code> in the app's Settings → Secrets.")
+
+        def _has(path_):
+            try:
+                cur = SECRETS
+                for k_ in path_:
+                    cur = cur[k_]
+                return bool(cur)
+            except Exception:  # noqa: BLE001
+                return False
+        sec_rows = [("Database URL", _has(["database", "url"]) or _has(["DATABASE_URL"])), ("Users in secrets", bool(USERS)),
+                    ("WhatsApp Business API", bool(notify.configured(SECRETS))), ("Anthropic API key", _has(["ANTHROPIC_API_KEY"]))]
+        st.markdown("**Secrets** (values are never shown): " + " · ".join(f"{'✅' if v else '—'} {k}" for k, v in sec_rows))
+        sec("Users")
+        everyone = auth.all_users(SECRETS)
+        try:
+            dbu = db.read("users")
+        except Exception:  # noqa: BLE001
+            dbu = pd.DataFrame()
+        ul = pd.DataFrame([{"user": k, "role": v.get("role"), "stores": v.get("stores", ""), "source": v.get("source"),
+                            "active": v.get("active", True)} for k, v in everyone.items()])
+        if len(dbu):
+            ul = ul.merge(dbu[["username", "last_login", "created_by"]].rename(columns={"username": "user"}), on="user", how="left")
+        st.dataframe(ul, hide_index=True, width="stretch")
+        st.caption("viewer: sees plans · store: + marks dispatch/receipt for its stores · approver: + line decisions, release, all tracking, "
+                   "audit · admin: + settings and users. Users in secrets can't be changed here.")
+        a, b = st.columns(2, gap="large")
+        with a, st.form("new_user", clear_on_submit=True):
+            st.markdown("**Add a user**")
+            nu = st.text_input("User name")
+            nr = st.selectbox("Role", ["viewer", "store", "approver", "admin"])
+            ns = st.multiselect("Limit to stores (optional)", list(stores.index))
+            npw = st.text_input("Temporary password (they change it at first sign-in)", type="password")
+            if st.form_submit_button("Create user", type="primary", width="stretch"):
+                try:
+                    auth.create_user(nu, npw, nr, ", ".join(ns), USER, must_change=True)
+                    log("user.create", nu.strip(), role=nr, stores=", ".join(ns))
+                    st.success(f"Created {nu.strip()}.")
+                except ValueError as e:
+                    st.error(str(e))
+        with b:
+            dbnames = list(dbu.username) if len(dbu) else []
+            if dbnames:
+                with st.form("edit_user"):
+                    st.markdown("**Change a user**")
+                    eu = st.selectbox("User", dbnames)
+                    cur = dbu.set_index("username").loc[eu]
+                    er = st.selectbox("Role", ["viewer", "store", "approver", "admin"],
+                                      index=["viewer", "store", "approver", "admin"].index(cur.role) if cur.role in auth.PERMS else 0)
+                    es = st.text_input("Stores (comma separated, blank = all)", cur.stores or "")
+                    ea = st.checkbox("Active", value=bool(cur.active))
+                    epw = st.text_input("New temporary password (optional)", type="password")
+                    if st.form_submit_button("Save changes", width="stretch"):
+                        if eu == USER and (not ea or er != "admin"):
+                            st.error("You can't remove your own admin access.")
+                        else:
+                            vals = dict(role=er, stores=es, active=ea)
+                            probs = auth.password_problems(epw, eu) if epw else []
+                            if probs:
+                                st.error("Password needs " + ", ".join(probs))
+                            else:
+                                if epw:
+                                    vals.update(password=epw, must_change=True, failed=0, locked_until=None)
+                                auth.update_user(eu, **vals)
+                                log("user.update", eu, role=er, stores=es, active=ea, password_reset=bool(epw))
+                                st.success("Saved.")

@@ -183,7 +183,7 @@ def send_all(w, recs, user, sender=_post):
 
 
 def log():
-    return pd.read_csv(LOG, dtype=str) if LOG.exists() else pd.DataFrame()
+    return fb._read(LOG)
 
 
 

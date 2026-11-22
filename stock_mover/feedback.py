@@ -1,11 +1,14 @@
-"""Run history, ratings, suggested settings, released transfer orders and receipts: simple files in ./workspace."""
-import json
+"""Run history, ratings, suggested settings, released transfer orders and movements.
+
+Storage is the database in db.py (PostgreSQL when configured, else a local SQLite file). The function names and
+behaviour are unchanged from the earlier CSV version; older CSV files in ./workspace are imported once automatically."""
 import uuid
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
+import db
 import schema
 
 DIR = Path(__file__).resolve().parent / "workspace"
@@ -26,14 +29,23 @@ SUGGESTIONS = {
 }
 
 
+_TABLE = {"runs.csv": "runs", "ratings.csv": "ratings", "released_transfer_orders.csv": "released_orders",
+          "movements.csv": "movements", "whatsapp_log.csv": "whatsapp_log"}
+
+
 def _append(path, rows):
-    DIR.mkdir(exist_ok=True)
-    df = pd.DataFrame(rows if isinstance(rows, list) else [rows])
-    df.to_csv(path, mode="a", header=not path.exists(), index=False)
+    """Append rows to the table that stands for this (former) CSV file."""
+    t = _TABLE.get(Path(path).name)
+    if t:
+        db.insert_rows(t, rows if isinstance(rows, (list, pd.DataFrame)) else [rows])
 
 
 def _read(path):
-    return pd.read_csv(path, dtype=str) if path.exists() else pd.DataFrame()
+    t = _TABLE.get(Path(path).name)
+    if not t:
+        return pd.DataFrame()
+    d = db.read(t)
+    return d.drop(columns=[c for c in ("id",) if c in d]) if len(d) else pd.DataFrame()
 
 
 def key(sec_k):
@@ -42,22 +54,19 @@ def key(sec_k):
 
 def load_settings():
     """Feedback-accepted overrides, as a nested dict to merge over the brand config."""
-    if SETTINGS.exists():
-        try:
-            return json.loads(SETTINGS.read_text())
-        except (ValueError, OSError):
-            return {}
-    return {}
+    try:
+        v = db.get_setting("overrides", {})
+        return v if isinstance(v, dict) else {}
+    except Exception:  # noqa: BLE001  (database unreachable: run with standard settings)
+        return {}
 
 
-def save_settings(over):
-    DIR.mkdir(exist_ok=True)
-    SETTINGS.write_text(json.dumps(over, indent=2))
+def save_settings(over, user=""):
+    db.upsert_setting("overrides", over, user)
 
 
-def reset_settings():
-    if SETTINGS.exists():
-        SETTINGS.unlink()
+def reset_settings(user=""):
+    db.upsert_setting("overrides", {}, user)
 
 
 def log_run(R, label, user):
