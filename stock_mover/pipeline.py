@@ -115,6 +115,11 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
         except Exception:  # noqa: BLE001
             pass
         try:
+            import kpi
+            kpi.save_snapshot(plan_id, R, user)
+        except Exception:  # noqa: BLE001
+            pass
+        try:
             import stockcount
             stockcount.save_catalog(R["P"]["items"], user)
         except Exception:  # noqa: BLE001

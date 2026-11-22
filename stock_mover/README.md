@@ -127,6 +127,14 @@ what then sold (only where the item was on the shelf), next to the simple 28-day
 store × category error is 27% vs 32% (apparel) and 11% vs 12% (general retail); on the hackathon data both methods
 under-forecast the October festival ramp by about 46%, which a year of history and an event calendar improve.
 
+## KPIs tab
+
+Today's stock KPIs (stock on hand, days of cover, in-stock rate, items at risk of running out, old stock, 30-day
+sell-through, stock turns, demand next 7 days), each shown now and after today's plan, by store too. **Predicted vs
+actual:** for each of the last 8 weeks the forecast is rebuilt from the data as it stood that week and compared with
+what sold (only where the item was on the shelf), next to a simple 4-week average, by store and category. Every saved
+plan also records its KPIs and 7-day forecast, so trend charts and forecast-vs-actual by plan day build up over time.
+
 ## Operations at scale
 
 **Data integration.** Upload (or drop in the daily folder) exports exactly as the POS, ERP or WMS produces them. Each file

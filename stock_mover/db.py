@@ -119,6 +119,11 @@ T["webhook_log"] = Table("webhook_log", md, Column("id", Integer, primary_key=Tr
                          Column("event", String(60)), Column("url", String(300)), Column("status", String(12)), Column("code", Integer),
                          Column("error", Text), Column("attempts", Integer))
 
+T["kpi_history"] = Table("kpi_history", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("plan_id", String(40)),
+                         Column("plan_date", String(10)), Column("store_id", String(40)), Column("category", String(120)),
+                         Column("on_hand", Integer), Column("pred7", Float), Column("selling", Integer), Column("in_stock", Integer),
+                         Column("at_risk", Integer), Column("old_units", Integer), Column("at", DateTime))
+
 _ENGINE = None
 _URL = None
 

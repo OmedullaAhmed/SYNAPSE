@@ -6,7 +6,7 @@ import pandas as pd
 import db
 
 ACTIONS = {
-    "login.ok": "Signed in", "login.guest": "Opened demo as guest", "user.bulk": "Imported users", "accuracy.run": "Measured forecast accuracy", "apikey.create": "Created API key", "apikey.revoke": "Revoked API key", "webhooks.set": "Changed webhooks", "count.save": "Saved a stock count", "vision.read": "Read stock from images", "ai.vision": "Changed AI image reading", "login.sso": "Signed in with company account", "queue.decide": "Regional queue decision", "exception.resolve": "Resolved exception",
+    "login.ok": "Signed in", "login.guest": "Opened demo as guest", "kpi.replay": "Built predicted vs actual", "user.bulk": "Imported users", "accuracy.run": "Measured forecast accuracy", "apikey.create": "Created API key", "apikey.revoke": "Revoked API key", "webhooks.set": "Changed webhooks", "count.save": "Saved a stock count", "vision.read": "Read stock from images", "ai.vision": "Changed AI image reading", "login.sso": "Signed in with company account", "queue.decide": "Regional queue decision", "exception.resolve": "Resolved exception",
     "exception.assign": "Assigned exception", "mapping.save": "Saved column mapping", "automation.settings": "Changed automation",
     "automation.run": "Daily run", "automation.failed": "Daily run failed", "erp.export": "Sent orders to ERP", "erp.poll": "Picked up ERP confirmations", "login.failed": "Failed sign-in", "login.locked": "Account locked", "logout": "Signed out",
     "session.timeout": "Session timed out", "user.create": "Created user", "user.update": "Changed user", "user.password": "Changed password",

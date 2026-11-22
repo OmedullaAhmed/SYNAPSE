@@ -934,7 +934,7 @@ with st.expander("📂  New data or settings"):
         demo_button("results", "👗  Apparel demo", primary=False)
     recent_plans("results")
 
-TAB_NAMES = ["Overview", "Inventory", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]
+TAB_NAMES = ["Overview", "Inventory", "KPIs", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]
 if not GUEST and not IN_BROWSER:                 # live operations data is never shown to guests
     TAB_NAMES[8:8] = ["Operations", "Exceptions"]
 if can_do("settings") and not GUEST and not IN_BROWSER:
@@ -2162,3 +2162,174 @@ with T[1]:
         st.download_button("⬇️ Purchase suggestions (CSV)", safety.csv(buy), f"purchase_suggestions_{pl.run:%Y-%m-%d}.csv", width="stretch")
     else:
         st.success("Nothing to buy: every shortfall can be covered by moving stock you already have.")
+
+
+# ============================================================================= KPIs: today, predicted vs actual, history
+def plan_std_inputs():
+    """This plan's input files, standardised, in a temporary folder (caller deletes it). None if they are not stored."""
+    import ingest
+    row = plans.get(PLAN_ID) if PLAN_ID and not IN_BROWSER else None
+    raw = Path(tempfile.mkdtemp(prefix="stockflow_kraw_"))
+    std = Path(tempfile.mkdtemp(prefix="stockflow_kstd_"))
+    try:
+        if row is None or row.source == "demo":
+            src = DEMO2 if "Demo Mart" in str(st.session_state.get("label", "")) else DEMO
+        elif row.input_pack is not None:
+            with zipfile.ZipFile(io.BytesIO(bytes(row.input_pack))) as z:
+                for m_ in z.infolist():
+                    p_ = Path(m_.filename)
+                    if not (m_.is_dir() or p_.is_absolute() or ".." in p_.parts):
+                        (raw / p_.name).write_bytes(z.read(m_))
+            import daily
+            daily._unzip(raw)
+            for j in raw.glob("*.json"):
+                j.unlink()
+            src = raw
+        else:
+            shutil.rmtree(std, ignore_errors=True)
+            return None
+        ingest.run(src, std, cfg=cfg, log=False, stale=False)
+        return std
+    finally:
+        shutil.rmtree(raw, ignore_errors=True)
+
+
+def _arrow(now, after, fmt, good_up=True):
+    if after is None or now is None or pd.isna(after) or pd.isna(now) or abs(after - now) < 1e-9:
+        return ""
+    better = (after > now) == good_up
+    return f"{'▲' if after > now else '▼'} {fmt(after)} after today's plan" + (" ✓" if better else "")
+
+
+with TABS["KPIs"]:
+    import kpi
+    K, KS = kpi.today(R)
+    pct = lambda v: "—" if v is None or pd.isna(v) else f"{v:.0%}"  # noqa: E731
+    days_ = lambda v: "—" if v is None or pd.isna(v) else f"{v:.0f} days"  # noqa: E731
+    sec(f"Stock KPIs on {pd.Timestamp(K['as_of']):%d %b %Y}")
+    kpis([("Stock on hand", f"{K['stock_units']:,} units", f"{M(K['stock_cost'])} at cost · {K['store_units']:,} in stores"),
+          ("Days of cover (stores)", days_(K["cover_days"]), _arrow(K["cover_days"], K["cover_days_after"], days_), TEAL),
+          ("In stock", pct(K["in_stock"]), _arrow(K["in_stock"], K["in_stock_after"], pct), GREEN),
+          ("At risk of running out", f"{K['at_risk']:,}", _arrow(K["at_risk"], K["at_risk_after"], lambda v: f"{int(v):,}", good_up=False) or
+           "store × item pairs before the next delivery", RED)])
+    kpis([("Old stock", pct(K["old_share"]), "of store units", SAFFRON),
+          ("Sell-through, 30 days", pct(K["sell_through"]), "sold ÷ (sold + on hand)", PLUM),
+          ("Stock turns", "—" if pd.isna(K["turns"]) else f"{K['turns']:.1f}× a year", "cost of sales ÷ stock at cost"),
+          ("Demand next 7 days", f"{K['pred7']:,.0f} units", f"if all on the shelf · sold last 7 days: {K['sold7']:,.0f}", TEAL)])
+    with st.expander("What each KPI means"):
+        st.markdown("\n".join(f"- **{n}**: {kpi.DEF[k]}" for n, k in (
+            ("Stock on hand", "stock_units"), ("Days of cover", "cover_days"), ("In stock", "in_stock"), ("At risk", "at_risk"),
+            ("Old stock", "old_share"), ("Sell-through", "sell_through"), ("Stock turns", "turns"), ("Demand next 7 days", "pred7"),
+            ("Error", "wape"), ("Bias", "bias"))))
+    ks = KS[KS.store_id.isin(SCOPE)] if SCOPE else KS
+    st.dataframe(ks[["store_id", "units", "cover_days", "cover_days_after", "in_stock", "in_stock_after", "at_risk", "at_risk_after",
+                     "old_share", "sold30", "pred7"]], hide_index=True, width="stretch",
+                 column_config={"store_id": "store", "units": st.column_config.NumberColumn("units", format="%d"),
+                                "cover_days": st.column_config.NumberColumn("cover days", format="%.0f"),
+                                "cover_days_after": st.column_config.NumberColumn("after plan", format="%.0f"),
+                                "in_stock": st.column_config.ProgressColumn("in stock", format="percent", min_value=0, max_value=1),
+                                "in_stock_after": st.column_config.ProgressColumn("after plan", format="percent", min_value=0, max_value=1),
+                                "at_risk": st.column_config.NumberColumn("at risk", format="%d"),
+                                "at_risk_after": st.column_config.NumberColumn("after plan", format="%d"),
+                                "old_share": st.column_config.ProgressColumn("old stock", format="percent", min_value=0, max_value=1),
+                                "sold30": st.column_config.NumberColumn("sold 30 days", format="%d"),
+                                "pred7": st.column_config.NumberColumn("demand next 7 days", format="%.0f")})
+
+    sec("Predicted vs actual sales, week by week")
+    st.caption("For each of the last 8 weeks, the forecast is rebuilt from the data as it stood at the start of that week and compared "
+               "with what then sold, next to the simple 'average of the last 4 weeks'. Counted only where the item was on the shelf "
+               "most of the week (or, without weekly stock records, where the store carries it), so empty shelves don't count as "
+               "forecast errors.")
+    import db as _db
+    wrep = None
+    cached = _db.get_setting(f"kpiw:{PLAN_ID}"[:40]) if PLAN_ID and not IN_BROWSER else None
+    if cached:
+        wrep = pd.DataFrame(cached)
+    elif not GUEST and st.button("📈 Build the weekly comparison", key="kpiw_go"):
+        bar = st.progress(0.0, text="Starting…")
+        std_ = plan_std_inputs()
+        try:
+            if std_ is None:
+                st.warning("This plan's input files are no longer stored, so past weeks can't be rebuilt.")
+            else:
+                wrep = kpi.replay(std_, cfg, 8, progress=lambda t_, p_: bar.progress(min(1.0, p_), text=t_))
+                if PLAN_ID:
+                    _db.upsert_setting(f"kpiw:{PLAN_ID}"[:40], json.loads(wrep.to_json(orient="records")), USER)
+                log("kpi.replay", PLAN_ID or "demo", weeks=int(wrep.week_start.nunique()))
+                if PLAN_ID:
+                    st.rerun()                       # show the saved comparison without the build button
+        except ValueError as e_:
+            st.warning(str(e_))
+        finally:
+            bar.empty()
+            if std_:
+                shutil.rmtree(std_, ignore_errors=True)
+    elif GUEST:
+        st.caption("Sign in to build the weekly comparison.")
+    if wrep is not None and len(wrep):
+        a_, b_ = st.columns(2)
+        fs_ = a_.multiselect("Stores", sorted(wrep.store_id.unique()), default=[s_ for s_ in SCOPE if s_ in set(wrep.store_id)] if SCOPE else [],
+                            key="kpiw_s", placeholder="All stores")
+        fc_ = b_.multiselect("Categories", sorted(wrep.category.unique()), key="kpiw_c", placeholder="All categories")
+        sub = wrep
+        if fs_:
+            sub = sub[sub.store_id.isin(fs_)]
+        if fc_:
+            sub = sub[sub.category.isin(fc_)]
+        w = kpi.weekly(sub)
+        e1, e2 = kpi.wape(sub), kpi.wape(sub, "simple")
+        bias_ = float((sub.pred.sum() - sub.actual.sum()) / sub.actual.sum()) if sub.actual.sum() else float("nan")
+        kpis([("StockFlow error", pct(e1), "weekly, store × category", GREEN if e1 < e2 else RED),
+              ("Simple average error", pct(e2), "same weeks and items"),
+              ("Bias", "—" if pd.isna(bias_) else f"{bias_:+.0%}", "negative = predicted too low", SAFFRON if abs(bias_) > .15 else GREEN),
+              ("Weeks", f"{len(w)}", f"{w.week_start.min()} to {w.week_start.max()}")])
+        long_ = w.melt(id_vars="week_start", value_vars=["actual", "pred", "simple"], var_name="series", value_name="units")
+        long_["series"] = long_.series.map({"actual": "Actual sales", "pred": "StockFlow prediction", "simple": "Simple 4-week average"})
+        fig = px.line(long_, x="week_start", y="units", color="series", markers=True,
+                      color_discrete_map={"Actual sales": "#1E2A33", "StockFlow prediction": TEAL, "Simple 4-week average": "#B8B2A7"},
+                      labels={"week_start": "week starting", "units": "units", "series": ""},
+                      title="Actual vs predicted units per week" + (f" · {', '.join(fs_)}" if fs_ else "") + (f" · {', '.join(fc_)}" if fc_ else ""))
+        fig.update_traces(selector=dict(name="Actual sales"), line=dict(width=3))
+        fig.update_traces(selector=dict(name="Simple 4-week average"), line=dict(dash="dot"))
+        plot(fig, 360)
+        st.dataframe(w.rename(columns={"week_start": "week starting", "pred": "StockFlow", "simple": "simple average",
+                                       "error": "StockFlow error", "simple_error": "simple error"}),
+                     hide_index=True, width="stretch",
+                     column_config={c_: st.column_config.NumberColumn(format="%.0f") for c_ in ("StockFlow", "simple average", "actual")} |
+                                   {c_: st.column_config.NumberColumn(format="percent") for c_ in ("StockFlow error", "simple error", "bias")})
+        bycat = sub.groupby("category").apply(lambda d: pd.Series(dict(actual=d.actual.sum(), predicted=d.pred.sum(),
+                                                                         stockflow_error=kpi.wape(d), simple_error=kpi.wape(d, "simple"))),
+                                              include_groups=False).reset_index().sort_values("actual", ascending=False)
+        st.markdown("**By category**")
+        st.dataframe(bycat, hide_index=True, width="stretch",
+                     column_config={"actual": st.column_config.NumberColumn(format="%.0f"), "predicted": st.column_config.NumberColumn(format="%.0f"),
+                                    "stockflow_error": st.column_config.NumberColumn("StockFlow error", format="percent"),
+                                    "simple_error": st.column_config.NumberColumn("simple error", format="percent")})
+        st.download_button("⬇️ Weekly predicted vs actual (CSV)", safety.csv(sub), "predicted_vs_actual_weekly.csv", width="stretch")
+        if e1 >= e2:
+            note("In these weeks StockFlow's weekly prediction was <b>no better than the simple average</b>. Its transfers still use the "
+                 "stockout-corrected speed (which the simple average can't give), but treat weekly sales predictions as indicative.")
+
+    sec("Tracking across saved plans")
+    hist = kpi.history() if not IN_BROWSER and not GUEST else pd.DataFrame()
+    if len(hist) and hist.plan_date.nunique() >= 2:
+        hs = hist[hist.store_id.isin(SCOPE)] if SCOPE else hist
+        tr_ = hs.groupby("plan_date", as_index=False).agg(on_hand=("on_hand", "sum"), selling=("selling", "sum"), in_stock=("in_stock", "sum"),
+                                                          at_risk=("at_risk", "sum"), old_units=("old_units", "sum"))
+        tr_["in stock %"] = tr_.in_stock / tr_.selling.replace(0, float("nan"))
+        tr_["old stock %"] = tr_.old_units / tr_.on_hand.replace(0, float("nan"))
+        c1, c2 = st.columns(2)
+        with c1:
+            plot(px.line(tr_, x="plan_date", y="in stock %", markers=True, title="In-stock rate by plan day",
+                         labels={"plan_date": ""}, color_discrete_sequence=[GREEN]).update_yaxes(tickformat=".0%"), 260)
+        with c2:
+            plot(px.line(tr_, x="plan_date", y="at_risk", markers=True, title="Store × items at risk of running out",
+                         labels={"plan_date": "", "at_risk": "pairs"}, color_discrete_sequence=[RED]), 260)
+        hv = kpi.history_vs_actual(hs, R["P"]["sales"])
+        if len(hv):
+            st.markdown("**Each plan's 7-day demand forecast vs what then sold** (actual is filled in once the data covers those 7 days)")
+            st.dataframe(hv, hide_index=True, width="stretch", column_config={
+                "predicted": st.column_config.NumberColumn(format="%.0f"), "actual": st.column_config.NumberColumn(format="%.0f")})
+    else:
+        st.caption("Every saved plan records these KPIs and its 7-day forecast. With a plan each day, trend charts and each plan's "
+                   "forecast against actual sales appear here automatically.")
