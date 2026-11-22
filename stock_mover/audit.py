@@ -6,7 +6,7 @@ import pandas as pd
 import db
 
 ACTIONS = {
-    "login.ok": "Signed in", "login.failed": "Failed sign-in", "login.locked": "Account locked", "logout": "Signed out",
+    "login.ok": "Signed in", "login.guest": "Opened demo as guest", "login.failed": "Failed sign-in", "login.locked": "Account locked", "logout": "Signed out",
     "session.timeout": "Session timed out", "user.create": "Created user", "user.update": "Changed user", "user.password": "Changed password",
     "plan.build": "Built a plan", "plan.reopen": "Reopened a plan", "decision.line": "Line decision", "decision.bulk": "Bulk line decision",
     "orders.release": "Released transfer orders", "orders.download": "Downloaded transfer orders", "move.dispatched": "Marked as left",

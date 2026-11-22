@@ -5,6 +5,7 @@ Start:  streamlit run app.py
 import html
 import io
 import json
+import os
 import re
 import shutil
 import sys
@@ -170,6 +171,31 @@ def sign_out(reason="logout"):
         del st.session_state[k]
 
 
+def guest_allowed():
+    """Demo without sign-in is on unless secrets say  guest_demo = false  (top level or under [auth])."""
+    for path_ in (("guest_demo",), ("auth", "guest_demo")):
+        try:
+            cur = SECRETS
+            for k_ in path_:
+                cur = cur[k_]
+            return str(cur).strip().lower() not in ("false", "0", "no", "off")
+        except Exception:  # noqa: BLE001
+            continue
+    return os.environ.get("STOCKFLOW_GUEST_DEMO", "true").strip().lower() not in ("false", "0", "no", "off")
+
+
+def guest_button(key):
+    if not guest_allowed():
+        return
+    st.markdown('<div style="text-align:center;color:#5E6875;margin:.6rem 0 .3rem">or</div>', unsafe_allow_html=True)
+    if st.button("👀  Explore the demo without signing in", key=f"guest_{key}", width="stretch"):
+        _set_session("guest", {"role": "guest"})
+        st.session_state.guest = True
+        st.session_state.auto_demo = True
+        audit.log("login.guest", "guest", {}, "guest", "guest")
+        st.rerun()
+
+
 def login_gate():
     """No page is shown without a signed-in user (except the single-device browser build)."""
     if IN_BROWSER:
@@ -232,6 +258,8 @@ def login_gate():
                         st.rerun()
                     except ValueError as e:
                         st.error(str(e))
+        with mid:
+            guest_button("setup")
         st.stop()
     topbar(schema.DEFAULTS, "Sign in")
     st.markdown('<div class="hero"><h1>Welcome back</h1><p>Sign in to see today\'s stock plan.</p></div>', unsafe_allow_html=True)
@@ -249,10 +277,13 @@ def login_gate():
                 st.rerun()
             audit.log("login.locked" if "locked" in msg else "login.failed", u.strip(), {}, u.strip(), "")
             st.error(msg)
+    with mid:
+        guest_button("login")
     st.stop()
 
 
 login_gate()
+GUEST = bool(st.session_state.get("guest"))
 USER = st.session_state.get("user", "demo")
 ROLE = st.session_state.get("role", "admin" if IN_BROWSER else "viewer")
 OPEN = False                               # sign-in is now mandatory; kept for code that still reads it
@@ -268,6 +299,14 @@ def log(action, obj="", **details):
 
 def account_bar():
     if IN_BROWSER:
+        return
+    if GUEST:
+        a, b = st.columns([5, 1])
+        a.caption("👀 Exploring the **demo brand** without signing in. You can try line approvals; uploading your own data, "
+                  "releasing orders, tracking and settings need an account.")
+        if b.button("Sign in", key="signout", width="stretch", type="primary"):
+            sign_out()
+            st.rerun()
         return
     name, is_pg = db.backend()
     a, b = st.columns([5, 1])
@@ -401,6 +440,14 @@ def start(source, cfg, label, reopen=None):
 
 
 def data_panel(key="main"):
+    if GUEST:
+        with st.container(border=True):
+            st.markdown('<div class="sf-h" style="font-weight:800;font-size:1.05rem">Plan with your own data</div>', unsafe_allow_html=True)
+            st.caption("Sign in to upload a brand's own sheets. The guest demo only uses the fictional demo brand.")
+            if st.button("Sign in", key=f"guest_signin_{key}", width="stretch"):
+                sign_out()
+                st.rerun()
+        return
     with st.container(border=True):
         st.markdown('<div class="sf-h" style="font-weight:800;font-size:1.05rem">Plan with your own data</div>', unsafe_allow_html=True)
         ups = st.file_uploader("Drop a zip, an Excel workbook or the CSV files (add config.json for brand settings)",
@@ -458,7 +505,7 @@ def reopen(plan_id):
 
 def recent_plans(key):
     try:
-        rp = plans.recent(8)
+        rp = plans.recent(8, "guest") if GUEST else plans.recent(8)
     except Exception:  # noqa: BLE001
         return
     if rp.empty:
@@ -545,6 +592,10 @@ language = "en"
 
 
 # ============================================================================= landing
+if "R" not in st.session_state and st.session_state.pop("auto_demo", False) and DEMO.exists():
+    css()
+    with st.spinner("Building the demo plan…"):
+        start(DEMO, schema.load_config(HERE / "brands" / "demo.json", fb.load_settings()), "Demo Threads (fictional brand)")
 if "R" not in st.session_state:
     css()
     topbar(schema.DEFAULTS, "Demo" if OPEN or IN_BROWSER else USER)

@@ -29,6 +29,7 @@ import secrets as pysecrets
 ROLES = {"viewer": 0, "store": 0, "approver": 1, "admin": 2}
 # what each role may do (the older can(role, level) check is kept and agrees with this table)
 PERMS = {
+    "guest":    {"view", "approve"},   # demo without sign-in: demo data only, line decisions, nothing released or tracked
     "viewer":   {"view"},
     "store":    {"view", "track_own"},                       # mark dispatch / receipt for its own stores
     "approver": {"view", "track_own", "track_all", "approve", "release", "audit"},

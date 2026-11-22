@@ -49,7 +49,12 @@ says so on every page and in the Admin tab; Streamlit Community Cloud wipes that
 on the start page reopens any saved plan: the engine is deterministic, so it rebuilds the same lines, and the saved
 line decisions, releases and tracking come back with it.
 
-**Sign-in is mandatory.** With no users anywhere, the first visitor creates the admin account. Admins add users in the
+**Guest demo.** The sign-in page has "Explore the demo without signing in". It opens the fictional demo brand only:
+guests can browse every dashboard and try line approvals, but can't upload data, release orders, track, change settings
+or see the Audit and Admin tabs. Guest visits are audited as user `guest`. Turn it off for a live brand with
+`guest_demo = false` in secrets (or `STOCKFLOW_GUEST_DEMO=false`).
+
+**Sign-in is mandatory** for real data. With no users anywhere, the first visitor creates the admin account. Admins add users in the
 Admin tab with a temporary password, which must be changed at first sign-in (10+ characters, letters and numbers, not
 the user name). Users can also be listed in secrets with hashed passwords (`python auth.py`); those win and can't be
 edited in the app. Five wrong passwords lock an account for 15 minutes; 30 idle minutes sign a user out.
