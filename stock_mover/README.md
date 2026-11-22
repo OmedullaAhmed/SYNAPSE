@@ -193,6 +193,36 @@ account" button appears. The work email is matched to a StockFlow user for the r
 **Readiness checks.** `python tests/enterprise_check.py` runs 25 checks across data integration, security, reliability,
 auditability and correctness against the configured database (SQLite or PostgreSQL).
 
+## Agents (Nov 2026)
+
+Six assistants on the **Agents** tab (and `/api/v1/agents`). They read the plan, transfers and problems and write
+**drafts**; nothing is sent, recorded or ordered until a person with the right role approves a draft (it can be edited
+first). Approval runs only a fixed list of actions (resolve exceptions, record a dispatch or receipt, send a WhatsApp,
+approve a purchase order, post the brief, save a column mapping), each with a role check and an audit entry.
+
+| Agent | What it drafts |
+|---|---|
+| Morning brief | Per region: trips to approve (urgent first), late transfers, open problems, buy suggestions, the first thing to do |
+| Exception investigator | Evidence (transfer lines, counts, files), likely cause, fix at source, a resolution note |
+| Transfer follow-up | WhatsApp nudges for late transfers; replies such as "sent all", "received 10, 2 damaged" or "got KUR-01 4" become proposed updates (inbound webhook `POST /api/v1/whatsapp/inbound`, Meta or Twilio, signature checked) |
+| Supplier buying | One purchase order per supplier (pack size and minimum order applied) and the email to send |
+| Data onboarding | "Check my files first": what each file was read as, guessed column matches, what is missing; mapping suggestions |
+| What-if planner | "close KOL-SL", "demand +20% in Dolls", "add a store like PAT-01 called PAT-02", "cover days 21": plans twice and compares |
+
+AI is **off by default**: every agent works from rules and templates. An admin turns AI on in Integrations (needs
+`ANTHROPIC_API_KEY` and confirmation that the data-processing agreement covers it); Claude then writes the drafts and can
+call read-only lookups (at most 8 steps per run). Model: `STOCKFLOW_AGENT_MODEL` (default `claude-sonnet-5-5`). Guests
+never see agents. Tests: `python tests/agents_check.py` (14 checks, no network; a fake model client tests the AI path).
+
+## Growth: the marketing agent (for the team selling StockFlow)
+
+`streamlit run growth_app.py` (admins of the server only). For each prospect: a brief (likely problems, who decides,
+objections), an ROI estimate with every assumption shown, a tailored email, WhatsApp, LinkedIn note and call script, a
+four-step follow-up sequence, and a **demo data pack built like their business** (`demo_factory.py`: their category, number
+of warehouses and stores, their cities, with typical problems planted). A pipeline tracker holds stages and due follow-ups.
+It drafts only: you send from your own email or phone. Every message carries an opt-out line; use business contacts only.
+Tests: `python tests/growth_check.py`.
+
 ## AI answers (optional)
 
 The Ask tab works offline by default. An admin can turn on AI answers with an Anthropic API key after confirming that

@@ -11,7 +11,7 @@ customer deploys it is marked **Deployment**.
 | API (`stock_mover/api.py`, FastAPI) | Phone app and other systems; OpenAPI docs at `/api/docs` | HTTPS via the reverse proxy |
 | Phone app (`mobile/`) | Android, iOS and installable web app; talks only to the API | — |
 | PostgreSQL | Plans, decisions, transfers, counts, users, audit | Private network only |
-| Optional outbound | ERP/WMS (SFTP / HTTPS), webhooks, Teams/Slack alerts, WhatsApp Business API, Anthropic (AI answers, reading handwriting) | Outbound only, each off until configured |
+| Optional outbound | ERP/WMS (SFTP / HTTPS), webhooks, Teams/Slack alerts, WhatsApp Business API, Anthropic (AI answers, reading handwriting, AI agents) | Outbound only, each off until configured |
 
 ## Identity and access
 
@@ -28,6 +28,10 @@ customer deploys it is marked **Deployment**.
 - Stored input files (they contain sales lines) are purged after 90 days (`privacy.retention_days`).
 - Secrets (database URL, API keys, SFTP passwords, tokens) live only in Streamlit secrets / environment variables; the Admin tab shows whether each is set, never the value. Tested: an ERP token never reaches any database table.
 - AI features send data to Anthropic only after an admin confirms the data-processing agreement covers it; off by default.
+- Agents only write drafts. Approval runs a fixed list of actions, each checked against the approver's role and written to
+  the audit trail; the model's tools are read-only and limited to 8 steps per run. Phone numbers are not returned by the API.
+- Inbound: `POST /api/v1/whatsapp/inbound` accepts only requests signed by Meta (`X-Hub-Signature-256`, `whatsapp.app_secret`)
+  or Twilio (`X-Twilio-Signature`, `whatsapp.auth_token` + `whatsapp.inbound_url`); a reply only creates a draft.
 - Encryption in transit: TLS at the reverse proxy (Caddy obtains and renews certificates; HSTS on). **Deployment:** encryption at rest is the database volume's or managed service's.
 
 ## Application security

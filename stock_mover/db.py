@@ -124,6 +124,19 @@ T["kpi_history"] = Table("kpi_history", md, Column("id", Integer, primary_key=Tr
                          Column("on_hand", Integer), Column("pred7", Float), Column("selling", Integer), Column("in_stock", Integer),
                          Column("at_risk", Integer), Column("old_units", Integer), Column("at", DateTime))
 
+T["agent_drafts"] = Table("agent_drafts", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("kind", String(40)),
+                          Column("created_at", DateTime), Column("agent", String(60)), Column("source", String(10)), Column("status", String(12)),
+                          Column("title", String(300)), Column("body", Text), Column("action", String(40)), Column("payload", JSON),
+                          Column("region", String(80)), Column("location", String(40)), Column("ref", String(120)),
+                          Column("decided_by", String(80)), Column("decided_at", DateTime), Column("result", Text))
+
+T["leads"] = Table("leads", md, Column("id", Integer, primary_key=True, autoincrement=True), Column("company", String(200)),
+                   Column("contact", String(120)), Column("role", String(120)), Column("email", String(200)), Column("phone", String(40)),
+                   Column("city", String(200)), Column("category", String(40)), Column("warehouses", Integer), Column("stores", Integer),
+                   Column("revenue_cr", Float), Column("pains", JSON), Column("stage", String(20)), Column("next_step", String(300)),
+                   Column("next_date", String(10)), Column("notes", Text), Column("source", String(200)), Column("owner", String(80)),
+                   Column("assets", JSON), Column("created_at", DateTime), Column("updated_at", DateTime))
+
 _ENGINE = None
 _URL = None
 
@@ -148,7 +161,9 @@ def _is_placeholder(u):
     try:
         from sqlalchemy.engine import make_url
         x = make_url(u.replace("postgres://", "postgresql://", 1))
-        return (x.host or "").upper() in ("HOST", "HOSTNAME", "YOUR-HOST", "") or (x.database or "").upper() in ("DBNAME", "DATABASE") \
+        host = x.host or x.query.get("host") or ""             # a Unix socket is given as ?host=/path
+        host = host[0] if isinstance(host, tuple) else host
+        return str(host).upper() in ("HOST", "HOSTNAME", "YOUR-HOST", "") or (x.database or "").upper() in ("DBNAME", "DATABASE") \
             or (x.username or "").upper() == "USER" and (x.password or "").upper() == "PASSWORD"
     except Exception:  # noqa: BLE001
         return True
@@ -196,7 +211,8 @@ def describe():
     try:
         from sqlalchemy.engine import make_url
         x = make_url(u)
-        return f"PostgreSQL · {x.host}:{x.port or 5432}/{x.database} as {x.username}"
+        h = x.host or x.query.get("host") or "?"
+        return f"PostgreSQL · {h[0] if isinstance(h, tuple) else h}:{x.port or x.query.get('port') or 5432}/{x.database} as {x.username}"
     except Exception:  # noqa: BLE001
         return "PostgreSQL"
 

@@ -12,12 +12,19 @@ import threading
 from collections import OrderedDict
 from pathlib import Path
 
-import audit
-import engine as E
-import exceptions_queue as XQ
-import feedback as fb
-import ingest
-import plans
+import audit  # noqa: E402
+# imported here, not inside build_plan: plans are built in background threads, where Streamlit has already put sys.path
+# back and a first import of a project module would fail (silently losing buy suggestions, KPI history, the catalog)
+import buying  # noqa: E402
+import db  # noqa: E402
+import kpi  # noqa: E402
+import stockcount  # noqa: E402
+import webhooks  # noqa: E402
+import engine as E  # noqa: E402
+import exceptions_queue as XQ  # noqa: E402
+import feedback as fb  # noqa: E402
+import ingest  # noqa: E402
+import plans  # noqa: E402
 
 
 # Plans shared by every session in this server process: twenty approvers opening the same daily plan hold one copy, and
@@ -57,7 +64,6 @@ def housekeeping(hours=24):
 def _apply_counts(std_dir, user):
     import pandas as pd
 
-    import stockcount
     price = {}
     f = Path(std_dir) / "items.csv"
     if f.exists():
@@ -108,19 +114,15 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
         except Exception as e:  # noqa: BLE001 - the plan is still usable in this session
             save_error = f"{type(e).__name__}: {e}"
         try:
-            import buying
-            import db
             b = buying.suggestions(R)
             db.upsert_setting(f"buy:{plan_id}"[:40], json.loads(b.to_json(orient="records")), user)
         except Exception:  # noqa: BLE001
             pass
         try:
-            import kpi
             kpi.save_snapshot(plan_id, R, user)
         except Exception:  # noqa: BLE001
             pass
         try:
-            import stockcount
             stockcount.save_catalog(R["P"]["items"], user)
         except Exception:  # noqa: BLE001
             pass
@@ -142,7 +144,6 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
                                               net=round(float(R["opportunity"]["net"])), stored_inputs=pack is not None or kind == "demo",
                                               data_issues=len(rep["issues"]) if rep else 0), user, role)
         try:
-            import webhooks
             webhooks.emit("plan.ready", {"plan_id": plan_id, "plan_date": f"{R['pl'].run:%Y-%m-%d}", "trips": len(R["trips"]),
                                          "pieces": int(R["moves"].qty.sum()), "source": kind})
         except Exception:  # noqa: BLE001
@@ -152,3 +153,37 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
     finally:
         # keep the Excel workbook the engine wrote (the app offers it for download), drop the standardised copies
         shutil.rmtree(work / "std", ignore_errors=True)
+
+
+def std_inputs(plan_id, cfg=None):
+    """A plan's input files, standardised, in a new temporary folder (the caller deletes it). None when not stored."""
+    import io
+    import zipfile
+
+    import daily
+    row = plans.get(plan_id) if plan_id else None
+    if row is None:
+        return None
+    here = Path(__file__).resolve().parent
+    raw = Path(tempfile.mkdtemp(prefix="stockflow_raw_"))
+    std = Path(tempfile.mkdtemp(prefix="stockflow_std_"))
+    try:
+        if row.source == "demo":
+            src = here / "data" / ("demo_general" if "Demo Mart" in str(row.data_label) else "demo")
+        elif row.input_pack is not None:
+            with zipfile.ZipFile(io.BytesIO(bytes(row.input_pack))) as z:
+                for m in z.infolist():
+                    p = Path(m.filename)
+                    if not (m.is_dir() or p.is_absolute() or ".." in p.parts):
+                        (raw / p.name).write_bytes(z.read(m))
+            daily._unzip(raw)
+            for j in raw.glob("*.json"):
+                j.unlink()
+            src = raw
+        else:
+            shutil.rmtree(std, ignore_errors=True)
+            return None
+        ingest.run(src, std, cfg=cfg, log=False, stale=False)
+        return std
+    finally:
+        shutil.rmtree(raw, ignore_errors=True)

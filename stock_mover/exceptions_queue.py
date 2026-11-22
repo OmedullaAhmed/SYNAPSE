@@ -35,10 +35,12 @@ def locations():
 
 def save_locations(R, user=""):
     st = R["pl"].st
-    loc = {s: dict(zone=str(r.zone), region=str(r.region), city=str(r.city), type=str(r.store_type)) for s, r in st.iterrows()}
+    loc = {s: dict(zone=str(r.zone), region=str(r.region), city=str(r.city), type=str(r.store_type),
+                   whatsapp=str(r.get("whatsapp", "") or "") if "whatsapp" in st else "") for s, r in st.iterrows()}
     for w in R["pl"].whs:
         wr = R["P"]["whs"].loc[w] if w in R["P"]["whs"].index else None
-        loc[w] = dict(zone=str(getattr(wr, "zone", "") or ""), region="", city=str(getattr(wr, "city", "") or ""), type="warehouse")
+        loc[w] = dict(zone=str(getattr(wr, "zone", "") or ""), region="", city=str(getattr(wr, "city", "") or ""), type="warehouse",
+                      whatsapp=str(getattr(wr, "whatsapp", "") or "") if wr is not None and "whatsapp" in wr.index else "")
     db.upsert_setting("locations", loc, user)
     return loc
 

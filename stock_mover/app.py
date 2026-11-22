@@ -683,6 +683,22 @@ def data_panel(key="main"):
             settings_panel(base)
         if st.button("▶️  Build my plan", type="primary", disabled=not ups, width="stretch", key=f"go_{key}"):
             start(None, base, ", ".join(f.name for f in ups)[:120])
+        if not IN_BROWSER and st.button("🔎  Check my files first", disabled=not ups, width="stretch", key=f"onb_{key}",
+                                        help="The data-onboarding agent reads the files without planning and explains what is "
+                                             "missing or unclear. Its suggestions appear under Agents."):
+            import ops_agents as OA
+            tmp_ = Path(tempfile.mkdtemp(prefix="stockflow_onb_in_"))
+            try:
+                unpack(ups, tmp_)
+                import daily
+                daily._unzip(tmp_)
+                ids_, rep_ = OA.run_onboard(tmp_, USER, SECRETS, cfg=base, label=", ".join(f.name for f in ups)[:60])
+                import agents as AG
+                st.text(AG.drafts(None).set_index("id").body.get(ids_[0], ""))
+                if len(ids_) > 1:
+                    st.info(f"{len(ids_) - 1} column-mapping suggestion(s) are waiting under Agents.")
+            finally:
+                shutil.rmtree(tmp_, ignore_errors=True)
     if not IN_BROWSER:
         if key == "results":                               # already inside an expander: no nesting
             with st.container(border=True):
@@ -937,6 +953,8 @@ with st.expander("📂  New data or settings"):
 TAB_NAMES = ["Overview", "Inventory", "KPIs", "Money", "Trips", "Approve", "Issues", "Stores", "Track", "Ask", "Feedback", "Data", "How it works"]
 if not GUEST and not IN_BROWSER:                 # live operations data is never shown to guests
     TAB_NAMES[8:8] = ["Operations", "Exceptions"]
+if not GUEST and not IN_BROWSER:                 # agents read live operations data and need the database
+    TAB_NAMES.insert(TAB_NAMES.index("Ask") + 1, "Agents")
 if can_do("settings") and not GUEST and not IN_BROWSER:
     TAB_NAMES.append("Integrations")
 if can_do("audit"):
@@ -2129,6 +2147,21 @@ if "Integrations" in TABS:
             db.upsert_setting("ai_vision", dict(enabled=True, by=USER, at=datetime.now().isoformat(timespec="seconds")), USER)
             log("ai.vision", "on")
             st.rerun()
+        sec("AI agents")
+        import agents as _ag
+        ag_on, _ = _ag.ai_status(SECRETS)
+        st.caption("The agents (Agents tab) always work from rules. With AI on, Claude writes their drafts and looks up facts with "
+                   "read-only tools; plan facts (stock, sales, transfer and exception details, store names) are then sent to Anthropic. "
+                   "Agents never act on their own: every draft waits for a person to approve it.")
+        st.markdown(f"**AI agents:** {'on' if ag_on else 'off'}" + ("" if has_key else " · ⚠️ no ANTHROPIC_API_KEY in secrets"))
+        if ag_on:
+            if st.button("Turn AI agents off", key="aia_off"):
+                _ag.set_ai(False, USER)
+                st.rerun()
+        elif st.checkbox("Sending plan data to the AI provider is covered by our data-processing agreement", key="aia_ok") \
+                and st.button("Turn AI agents on", key="aia_on", disabled=not has_key):
+            _ag.set_ai(True, USER)
+            st.rerun()
         sec("ERP / WMS connection")
         ec = erp.conf(SECRETS)
         st.markdown(f"**Channel:** {html.escape(erp.describe(ec))} · format **{ec.get('format')}** · "
@@ -2333,3 +2366,86 @@ with TABS["KPIs"]:
     else:
         st.caption("Every saved plan records these KPIs and its 7-day forecast. With a plan each day, trend charts and each plan's "
                    "forecast against actual sales appear here automatically.")
+
+
+# ---- agents: AI assistants that investigate and draft; people approve
+if "Agents" in TABS:
+    with TABS["Agents"]:
+        import agents as AG
+        import ops_agents as OA
+        sec("Agents")
+        ag_on_, ag_key_ = AG.ai_status(SECRETS)
+        st.caption("Each agent looks at today's plan, transfers and problems and writes drafts. Nothing is sent, recorded or ordered "
+                   "until you approve a draft (you can edit it first). "
+                   + ("AI is on: Claude writes the drafts." if ag_on_ and ag_key_ else
+                      "AI is off: drafts are written from rules. An admin can turn AI on in Integrations."))
+        cols_ = st.columns(3)
+        for i_, (k_, (t_, d_, p_)) in enumerate([(k, v) for k, v in OA.AGENTS.items() if k not in ("whatif", "onboard")]):
+            with cols_[i_ % 3]:
+                st.markdown(f"**{t_}**  \n<span style='font-size:.85rem;opacity:.75'>{html.escape(d_)}</span>", unsafe_allow_html=True)
+                if st.button(f"Run {t_.lower()}", key=f"ag_run_{k_}", disabled=not can_do(p_), width="stretch"):
+                    with st.spinner(f"{t_} is working…"):
+                        fn_ = {"brief": lambda: OA.run_brief(USER, PLAN_ID, SECRETS), "fix": lambda: OA.run_fixer(USER, SECRETS),
+                               "chase": lambda: OA.run_chaser(USER, SECRETS), "buy": lambda: OA.run_buyer(USER, PLAN_ID, SECRETS)}[k_]
+                        try:
+                            n_ = fn_()
+                            log("agent.run", k_, drafts=len(n_))
+                            st.toast(f"{t_}: {len(n_)} drafts")
+                        except Exception as e_:  # noqa: BLE001
+                            st.error(f"{t_} stopped: {type(e_).__name__}: {e_}")
+        if can_do("approve"):
+            sec("What if…")
+            with st.form("ag_whatif"):
+                q_ = st.text_input("Ask a what-if question about today's plan",
+                                   placeholder="e.g. close KOL-SL · demand +20% in Dolls · add a store like PAT-01 called PAT-02 · cover days 21")
+                go_ = st.form_submit_button("🔮 Compare", type="primary")
+            if go_ and q_.strip():
+                with st.spinner("Planning twice (as is and with your change)…"):
+                    try:
+                        did_, sc_, a_, b_ = OA.run_whatif(q_.strip()[:500], USER, PLAN_ID, SECRETS)
+                        log("agent.run", "whatif", q=q_[:200])
+                        if b_:
+                            rows_ = [("Trips", "trips", "{:,}"), ("Pieces moved", "pieces", "{:,}"), ("Expected benefit", "net_benefit", "₹{:,.0f}"),
+                                     ("In stock after plan", "in_stock_after", "{:.1%}"), ("Items at risk after plan", "at_risk_after", "{:,}"),
+                                     ("Forecast units, next 7 days", "pred7", "{:,.0f}"), ("Checks passed", "rules", "{}")]
+                            st.markdown(f"**What if:** {html.escape(OA.describe(sc_))}")
+                            st.dataframe(pd.DataFrame([{"": n, "Today": f.format(a_[k]), "Scenario": f.format(b_[k])} for n, k, f in rows_]),
+                                         hide_index=True, width="stretch")
+                    except Exception as e_:  # noqa: BLE001
+                        st.error(str(e_))
+        sec("Drafts waiting for you")
+        dk_ = st.multiselect("Agent", list(OA.AGENTS) + ["reply"], format_func=lambda k: OA.AGENTS.get(k, ("WhatsApp replies",))[0],
+                             key="ag_kind", placeholder="All agents")
+        dd_ = AG.drafts(("pending",), dk_ or None)
+        if len(dd_) and SCOPE:
+            dd_ = dd_[dd_.location.isin(SCOPE) | (dd_.location == "")]
+        if dd_.empty:
+            st.success("Nothing waiting. Run an agent above.")
+        for r_ in dd_.head(40).itertuples():
+            perm_ = AG.ACTIONS[r_.action][0] if r_.action else "view"
+            badge_ = "🤖 AI" if r_.source == "ai" else "📏 rules"
+            with st.expander(f"{r_.title}  ·  {badge_}"):
+                body_ = st.text_area("Draft (edit before approving)", r_.body, height=220, key=f"ag_b_{r_.id}")
+                what_ = {"post_brief": "Approve posts it to the team channel (if set up).", "resolve_exceptions": "Approve resolves the exception with this note.",
+                         "record_transfer": "Approve records the dispatch / receipt.", "send_whatsapp": "Approve sends this WhatsApp message.",
+                         "approve_po": "Approve marks the purchase order approved (send the email yourself).",
+                         "save_mapping": "Approve saves this column mapping for future uploads."}.get(r_.action, "Information only.")
+                st.caption(what_)
+                if r_.action == "approve_po":
+                    po_ = pd.DataFrame((r_.payload or {}).get("lines", []))
+                    if len(po_):
+                        st.download_button("⬇️ Purchase order (CSV)", safety.csv(po_), f"{(r_.payload or {}).get('po_id', 'po')}.csv", key=f"ag_po_{r_.id}")
+                a__, b__ = st.columns(2)
+                if a__.button("✅ Approve", key=f"ag_ok_{r_.id}", type="primary", disabled=not can_do(perm_), width="stretch"):
+                    try:
+                        st.success(AG.decide(r_.id, USER, ROLE, True, body_, can=can_do, secrets=SECRETS))
+                    except (PermissionError, ValueError) as e_:
+                        st.error(str(e_))
+                if b__.button("✖ Reject", key=f"ag_no_{r_.id}", width="stretch"):
+                    AG.decide(r_.id, USER, ROLE, False)
+                    st.rerun()
+        with st.expander("Decided drafts"):
+            hd_ = AG.drafts(("approved", "rejected", "done", "failed"))
+            if len(hd_):
+                st.dataframe(hd_[["id", "created_at", "agent", "title", "status", "decided_by", "decided_at", "result"]].head(200),
+                             hide_index=True, width="stretch")

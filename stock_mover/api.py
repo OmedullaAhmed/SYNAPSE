@@ -527,6 +527,133 @@ def job(job_id: str, w: Who = Depends(need("view"))):
     return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in s.items() if k not in ("log", "host")}
 
 
+# ----------------------------------------------------------------------------- agents (draft only; people approve)
+class AgentRunIn(BaseModel):
+    text: str = ""            # what-if question
+    plan_id: str = ""
+
+
+class DraftDecisionIn(BaseModel):
+    approve: bool
+    body: Optional[str] = None   # edited text, saved before approving
+
+
+@app.get("/api/v1/agents", tags=["agents"])
+def agent_list(w: Who = Depends(need("view"))):
+    import agents as A
+    import ops_agents as O
+    on, key = A.ai_status(SECRETS)
+    return {"ai_enabled": on, "ai_key": bool(key),
+            "agents": [dict(name=k, title=t, does=d, needs=p, allowed=auth.allowed(w.role, p)) for k, (t, d, p) in O.AGENTS.items()]}
+
+
+@app.post("/api/v1/agents/{name}/run", tags=["agents"])
+def agent_run(name: str, body: AgentRunIn, w: Who = Depends(need("view"))):
+    """Runs one agent in the background. It only writes drafts; poll GET /jobs/{job_id}, then list the drafts."""
+    import ops_agents as O
+    if name not in O.AGENTS or name == "onboard":
+        raise HTTPException(404, "No such agent (data onboarding runs on an upload in the web app).")
+    if not auth.allowed(w.role, O.AGENTS[name][2]):
+        raise HTTPException(403, f"Your role ({w.role}) cannot run this agent.")
+    if name == "whatif" and not body.text.strip():
+        raise HTTPException(400, "Ask a what-if question in text.")
+    pid = body.plan_id or None
+    user = w.user
+    fn = {"brief": lambda: O.run_brief(user, pid, SECRETS), "fix": lambda: O.run_fixer(user, SECRETS),
+          "chase": lambda: O.run_chaser(user, SECRETS), "buy": lambda: O.run_buyer(user, pid, SECRETS),
+          "whatif": lambda: O.run_whatif(body.text[:500], user, pid, SECRETS)[0]}[name]
+    audit.log("agent.run", name, {"via": w.via, "text": body.text[:200]}, w.user, w.role)
+    return {"job_id": jobs.submit("agent", lambda progress: {"drafts": fn()}, user, label=f"agent {name}")}
+
+
+def _drafts_for(w, status, kind):
+    import agents as A
+    d = A.drafts(tuple(s for s in status.split(",") if s) or None, kind or None)
+    if len(d) and w.stores:
+        d = d[d.location.isin(w.stores)]
+    return d
+
+
+@app.get("/api/v1/agents/drafts", tags=["agents"])
+def agent_drafts(status: str = "pending", kind: str = "", w: Who = Depends(need("view"))):
+    d = _drafts_for(w, status, kind)
+    if len(d) and "payload" in d:      # phone numbers stay on the server
+        d = d.assign(payload=[{k: v for k, v in (p or {}).items() if k != "phone"} for p in d.payload])
+    return rows(d)
+
+
+@app.post("/api/v1/agents/drafts/{draft_id}", tags=["agents"])
+def agent_decide(draft_id: int, body: DraftDecisionIn, w: Who = Depends(need("view"))):
+    import agents as A
+    d = _drafts_for(w, "pending", "")
+    if not len(d) or draft_id not in set(d.id.astype(int)):
+        raise HTTPException(404, "No such pending draft.")
+    try:
+        msg = A.decide(draft_id, w.user, w.role, body.approve, body.body, can=lambda p: auth.allowed(w.role, p), secrets=SECRETS)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+    return {"ok": True, "result": msg}
+
+
+# WhatsApp replies from store and warehouse managers -> proposed transfer updates (drafts). Nothing is recorded until a
+# person approves. Meta: set [whatsapp] verify_token and app_secret; Twilio: auth_token and inbound_url (the public URL).
+def _wa():
+    try:
+        return dict(SECRETS["whatsapp"]) if "whatsapp" in SECRETS else {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+@app.get("/api/v1/whatsapp/inbound", tags=["agents"], include_in_schema=False)
+def wa_verify(request: Request):
+    q = request.query_params
+    tok = _wa().get("verify_token") or os.environ.get("STOCKFLOW_WA_VERIFY_TOKEN")
+    if tok and q.get("hub.mode") == "subscribe" and hmac.compare_digest(str(q.get("hub.verify_token", "")), str(tok)):
+        return JSONResponse(int(q.get("hub.challenge", "0")) if str(q.get("hub.challenge", "")).isdigit() else q.get("hub.challenge"))
+    raise HTTPException(403, "Verification failed.")
+
+
+def twilio_signature(token, url, params):
+    data = url + "".join(f"{k}{params[k]}" for k in sorted(params))
+    return base64.b64encode(hmac.new(token.encode(), data.encode(), hashlib.sha1).digest()).decode()
+
+
+@app.post("/api/v1/whatsapp/inbound", tags=["agents"], include_in_schema=False)
+async def wa_inbound(request: Request):
+    import ops_agents as O
+    w = _wa()
+    raw = await request.body()
+    if len(raw) > 200_000:
+        raise HTTPException(413, "Too large.")
+    msgs = []
+    sig = request.headers.get("x-hub-signature-256", "")
+    if sig:                                                       # Meta WhatsApp Cloud API
+        sec = w.get("app_secret") or os.environ.get("STOCKFLOW_WA_APP_SECRET")
+        good = "sha256=" + hmac.new(str(sec or "").encode(), raw, hashlib.sha256).hexdigest()
+        if not sec or not hmac.compare_digest(sig, good):
+            raise HTTPException(403, "Bad signature.")
+        j = json.loads(raw or b"{}")
+        for e in j.get("entry", []):
+            for c in e.get("changes", []):
+                for m in (c.get("value") or {}).get("messages", []) or []:
+                    if m.get("type") == "text":
+                        msgs.append((m.get("from", ""), (m.get("text") or {}).get("body", "")))
+    elif request.headers.get("x-twilio-signature"):              # Twilio
+        tok = w.get("auth_token") or os.environ.get("STOCKFLOW_TWILIO_AUTH_TOKEN")
+        form = dict((await request.form()).items())
+        url = w.get("inbound_url") or str(request.url)
+        if not tok or not hmac.compare_digest(request.headers["x-twilio-signature"], twilio_signature(tok, url, form)):
+            raise HTTPException(403, "Bad signature.")
+        msgs.append((str(form.get("From", "")).replace("whatsapp:", ""), str(form.get("Body", ""))))
+    else:
+        raise HTTPException(403, "Unsigned request.")
+    ids = [O.handle_reply(text[:1000], phone, "whatsapp", SECRETS) for phone, text in msgs[:20] if text.strip()]
+    audit.log("whatsapp.inbound", "", {"messages": len(ids)}, "whatsapp", "system")
+    return {"ok": True, "drafts": ids}
+
+
 # ----------------------------------------------------------------------------- webhooks and keys (admin)
 class WebhookIn(BaseModel):
     url: str

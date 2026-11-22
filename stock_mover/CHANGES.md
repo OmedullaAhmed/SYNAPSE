@@ -59,3 +59,19 @@ Selling speed now blends the last 4 weeks with the longer average and carries ca
 before their launch date are forecast (and reported). Fixed a planner gap where an old-stock "whole run" move could leave
 a still-selling store without a core size or under its style cover when combined with a refill (rules 14 and 13). Plans
 change slightly as a result; all 17 rules pass on every dataset, including 100, 200 and 500 stores.
+
+
+## Agents and growth (23 Nov 2026)
+
+- Six operations agents (morning brief, exception investigator, transfer follow-up with WhatsApp replies, supplier buying,
+  data onboarding, what-if planner). Draft-and-approve only; whitelisted actions; role checks; audit; AI off by default
+  with rule-based drafts; Claude tool use with read-only tools when an admin turns AI on.
+- WhatsApp inbound webhook (Meta signature `X-Hub-Signature-256` with `app_secret`, Twilio `X-Twilio-Signature` with
+  `auth_token` and `inbound_url`); unsigned requests are refused; replies only create drafts.
+- Growth app for the sales team: prospect brief, ROI estimate, tailored messages, follow-ups, personalised demo data, pipeline.
+- Fixed: buy suggestions, KPI history and the product catalog were silently not saved when a plan was built in a background
+  job from the web app (Streamlit restores `sys.path` after each run, so first-time imports inside the job failed).
+  These modules are now imported up front.
+- Fixed: a PostgreSQL URL using a Unix socket (`?host=/path`) was treated as the example placeholder.
+- Known gap: two plans for the same date reuse transfer numbers (TO-yymmdd-NNN); releasing both mixes their tracking.
+  Release one plan per day, or rebuild instead of releasing twice, until numbers include the plan id.
