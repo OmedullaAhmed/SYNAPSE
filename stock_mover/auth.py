@@ -62,7 +62,9 @@ def users(st_secrets=None):
         u = {}
     if not u and os.environ.get("STOCKFLOW_USERS"):
         u = json.loads(os.environ["STOCKFLOW_USERS"])
-    return u
+    # entries copied from secrets.example.toml ("pbkdf2$200000$<salt>$<hash>") are not real accounts: ignore them, so the
+    # first-admin setup still appears and nobody is locked out by an example
+    return {k: v for k, v in u.items() if "<" not in str(v.get("password", "")) and str(v.get("password", "")).count("$") == 3}
 
 
 def can(role, need):
