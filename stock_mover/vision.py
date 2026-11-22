@@ -239,7 +239,12 @@ def extract(files, catalog=None, methods=("barcode", "ocr"), api_key=None):
                     notes.append(f"{tag}: AI reading failed ({type(e).__name__}); used offline reading")
                     methods = tuple(m for m in methods if m != "ai") + ("ocr",)
             if "ocr" in methods and "ai" not in methods:
-                lines = parse_lines(ocr_lines(im), catalog)
+                try:
+                    lines = parse_lines(ocr_lines(im), catalog)
+                except Exception as e:  # noqa: BLE001 - e.g. Tesseract not installed on this server
+                    notes.append(f"{tag}: printed-text reading is not available on this server ({type(e).__name__}); "
+                                 "install tesseract-ocr or use barcodes / AI reading")
+                    lines = []
                 for x in lines:
                     x["file"] = tag
                 cands += lines
