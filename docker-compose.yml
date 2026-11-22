@@ -1,0 +1,54 @@
+# Production-style StockFlow on one server:  cp deploy/.env.example .env  (fill it in)  &&  docker compose up -d
+# web  = planners' web app      https://$DOMAIN
+# api  = API + phone app        https://api.$DOMAIN   (phone app at /app/, API docs at /api/docs)
+# db   = PostgreSQL 16 with a daily backup (backup service) kept for $BACKUP_DAYS days
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stockflow
+      POSTGRES_USER: stockflow
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U stockflow"], interval: 10s, retries: 6}
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on: {db: {condition: service_healthy}}
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://stockflow:${DB_PASSWORD}@db:5432/stockflow
+    volumes: [./deploy/secrets.toml:/srv/stock_mover/.streamlit/secrets.toml:ro]
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on: {db: {condition: service_healthy}}
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://stockflow:${DB_PASSWORD}@db:5432/stockflow
+      STOCKFLOW_CORS: https://${DOMAIN}
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers"]
+    volumes: [./deploy/secrets.toml:/srv/stock_mover/.streamlit/secrets.toml:ro]
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment: {DOMAIN: "${DOMAIN}"}
+    volumes: [./deploy/Caddyfile:/etc/caddy/Caddyfile:ro, caddy:/data]
+    depends_on: [web, api]
+
+  backup:
+    image: postgres:16
+    restart: unless-stopped
+    depends_on: {db: {condition: service_healthy}}
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+      BACKUP_DAYS: ${BACKUP_DAYS:-30}
+    volumes: [./scripts:/scripts:ro, ./backups:/backups]
+    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/backup.sh postgresql://stockflow@db:5432/stockflow /backups; sleep 86400; done"]
+
+volumes: {dbdata: {}, caddy: {}}

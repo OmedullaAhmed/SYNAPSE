@@ -41,3 +41,14 @@ discrepancies (exceptions_queue.py); regional approval queues and transfer statu
 jobs with progress (jobs.py) through one shared pipeline (pipeline.py); a 3.6–5x faster engine with identical output;
 shared plan cache; company sign-in (OIDC); spreadsheet-formula neutralising on every export (safety.py); HTML escaping of
 data in the page; retention purge of stored inputs; Teams/Slack/Google Chat alerts; tests/enterprise_check.py.
+
+## Any-business release (Nov 2026)
+
+Daily scheduled run paused (manual trigger only). Added without removing anything: optional sizes/styles/colours, expiry
+dates, six business-type profiles and a general-retail demo; stock from photos and scans (barcodes, OCR, opt-in AI) with
+reviewed counts that feed plans and exceptions; REST API with tokens, API keys, scopes and signed webhooks; Android / iOS /
+web phone app with offline outbox; approval deadlines with escalation; purchase suggestions; forecast accuracy back-test;
+bulk user import; Docker / compose / HTTPS / backup-restore kit; optional error tracking; outbound URL safety; security
+overview and a data-protection draft. Fixed: engine crash on stock without dates and nothing old; pack_size column
+swallowed by a size alias; Integrations tab crash without a secrets file; age bands for short "old stock" thresholds;
+store users seeing other stores' exceptions.

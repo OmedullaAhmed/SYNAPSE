@@ -76,6 +76,12 @@ def submit(kind, fn, user="", plan_id=None, label=""):
         except Exception as e:  # noqa: BLE001
             with _LOCK:
                 _RESULTS[job_id] = e
+            try:
+                import sentry_sdk
+                if type(e).__name__ != "DataError":       # bad input data is the user's to fix, not an error to page anyone about
+                    sentry_sdk.capture_exception(e)
+            except Exception:  # noqa: BLE001
+                pass
             _upd(job_id, status="failed", finished_at=datetime.now(), error=f"{type(e).__name__}: {e}"[:2000],
                  log=traceback.format_exc()[-4000:])
 

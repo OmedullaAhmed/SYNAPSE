@@ -497,7 +497,8 @@ def prep(D, cfg):
     items["is_core"] = [s in core.get(c, set()) for s, c in zip(items["size"], items.category)]
 
     return dict(items=items, stores=stores, whs=whs, snap=sn, today=today, prot=prot, md=md, mgr=mgr, lanes=lanes,
-                outlets=outlets, tier_rank=tier_rank, core=core, nonsell=nonsell, sales=sales, ex=ex, issue=issue, cfg=cfg)
+                outlets=outlets, tier_rank=tier_rank, core=core, nonsell=nonsell, sales=sales, ex=ex, issue=issue, cfg=cfg,
+                inbound=D.get("inbound"))
 
 
 # ============================================================================= 2. velocity

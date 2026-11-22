@@ -1,3 +1,6 @@
+> **StockFlow** (in `stock_mover/`) is now a general stock-planning product for any business with stores and warehouses:
+> web app, REST API, Android / iOS app (`mobile/`), self-hosting kit (`deploy/`). Start with `stock_mover/README.md`.
+
 <p align="center">
   <img src=".github/assets/banner.svg" alt="Stock Mover by Synapse, prepared for Manyavar and Mohey" width="100%">
 </p>

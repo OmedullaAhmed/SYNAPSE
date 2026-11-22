@@ -15,7 +15,8 @@ import pandas as pd
 
 import db
 
-KINDS = {"data": "Data quality", "plan": "Stock data", "transfer": "Transfer discrepancy", "count": "Count vs system"}
+KINDS = {"data": "Data quality", "plan": "Stock data", "transfer": "Transfer discrepancy", "count": "Count vs system",
+         "approval": "Approval overdue"}
 # planner findings that are data problems someone has to fix at source (the rest are insights, not exceptions)
 PLAN_KINDS = {"Stock records disagree": "high", "Negative stock": "high", "Unknown location": "high", "Cost price missing": "medium",
               "Stock age missing": "medium", "Non-sellable stock": "low", "Over capacity": "medium", "Warehouse shortfall": "medium",
@@ -167,3 +168,42 @@ def summary():
         return dict(open=0, high=0, oldest_days=0)
     age = (pd.Timestamp.now() - pd.to_datetime(d.first_seen)).dt.days
     return dict(open=len(d), high=int((d.severity == "high").sum()), oldest_days=int(age.max()))
+
+
+def check_deadlines(plan_id=None, now=None, approve_by=None, user="system"):
+    """Regions with undecided trips after the approve-by time (plan day) -> 'Approvals overdue' exceptions (high if urgent
+    refills are waiting). Cleared automatically once the region has decided. Returns the overdue regions."""
+    import schema
+    import plans as _plans
+    from datetime import datetime as _dt
+    now = now or _dt.now()
+    if plan_id is None:
+        p = _plans.recent(1)
+        if p.empty:
+            return []
+        plan_id = p.iloc[0].plan_id
+    p = _plans.get(plan_id)
+    if p is None:
+        return []
+    hhmm = approve_by or ((p.settings or {}).get("operations", {}) or {}).get("approve_by") or schema.DEFAULTS["operations"]["approve_by"]
+    deadline = _dt.fromisoformat(f"{p.plan_date}T{hhmm}")
+    t = _plans.trips_of(plan_id)
+    out = []
+    if len(t) and now > deadline:
+        d = db.read("trip_decisions", {"plan_id": plan_id})
+        decided = set(d.to_number) if len(d) else set()
+        import feedback as fb
+        rel = fb.released()
+        done = set(rel[rel.run_id == plan_id].to_number) if len(rel) and "run_id" in rel else set()
+        locs = locations()
+        t["region"] = [(locs.get(b) or {}).get("zone") or (locs.get(a) or {}).get("zone") or "—" for a, b in zip(t.from_id, t.to_id)]
+        wait = t[~t.to_number.isin(decided | done)]
+        late = (now - deadline).total_seconds() / 3600
+        for region, g in wait.groupby("region"):
+            urgent = int((g.urgent > 0).sum())
+            out.append(dict(key=f"deadline:{plan_id}:{region}", kind="approval", severity="high" if urgent else "medium", region=region,
+                            location="", ref=plan_id, title=f"Approvals overdue in {region}: {len(g)} trips",
+                            detail=f"{len(g)} trips ({int(g.pieces.sum()):,} units, {urgent} urgent) not decided {late:.1f} h after the "
+                                   f"{hhmm} cut-off for {p.plan_date}. Stock that should be moving is waiting.", value=float(g.net_benefit.sum())))
+    record(out, "deadline", user=user)
+    return [o["region"] for o in out]

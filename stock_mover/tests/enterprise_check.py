@@ -396,6 +396,193 @@ def t_lines():
     return gone and one, f"{len(o)}→{len(o2)} lines, rejected line removed={gone}, reduced to 1={one}"
 
 
+# ============================================================================ any business, images, operations
+GEN = HERE / "data" / "demo_general"
+
+
+@check("Any business", "General retail without sizes or styles: vendor exports, expiry dates, all 17 rules pass")
+def t_general():
+    rep = ingest.run(GEN, TMP / "gen_std", log=False, stale=False)
+    R = E.run(TMP / "gen_std", None, schema.load_config(HERE / "brands" / "demo_general.json"))
+    ok = (R["checks"].status == "PASS").all() and not rep["missing"] and len(R["moves"]) > 0
+    return ok, f"{len(R['trips'])} trips, {int(R['moves'].qty.sum())} units, rules {(R['checks'].status == 'PASS').sum()}/{len(R['checks'])}"
+
+
+@check("Any business", "Every business-type profile plans with all rules passing")
+def t_profiles():
+    out = {}
+    for p in ("apparel", "general_retail", "electronics", "grocery_fmcg", "pharmacy", "spare_parts"):
+        R = E.run(TMP / "gen_std", None, schema.load_config(HERE / "brands" / f"{p}.json"))
+        out[p] = bool((R["checks"].status == "PASS").all())
+    return all(out.values()), out
+
+
+@check("Any business", "Expired stock is never moved; stock near expiry is sent where it sells in time")
+def t_expiry():
+    d = TMP / "exp"
+    shutil.copytree(TMP / "gen_std", d)
+    sn = pd.read_csv(d / "stock_snapshot.csv", dtype=str, keep_default_na=False)
+    food = sn[(sn.location_id == "SIL-01") & sn.sku_id.str.startswith("PAC")].head(3).index
+    sn.loc[food[:1], "expiry_date"] = "2026-10-20"           # already expired
+    sn.loc[food[1:], "expiry_date"] = "2026-11-10"           # expires within the window
+    sn.to_csv(d / "stock_snapshot.csv", index=False)
+    R = E.run(d, None, schema.load_config(HERE / "brands" / "grocery_fmcg.json"))
+    mv = R["moves"]
+    expired_sku = sn.loc[food[0], "sku_id"]
+    moved_expired = int(mv[(mv.from_id == "SIL-01") & (mv.sku_id == expired_sku)].qty.sum())
+    flagged = R["issues"].issue.isin(["Expiring soon"]).any() and R["issues"].detail.str.contains("expired").any()
+    return moved_expired == 0 and flagged, f"expired units moved from SIL-01: {moved_expired}; 'Expiring soon' and expired stock reported: {flagged}"
+
+
+def _images():
+    import numpy as np
+    import zxingcpp
+    from PIL import Image, ImageDraw, ImageFilter, ImageFont
+    it = pd.read_csv(GEN / "item_master.csv", dtype=str)
+    rng = np.random.default_rng(3)
+    pick = it.sample(18, random_state=4)
+    truth = {r.sku_id: int(rng.integers(0, 60)) for r in pick.itertuples()}
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 26) if Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf").exists() else ImageFont.load_default()
+    im = Image.new("RGB", (1700, 1250), "white")
+    dr = ImageDraw.Draw(im)
+    y = 120
+    for r in pick.itertuples():
+        dr.text((60, y), f"{r.sku_id:<12}  {r.product_name[:30]}", font=font, fill="black")
+        dr.text((1150, y), str(truth[r.sku_id]), font=font, fill="black")
+        y += 58
+    photo = im.rotate(3, expand=True, fillcolor="#d8d4cc").filter(ImageFilter.GaussianBlur(1.1))
+    codes = list(it.sample(6, random_state=9).itertuples())
+    counts = dict(zip([c.sku_id for c in codes], [3, 1, 2, 4, 1, 2]))
+    shelf = Image.new("RGB", (2000, 1500), "#efece6")
+    x, yy = 40, 40
+    for c in codes:
+        for _ in range(counts[c.sku_id]):
+            b = zxingcpp.write_barcode_to_image(zxingcpp.create_barcode(c.barcode, zxingcpp.BarcodeFormat.EAN13), scale=3)
+            b = Image.fromarray(np.array(b)).convert("RGB")
+            shelf.paste(b, (x, yy))
+            x += b.width + 60
+            if x > 1600:
+                x, yy = 40, yy + b.height + 70
+    enc = lambda i, f="JPEG": (lambda bio: (i.save(bio, f), bio.getvalue())[1])(io.BytesIO())  # noqa: E731
+    cat = pd.DataFrame({"sku_id": it.sku_id, "name": it.product_name, "barcode": it.barcode})
+    return cat, truth, counts, enc(photo), enc(shelf)
+
+
+@check("Stock from images", "Barcode photo: every item and unit counted; tilted, blurred photo of a printed sheet: 17+ of 18 lines exact")
+def t_vision():
+    import vision
+    cat, truth, counts, photo, shelf = _images()
+    b = vision.summarise(vision.extract([("shelf.jpg", shelf)], cat, ("barcode",))[0])
+    s = vision.summarise(vision.extract([("sheet.jpg", photo)], cat, ("ocr",))[0])
+    bar_ok = dict(zip(b.sku_id, b.qty)) == counts
+    exact = sum(1 for k, v in truth.items() if dict(zip(s.sku_id, s.qty)).get(k) == v)
+    return bar_ok and exact >= 17, f"barcodes exact: {bar_ok}; sheet lines exact: {exact}/18"
+
+
+@check("Stock from images", "Look-alike codes (PS01 vs P501) are never guessed between")
+def t_vision_collision():
+    import vision
+    cat = pd.DataFrame({"sku_id": ["PS01", "P501", "AB12"], "name": ["x", "y", "z"], "barcode": ["", "", ""]})
+    got = vision.parse_lines(["PS01 4", "P501 7", "PSO1 9"], cat)
+    m = {g["raw"]: g["code"] for g in got}
+    return m.get("PS01 4") == "PS01" and m.get("P501 7") == "P501" and m.get("PSO1 9") in ("", None), m
+
+
+@check("Stock from images", "AI reading parses the model's reply and keeps unreadable quantities flagged (simulated reply)")
+def t_vision_ai():
+    import types
+    import vision
+    from PIL import Image
+    reply = '{"lines": [{"code": "MOB001", "name": "USB-C Cable A", "qty": 12, "legible": true}, {"code": "", "name": "Earbuds", "qty": 3, "legible": false}]}'
+
+    class FakeMsgs:
+        def create(self, **kw):
+            return types.SimpleNamespace(content=[types.SimpleNamespace(text="Here you go:\n" + reply)])
+
+    fake = types.SimpleNamespace(Anthropic=lambda **kw: types.SimpleNamespace(messages=FakeMsgs()))
+    real = sys.modules.get("anthropic")
+    sys.modules["anthropic"] = fake
+    try:
+        lines = vision.ai_read(Image.new("RGB", (50, 50), "white"))
+    finally:
+        if real is not None:
+            sys.modules["anthropic"] = real
+        else:
+            del sys.modules["anthropic"]
+    return lines[0]["qty"] == 12 and lines[1]["confidence"] < 0.5, f"{len(lines)} lines; unreadable line confidence {lines[1]['confidence']}"
+
+
+@check("Stock counts", "A saved count replaces system stock in the next plan and raises a 'count differs' exception")
+def t_counts():
+    import stockcount
+    stockcount.save("KOL-02", "2026-10-31", pd.DataFrame({"sku_id": ["MOB001", "MOB002"], "qty": [77, 0], "confidence": [1.0, 1.0]}), "tester")
+    r = pipeline.build_plan(GEN, schema.load_config(HERE / "brands" / "demo_general.json"), "count test", "tester", "upload")
+    oh = r["R"]["pl"].g.oh
+    x = XQ.table()
+    hit = x[(x.kind == "count") & (x.location == "KOL-02")]
+    return int(oh.get(("KOL-02", "MOB001"), -1)) == 77 and int(oh.get(("KOL-02", "MOB002"), -1)) == 0 and len(hit) == 1, \
+        f"MOB001={oh.get(('KOL-02', 'MOB001'))}, MOB002={oh.get(('KOL-02', 'MOB002'))}, exception: {hit.title.tolist()}"
+
+
+@check("Stock counts", "With no stock file at all, counts alone become the stock (and old stock without dates no longer crashes)")
+def t_counts_only():
+    d = TMP / "nostock"
+    shutil.copytree(GEN, d)
+    (d / "closing_stock.csv").unlink()
+    r = pipeline.build_plan(d, schema.load_config(HERE / "brands" / "demo_general.json"), "counts only", "tester", "upload")
+    return r["report"]["counts"]["created"] and (r["R"]["checks"].status == "PASS").all(), r["report"]["counts"]
+
+
+@check("Operations", "Approvals not decided by the cut-off raise exceptions per region, and clear once decided")
+def t_deadline():
+    from datetime import datetime
+    pid = plans.recent(1).iloc[0].plan_id
+    p = plans.get(pid)
+    late = XQ.check_deadlines(pid, now=datetime.fromisoformat(f"{p.plan_date}T15:00"))
+    for t in plans.trips_of(pid).to_number:
+        db.insert_rows("trip_decisions", [dict(plan_id=pid, to_number=t, region="", decision="approved", by="t", at=datetime.now())])
+    after = XQ.check_deadlines(pid, now=datetime.fromisoformat(f"{p.plan_date}T15:30"))
+    return len(late) >= 1 and after == [], f"overdue regions {late}, after deciding {after}"
+
+
+@check("Operations", "Purchase suggestions subtract spare warehouse stock and orders due, and round up to pack size")
+def t_buying():
+    import buying
+    d = TMP / "buy"
+    shutil.copytree(TMP / "gen_std", d)
+    it = pd.read_csv(d / "items.csv", dtype=str)
+    it["pack_size"] = "12"
+    it.to_csv(d / "items.csv", index=False)
+    R = E.run(d, None, schema.load_config(HERE / "brands" / "demo_general.json"))
+    b = buying.suggestions(R)
+    ok = len(b) > 0 and (b.suggest_buy % 12 == 0).all() and (b.suggest_buy >= b.units_short - b.warehouse_spare - b.on_order_later).all()
+    return ok, f"{len(b)} SKUs, {int(b.suggest_buy.sum())} units, all multiples of 12: {(b.suggest_buy % 12 == 0).all()}"
+
+
+@check("Operations", "Forecast back-test: StockFlow beats the simple 28-day average on both demo businesses")
+def t_accuracy():
+    import accuracy
+    res = {}
+    for name, src, prof in (("apparel", DEMO, "demo"), ("general", GEN, "demo_general")):
+        r = accuracy.for_inputs(src, schema.load_config(HERE / "brands" / f"{prof}.json"))
+        lv = r["levels"]["Store × category"]
+        res[name] = (round(lv["stockflow_wape"], 3), round(lv["simple_wape"], 3))
+    return all(a < b for a, b in res.values()), f"store×category error (StockFlow, simple): {res}"
+
+
+@check("Security", "Outbound calls refuse file:, ftp: and cloud-metadata addresses")
+def t_urls():
+    bad = []
+    for u in ("file:///etc/passwd", "ftp://x/y", "http://169.254.169.254/latest", "gopher://x"):
+        try:
+            safety.check_url(u)
+            bad.append(u)
+        except ValueError:
+            pass
+    safety.check_url("https://erp.example.com/api")
+    return not bad, "all refused" if not bad else bad
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json")

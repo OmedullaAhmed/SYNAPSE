@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/__pycache__
+**/workspace
+**/.streamlit/secrets.toml
+.git
+mobile/android
+mobile/ios
+pitch
+src
+public

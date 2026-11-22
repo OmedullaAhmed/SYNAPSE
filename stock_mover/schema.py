@@ -80,6 +80,9 @@ DEFAULTS = {
                          "customer_phone", "customer_email", "address", "pan", "gstin_customer", "loyalty_id"],
         "retention_days": 90,        # stored input files (sales lines) are purged from plans older than this
     },
+    "operations": {
+        "approve_by": "11:00",      # trips not decided by this time on the plan day raise an 'approvals overdue' exception
+    },
     "integration": {
         "stale_stock_days": 2,       # stock older than this raises a data-quality exception
         "uppercase_ids": True,       # store / SKU codes compared without case (del-01 = DEL-01)
@@ -152,9 +155,13 @@ TABLES = {
         ("is_core_style", OPT, "1 = replenished all year", "1"),
         ("is_non_product", OPT, "1 = bag, hanger, gift box, packaging (ignored)", "0"),
         ("barcode", OPT, "EAN / UPC printed on the item; lets photos and scans of barcodes be counted", "8901234567890"),
-    ], {"color": "colour", "ean": "barcode", "upc": "barcode", "gtin": "barcode", "is_packaging": "is_non_product", "product_name": "style_name", "name": "style_name",
+        ("vendor", OPT, "Supplier; purchase suggestions are grouped by it", "Sharma Textiles"),
+        ("pack_size", OPT, "Supplier pack (units); purchase suggestions are rounded up to it", "6"),
+        ("moq", OPT, "Supplier minimum order quantity (units)", "24"),
+    ], {"color": "colour", "ean": "barcode", "upc": "barcode", "gtin": "barcode", "supplier": "vendor",
+        "vendor_name": "vendor", "case_size": "pack_size", "case_pack": "pack_size", "min_order_qty": "moq", "is_packaging": "is_non_product", "product_name": "style_name", "name": "style_name",
         "item_name": "style_name", "description": "style_name", "product_id": "style_id", "parent_sku": "style_id",
-        "model": "style_id", "variant": "size", "pack_size": "size", "price": "mrp", "retail_price": "mrp", "cost": "cost_price"}),
+        "model": "style_id", "variant": "size", "price": "mrp", "retail_price": "mrp", "cost": "cost_price"}),
     "sales": (R, "Sales lines. Alternative: bills + bill_lines (joined on bill_id). Last 12+ weeks; a year or more for season effects.", [
         ("date", R, "Sale date", "2026-10-30"),
         ("store_id", R, "Store", "DEL-01"),

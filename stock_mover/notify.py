@@ -29,6 +29,7 @@ How it is sent
 Phone numbers are staff personal data: they are used only to send these alerts, never shown to the AI assistant,
 and the send log keeps only the last 4 digits.
 """
+import safety
 import json
 import re
 import urllib.parse
@@ -130,7 +131,7 @@ def configured(secrets):
 def _post(url, data, headers, timeout=15):
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with safety.urlopen(req, timeout=timeout) as r:
             return r.status, r.read().decode("utf8", "ignore")
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode("utf8", "ignore")
@@ -245,7 +246,7 @@ def post_webhook(url, text):
     try:
         body = _json.dumps({"text": text}).encode()
         req = _u.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
-        with _u.urlopen(req, timeout=15) as r:   # noqa: S310 - URL comes from the admin's secrets
+        with safety.urlopen(req, timeout=15) as r:   # noqa: S310 - URL comes from the admin's secrets
             return r.status < 300
     except Exception:  # noqa: BLE001
         return False

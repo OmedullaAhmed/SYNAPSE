@@ -19,6 +19,7 @@ import plotly.express as px
 import streamlit as st
 
 import audit
+import monitoring
 import erp
 import exceptions_queue as XQ
 import ingest
@@ -166,6 +167,7 @@ def topbar(cfg, extra=""):
 
 # ----------------------------------------------------------------------------- sign in (mandatory)
 SECRETS = st.secrets if hasattr(st, "secrets") else None
+monitoring.init("web")
 
 
 def secret(*path, default=None):
@@ -1456,8 +1458,60 @@ with T[8]:
 with T[9]:
     data_guide("tab")
 
+def accuracy_panel():
+    import accuracy
+    sec("How accurate is the forecast?")
+    st.caption("A back-test: the plan is rebuilt as if it were 4 weeks ago, and its forecast is compared with what then sold, only "
+               "where the item was on the shelf. The simple 28-day average most chains use is shown for comparison. Error = WAPE "
+               "(total absolute error ÷ units sold; lower is better).")
+    rep = accuracy.load(PLAN_ID) if PLAN_ID and not IN_BROWSER else None
+    if rep is None and st.button("📏 Measure it on this plan's data", key="acc_go"):
+        row = plans.get(PLAN_ID) if PLAN_ID else None
+        try:
+            with st.spinner("Rebuilding the plan as of 4 weeks ago and comparing…"):
+                if row is not None and row.source == "demo" or row is None:
+                    src = DEMO2 if "Demo Mart" in str(st.session_state.get("label", "")) else DEMO
+                    rep = accuracy.for_inputs(src, cfg)
+                elif row.input_pack is not None:
+                    tmpa = Path(tempfile.mkdtemp(prefix="stockflow_accp_"))
+                    with zipfile.ZipFile(io.BytesIO(bytes(row.input_pack))) as z:
+                        for m_ in z.infolist():
+                            p_ = Path(m_.filename)
+                            if not (m_.is_dir() or p_.is_absolute() or ".." in p_.parts):
+                                (tmpa / p_.name).write_bytes(z.read(m_))
+                    import daily
+                    daily._unzip(tmpa)
+                    rep = accuracy.for_inputs(tmpa, cfg)
+                    shutil.rmtree(tmpa, ignore_errors=True)
+                else:
+                    st.warning("This plan's input files are no longer stored.")
+            if rep:
+                accuracy.save(PLAN_ID, rep, USER)
+                log("accuracy.run", PLAN_ID, pairs=rep["pairs"])
+        except ValueError as e_:
+            st.warning(str(e_))
+    if rep:
+        lv = rep["levels"]
+        sk, sc = lv["Store × SKU"], lv["Store × category"]
+        kpis([("Error, store × item", f"{sk['stockflow_wape']:.0%}", f"simple average: {sk['simple_wape']:.0%}", TEAL),
+              ("Error, store × category", f"{sc['stockflow_wape']:.0%}", f"simple average: {sc['simple_wape']:.0%}", TEAL),
+              ("Bias", f"{sk['stockflow_bias']:+.0%}", "negative = forecast too low", SAFFRON if abs(sk["stockflow_bias"]) > .15 else GREEN),
+              ("Compared", f"{rep['pairs']:,}", f"store × item pairs, {rep['cutoff']} to {rep['end']}")])
+        bc = rep["by_category"]
+        if len(bc):
+            st.dataframe(bc, hide_index=True, width="stretch", column_config={
+                "stockflow_wape": st.column_config.NumberColumn("StockFlow error", format="percent"),
+                "simple_wape": st.column_config.NumberColumn("simple average error", format="percent"),
+                "actual": st.column_config.NumberColumn("units sold", format="%d"), "forecast": st.column_config.NumberColumn(format="%d")})
+        if abs(sk["stockflow_bias"]) > .15:
+            note("The forecast was clearly too " + ("low" if sk["stockflow_bias"] < 0 else "high") + " in this window. That usually means a "
+                 "season change the history does not cover yet (a year of sales and a calendar of events fix most of it).")
+
+
 # ---- how it works
 with T[10]:
+    if not GUEST:
+        accuracy_panel()
     (st.success if allp else st.error)(f"All {len(val)} rules passed on this plan." if allp else "Some rules failed. Don't send this plan.")
     st.markdown("""<div class="grid">
 <div class="card"><div class="ic">📏</div><h4>Real selling speed</h4><p>Sales divided by days the size was actually on the shelf, blended with similar stores for new stores and launches.</p></div>
@@ -1620,6 +1674,37 @@ if "Admin" in TABS:
         if len(dbu):
             ul = ul.merge(dbu[["username", "last_login", "created_by"]].rename(columns={"username": "user"}), on="user", how="left")
         st.dataframe(ul, hide_index=True, width="stretch")
+        with st.expander("👥 Add many users from a CSV"):
+            st.caption("Columns: username, role (viewer / store / approver / admin), stores (optional, comma or ; separated). With company "
+                       "sign-in set up, use work emails as user names and no passwords are made. Otherwise each new user gets a "
+                       "temporary password, shown once below, which they must change at first sign-in.")
+            upu = st.file_uploader("Users CSV", type=["csv"], key="bulk_users")
+            if upu is not None and st.button("Create these users", key="bulk_go"):
+                bu = pd.read_csv(upu, dtype=str, keep_default_na=False)
+                bu.columns = [c.strip().lower() for c in bu.columns]
+                made, errs = [], []
+                import secrets as _sec
+                for r_ in bu.itertuples():
+                    un = str(getattr(r_, "username", "")).strip()
+                    rl = str(getattr(r_, "role", "viewer")).strip().lower() or "viewer"
+                    stx = str(getattr(r_, "stores", "")).replace(";", ",")
+                    if rl not in ("viewer", "store", "approver", "admin"):
+                        errs.append(f"{un}: unknown role {rl}")
+                        continue
+                    sso_only = bool(sso_providers()) and "@" in un
+                    pw = _sec.token_urlsafe(24) + "9a" if sso_only else _sec.token_urlsafe(9) + "7"
+                    try:
+                        auth.create_user(un, pw, rl, stx, USER, must_change=True)
+                        made.append(dict(username=un.lower() if "@" in un else un, role=rl, stores=stx,
+                                         temporary_password="(company sign-in)" if sso_only else pw))
+                    except ValueError as e_:
+                        errs.append(f"{un}: {e_}")
+                log("user.bulk", f"{len(made)} users", created=len(made), errors=len(errs))
+                if made:
+                    st.success(f"Created {len(made)} users. Download the list now and share each password privately; it is not shown again.")
+                    st.download_button("⬇️ New users and temporary passwords", safety.csv(pd.DataFrame(made)), "new_users.csv")
+                for e_ in errs[:20]:
+                    st.warning(e_)
         st.caption("viewer: sees plans · store: + marks dispatch/receipt for its stores · approver: + line decisions, release, all tracking, "
                    "audit · admin: + settings and users. Users in secrets can't be changed here.")
         a, b = st.columns(2, gap="large")
@@ -1717,6 +1802,13 @@ def release_trips(numbers, where):
 
 if "Operations" in TABS:
     with TABS["Operations"]:
+        try:
+            late_ = XQ.check_deadlines(PLAN_ID, user=USER) if PLAN_ID else []
+        except Exception:  # noqa: BLE001
+            late_ = []
+        if late_:
+            note(f"⏰ <b>Approvals overdue</b> after the {html.escape(str(cfg.get('operations', {}).get('approve_by', '11:00')))} cut-off in: "
+                 f"{html.escape(', '.join(late_))}.")
         q = queue_frame()
         regions = sorted(q.region.unique())
         mine = sorted({trip_region(s_, s_) for s_ in SCOPE}) if SCOPE else regions
@@ -1845,9 +1937,12 @@ if "Exceptions" in TABS:
         show_all = st.toggle("Include resolved and cleared", False, key="x_all")
         xt = XQ.table(None if show_all else ("open", "assigned"))
         if SCOPE and len(xt):
-            locs_ = XQ.locations()
-            zones_ = {(locs_.get(s_) or {}).get("zone") for s_ in SCOPE}
-            xt = xt[xt.location.isin(SCOPE) | xt.region.isin(zones_) | (xt.location == "")]
+            if ROLE == "store":
+                xt = xt[xt.location.isin(SCOPE) | (xt.location == "")]
+            else:
+                locs_ = XQ.locations()
+                zones_ = {(locs_.get(s_) or {}).get("zone") for s_ in SCOPE}
+                xt = xt[xt.location.isin(SCOPE) | xt.region.isin(zones_) | (xt.location == "")]
         if xt.empty:
             st.success("No open exceptions.")
         else:
@@ -2037,3 +2132,31 @@ if "Integrations" in TABS:
         st.markdown(f"**Channel:** {html.escape(erp.describe(ec))} · format **{ec.get('format')}** · "
                     + ("custom field names" if ec.get("fields") else "standard field names")
                     + ("" if erp_on() else " · ⚠️ not configured in secrets (local folder only)"))
+
+
+# ---- money: what to buy (added after the existing Money content)
+with T[1]:
+    import buying
+    sec("What to buy")
+    st.caption("Stock no transfer can supply: each store's shortfall after today's trips, less spare warehouse stock and supplier "
+               "deliveries already due, rounded up to pack size and minimum order. Hand it to buying as a starting point.")
+    try:
+        buy = buying.suggestions(R)
+    except Exception as e_:  # noqa: BLE001
+        buy = pd.DataFrame()
+        st.caption(f"Not available for this plan ({type(e_).__name__}).")
+    if SCOPE and len(buy):
+        st.caption("Shown for the whole chain: buying is central.")
+    if len(buy):
+        kpis([("SKUs to buy", f"{len(buy):,}", f"{int(buy.suggest_buy.sum()):,} units"),
+              ("At cost", M(float(buy.cost_value.sum())), "to cover the shortfall", PLUM),
+              ("Stores short", f"{int(buy.stores_short.max())}", "most stores short of one SKU", SAFFRON)])
+        if (buy.vendor != "").any():
+            st.dataframe(buy.groupby("vendor", as_index=False).agg(skus=("sku_id", "size"), units=("suggest_buy", "sum"),
+                                                                   cost=("cost_value", "sum")).assign(cost=lambda d: d.cost.map(M)),
+                         hide_index=True, width="stretch")
+        st.dataframe(buy.assign(cost_value=buy.cost_value.map(M)), hide_index=True, width="stretch", height=min(420, 40 + 35 * len(buy)),
+                     column_config={"sells_per_day": st.column_config.NumberColumn("sells/day", format="%.1f")})
+        st.download_button("⬇️ Purchase suggestions (CSV)", safety.csv(buy), f"purchase_suggestions_{pl.run:%Y-%m-%d}.csv", width="stretch")
+    else:
+        st.success("Nothing to buy: every shortfall can be covered by moving stock you already have.")

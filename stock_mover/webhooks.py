@@ -14,6 +14,7 @@ import urllib.request
 from datetime import datetime
 
 import db
+import safety
 
 EVENTS = ["plan.ready", "trips.released", "transfer.dispatched", "transfer.received", "exception.opened", "count.saved"]
 
@@ -48,7 +49,7 @@ def _deliver(sub, event, body):
             req = urllib.request.Request(sub["url"], data=body, method="POST", headers={
                 "Content-Type": "application/json", "User-Agent": "StockFlow-Webhook/1", "X-StockFlow-Event": event,
                 **({"X-StockFlow-Signature": sign(sub["secret"], body)} if sub.get("secret") else {})})
-            with urllib.request.urlopen(req, timeout=10) as r:   # noqa: S310 - admin-configured URL
+            with safety.urlopen(req, timeout=10) as r:   # noqa: S310 - admin-configured URL
                 code = r.status
             if code < 300:
                 _log(event, sub["url"], "ok", code, "", attempt)

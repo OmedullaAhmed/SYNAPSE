@@ -37,8 +37,10 @@ import plans
 import schema
 import stockcount
 import vision
+import monitoring
 import webhooks
 
+monitoring.init("api")
 HERE = Path(__file__).resolve().parent
 VERSION = "1.0"
 
@@ -342,6 +344,12 @@ def release(plan_id: str, body: ReleaseIn, w: Who = Depends(need("release"))):
     return {"released": sorted(o.to_number.unique()), "lines": len(o), "pieces": int(o.qty.sum()), "erp": sent}
 
 
+@app.get("/api/v1/plans/{plan_id}/purchase-suggestions", tags=["plans"])
+def purchase_suggestions(plan_id: str, w: Who = Depends(need("view"))):
+    """What to buy from suppliers because no stock exists anywhere to move (saved with each plan)."""
+    return db.get_setting(f"buy:{plan_id}"[:40], []) or []
+
+
 # ----------------------------------------------------------------------------- transfers
 @app.get("/api/v1/transfers", tags=["transfers"])
 def transfers(status: str = "", location: str = "", w: Who = Depends(need("view"))):
@@ -456,8 +464,11 @@ async def read_images(files: list[UploadFile] = File(...), methods: str = Form("
 def exceptions(status: str = "open,assigned", w: Who = Depends(need("view"))):
     x = XQ.table(tuple(s.strip() for s in status.split(",")) if status else None)
     if len(x) and w.stores:
-        zones = {(XQ.locations().get(s) or {}).get("zone") for s in w.stores}
-        x = x[x.location.isin(w.stores) | x.region.isin(zones) | (x.location == "")]
+        if w.role == "store":                     # a store sees its own problems (and chain-wide data issues), not its neighbours'
+            x = x[x.location.isin(w.stores) | (x.location == "")]
+        else:                                     # a regional approver sees the regions of their stores
+            zones = {(XQ.locations().get(s) or {}).get("zone") for s in w.stores}
+            x = x[x.location.isin(w.stores) | x.region.isin(zones) | (x.location == "")]
     return rows(x)
 
 
@@ -470,6 +481,12 @@ def resolve(xid: int, body: ResolveIn, w: Who = Depends(need("resolve"))):
     XQ.resolve([xid], w.user, body.note)
     audit.log("exception.resolve", str(xid), {"note": body.note[:200], "via": w.via}, w.user, w.role)
     return {"ok": True}
+
+
+@app.post("/api/v1/exceptions/check-deadlines", tags=["exceptions"])
+def check_deadlines(w: Who = Depends(need("view"))):
+    """Raise or clear 'approvals overdue' exceptions for the latest plan (call it from a scheduler every 15-30 minutes)."""
+    return {"overdue_regions": XQ.check_deadlines(user=w.user)}
 
 
 # ----------------------------------------------------------------------------- plan building (upload) and jobs

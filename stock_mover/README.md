@@ -1,14 +1,24 @@
-# StockFlow: daily stock moves for multi-store apparel brands
+# StockFlow: stock planning for any business with stores and warehouses
 
-Upload yesterday's sales and stock and get back a short list of **trips** to approve. Each trip has a one-line
-reason, what it gains and what it costs to move. StockFlow is built for ethnic and occasion wear brands with about
-5 to 100 stores, one or more warehouses and optional outlet stores. It contains no brand names, store grades,
-category names or warehouse codes; everything comes from your sheets and an optional `config.json`.
+Upload yesterday's sales and stock (or photograph a count sheet) and get back a short list of **transfers** between
+warehouses and stores to approve, each with a one-line reason, what it gains and what it costs to move. Built for chains
+of 2 to 500 locations selling anything: apparel and footwear (sizes and colours kept as sets), electronics, home goods,
+grocery and FMCG, pharmacy (expiry-aware), spare parts. Approvers work on the web or on the Android / iOS app.
+
+| Piece | Where |
+|---|---|
+| Web app for planners and admins | `app.py` (Streamlit) |
+| REST API for the phone app and other systems | `api.py` (FastAPI, docs at `/api/docs`) |
+| Phone app (Android, iOS, installable web app) | `../mobile` |
+| Self-hosting (Docker, HTTPS, PostgreSQL, backups) | `../deploy`, `../docker-compose.yml` |
+| Security overview | `../SECURITY.md` |
 
 ```
 pip install -r requirements.txt
-python make_demo_data.py            # builds the fictional "Demo Threads" pack in data/demo
-streamlit run app.py                # press "Try the demo brand", or upload your own pack
+python make_demo_data.py            # apparel demo ("Demo Threads") in data/demo
+python tests/make_general_demo.py data/demo_general   # general-retail demo ("Demo Mart"): no sizes, expiry dates
+streamlit run app.py                # press a demo button, or upload your own exports
+uvicorn api:app --port 8000         # API + phone app at http://localhost:8000/app/
 python engine.py --data <folder or workbook> [--config brands/x.json] --out output   # command line / scheduler
 ```
 
@@ -80,6 +90,42 @@ edited lines. Trip-level toggles still work as before.
 **Inventory dashboard.** The Inventory tab shows chain-wide pieces and value (stores, warehouses, in transit), cover,
 size availability and old stock, by category, and a store-by-store comparison (shelf used, cover, sizes on shelf,
 old stock, hidden stockouts, pieces in and out in today's plan) with zone, tier and category filters and a CSV export.
+
+## Any business (Nov 2026)
+
+**Business types.** Pick one when uploading: apparel, general retail, electronics, grocery / FMCG, pharmacy, spare parts.
+Each sets sensible starting values (cover days, when stock counts as old, expiry window, handling cost); all can be tuned.
+Sizes, styles and colours are optional: a product master with just SKU, name and price works.
+
+**Expiry dates.** Add `expiry_date` to the stock file (earliest expiry of those units). Expired stock is never moved and is
+reported; stock expiring within the window (30 days by default, 21 for grocery, 90 for pharmacy) is treated as old and
+sent to stores that will sell it in time.
+
+**Stock from photos and scans.** Upload or photograph (web or phone): barcodes are counted on the server (each scan =
+one unit), printed count sheets and registers are read by OCR on the server, and handwritten registers can be read by AI
+once an admin switches it on (the image then goes to Anthropic). Lines that are unclear or not in the product list are
+shown first for checking. A saved count replaces the system figure in the next plan for that day ("everything at the
+location" counts set uncounted items to zero) and raises a *Count differs from system* exception with the value at stake.
+With no stock file at all, counts alone become the stock. Tested: 18/18 lines from a printed sheet, 17-18/18 from a tilted,
+blurred phone photo, every barcode on a shelf photo.
+
+**Phone app.** Approve trips by region, release, mark transfers sent and received (scan to check), count stock by scanning
+or photographing a sheet, resolve issues. Works offline: actions are kept and sent when the signal returns.
+
+**API and webhooks.** Everything the phone app does is in the REST API (`/api/docs`), with user tokens or API keys for
+systems, location scopes and the same audit trail. Signed webhooks for plan.ready, trips.released, transfer.dispatched,
+transfer.received, exception.opened, count.saved.
+
+**Approval deadlines.** Trips not decided by the cut-off (11:00 on the plan day by default; `operations.approve_by`) raise
+an *Approvals overdue* exception per region, high if urgent refills are waiting, and alert Teams/Slack via webhooks.
+
+**What to buy.** The Money tab lists stock no transfer can supply: store shortfalls after the plan, less spare warehouse
+stock and supplier deliveries due, rounded to pack size / minimum order (optional item columns `vendor`, `pack_size`, `moq`).
+
+**Forecast accuracy.** How it works → "Measure it": the plan is rebuilt as of 4 weeks ago and its forecast compared with
+what then sold (only where the item was on the shelf), next to the simple 28-day average. On the demo data StockFlow's
+store × category error is 27% vs 32% (apparel) and 11% vs 12% (general retail); on the hackathon data both methods
+under-forecast the October festival ramp by about 46%, which a year of history and an event calendar improve.
 
 ## Operations at scale
 

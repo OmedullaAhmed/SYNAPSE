@@ -34,6 +34,7 @@ from pathlib import Path
 import pandas as pd
 
 import db
+import safety
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_DIR = HERE / "workspace" / "erp"
@@ -117,7 +118,7 @@ def _http(url, c, data=None, method="GET"):
     req.add_header("Content-Type", "application/json")
     if c.get("token"):
         req.add_header(c.get("auth_header", "Authorization"), c.get("auth_prefix", "Bearer ") + c["token"])
-    with urllib.request.urlopen(req, timeout=30) as r:   # noqa: S310 - URL comes from the admin's secrets
+    with safety.urlopen(req, timeout=30) as r:   # noqa: S310 - URL comes from the admin's secrets
         return r.status, r.read()
 
 

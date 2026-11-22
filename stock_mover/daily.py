@@ -30,6 +30,7 @@ from pathlib import Path
 
 import audit
 import db
+import safety
 import erp
 import exceptions_queue as XQ
 import feedback as fb
@@ -79,7 +80,7 @@ def fetch(s, dest):
             req = urllib.request.Request(u)
             if s.get("token"):
                 req.add_header("Authorization", "Bearer " + s["token"])
-            with urllib.request.urlopen(req, timeout=120) as r:   # noqa: S310 - URLs come from the admin's settings
+            with safety.urlopen(req, timeout=120) as r:   # noqa: S310 - URLs come from the admin's settings
                 name = Path(u.split("?")[0]).name or f"file_{uuid.uuid4().hex[:6]}.csv"
                 (dest / name).write_bytes(r.read())
         return f"{len(urls)} URLs"
@@ -236,6 +237,7 @@ def start_scheduler(secrets=None):
                 hh, mm = map(int, str(s.get("run_at", "06:30")).split(":"))
                 now = datetime.now()
                 key = now.strftime("%Y-%m-%d")
+                XQ.check_deadlines(user="scheduler")                # approvals overdue -> exceptions + alerts, every minute
                 if (now.hour, now.minute) >= (hh, mm) and db.get_setting("scheduler_last", "") != key and not already_done(key):
                     db.upsert_setting("scheduler_last", key, "scheduler")      # claim the day first: one run even with two replicas
                     jobs.submit("daily", lambda p: run_daily("scheduler", None, False, False, p, secrets), "scheduler", label="Daily run")

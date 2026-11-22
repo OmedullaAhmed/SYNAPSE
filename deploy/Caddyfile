@@ -1,0 +1,11 @@
+# HTTPS certificates are obtained and renewed automatically for both names (point their DNS at this server first).
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy web:8501
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+}
+api.{$DOMAIN} {
+	encode gzip
+	reverse_proxy api:8000
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+}

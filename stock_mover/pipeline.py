@@ -4,6 +4,7 @@
                                   |                         |
                                   +--> data-quality exceptions +--> stock-data exceptions
 """
+import json
 import os
 import shutil
 import tempfile
@@ -106,6 +107,13 @@ def build_plan(source, cfg, label, user, kind="upload", pack=None, progress=None
             save_error = ""
         except Exception as e:  # noqa: BLE001 - the plan is still usable in this session
             save_error = f"{type(e).__name__}: {e}"
+        try:
+            import buying
+            import db
+            b = buying.suggestions(R)
+            db.upsert_setting(f"buy:{plan_id}"[:40], json.loads(b.to_json(orient="records")), user)
+        except Exception:  # noqa: BLE001
+            pass
         try:
             import stockcount
             stockcount.save_catalog(R["P"]["items"], user)
