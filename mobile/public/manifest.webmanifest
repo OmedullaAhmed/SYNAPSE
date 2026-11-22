@@ -1,0 +1,15 @@
+{
+  "name": "StockFlow",
+  "short_name": "StockFlow",
+  "description": "Approve stock transfers, mark them sent and received, and count stock by scanning.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F4F0",
+  "theme_color": "#1F5C8A",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
