@@ -1615,7 +1615,7 @@ def plan_tag(source, cfg):
     """3 characters that make transfer numbers unique between plans for the same day (TO-261123-A7F-001). Taken from
     the input files and settings, so rebuilding the same plan gives the same numbers."""
     import hashlib
-    h = hashlib.sha1(json.dumps(cfg, sort_keys=True, default=str).encode())
+    h = hashlib.sha256(json.dumps(cfg, sort_keys=True, default=str).encode())
     p = Path(source) if source is not None and not isinstance(source, dict) else None
     if p is not None and p.is_dir():
         for f in sorted(p.rglob("*")):

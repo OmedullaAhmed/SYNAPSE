@@ -29,16 +29,17 @@ jobs:
           echo "::error title=Stack did not start::$(docker compose logs --tail 30 | tr '\n' ' ' | cut -c1-900)"; exit 1
       - name: End-to-end smoke test
         run: |
-          set -e
-          API="curl -fsSk --resolve api.localhost:443:127.0.0.1 https://api.localhost"
-          $API/api/v1/health
-          docker compose exec -T web python -c "import db; d = db.describe(); print(d); assert d.startswith('PostgreSQL'), d"
-          docker compose exec -T api python -c "import auth; auth.create_user('smoke', 'Smoke-pass-12345', 'admin', must_change=False)"
-          TOKEN=$($API/api/v1/auth/token -H 'Content-Type: application/json' -d '{"username":"smoke","password":"Smoke-pass-12345"}' \
-                  | python3 -c 'import sys, json; print(json.load(sys.stdin)["access_token"])')
-          $API/api/v1/me -H "Authorization: Bearer $TOKEN"
-          $API/app/ | grep -qi "<html"
-          curl -sSk -o /dev/null -w "%{http_code}" --resolve api.localhost:443:127.0.0.1 https://api.localhost/api/v1/me | grep -q 401
+          step() { name="$1"; shift; if ! out=$("$@" 2>&1); then echo "::error title=Smoke - $name::$(echo "$out" | tail -6 | tr '\n' ' ' | cut -c1-900)"; exit 1; fi; echo "ok: $name"; }
+          api() { curl -fsSk --resolve api.localhost:443:127.0.0.1 "https://api.localhost$@"; }
+          step "API health through HTTPS" api /api/v1/health
+          step "web app uses PostgreSQL" docker compose exec -T web python -c "import db; d = db.describe(); print(d); assert d.startswith('PostgreSQL'), d"
+          step "API uses PostgreSQL" docker compose exec -T api python -c "import db; d = db.describe(); print(d); assert d.startswith('PostgreSQL'), d"
+          step "create a user" docker compose exec -T api python -c "import auth; auth.create_user('smoke', 'Smoke-pass-12345', 'admin', must_change=False)"
+          step "sign in" sh -c "curl -fsSk --resolve api.localhost:443:127.0.0.1 https://api.localhost/api/v1/auth/token -H 'Content-Type: application/json' -d '{\"username\":\"smoke\",\"password\":\"Smoke-pass-12345\"}' > token.json"
+          TOKEN=$(python3 -c 'import json; print(json.load(open("token.json"))["access_token"])')
+          step "who am I" api /api/v1/me -H "Authorization: Bearer $TOKEN"
+          step "phone app is served" sh -c "curl -fsSk --resolve api.localhost:443:127.0.0.1 https://api.localhost/app/ | grep -qi '<html'"
+          step "no token -> 401" sh -c "curl -sSk -o /dev/null -w '%{http_code}' --resolve api.localhost:443:127.0.0.1 https://api.localhost/api/v1/me | grep -q 401"
           echo "::notice title=Smoke test::HTTPS proxy, web app, API sign-in, phone app and PostgreSQL all answered"
       - name: Check suites inside the running image (PostgreSQL)
         run: |
