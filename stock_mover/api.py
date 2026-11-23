@@ -67,7 +67,19 @@ async def security_headers(request: Request, call_next):
     r.headers["X-Content-Type-Options"] = "nosniff"
     r.headers["Referrer-Policy"] = "no-referrer"
     r.headers["X-Frame-Options"] = "DENY"
-    if request.url.path.startswith("/api/"):
+    r.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    r.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+    p = request.url.path
+    if p.startswith("/api/docs") or p.startswith("/api/redoc"):
+        pass                                     # interactive docs load their scripts from a CDN
+    elif p.startswith("/app"):                   # the phone app: only its own files; camera images stay local
+        r.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
+            "media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; font-src 'self' data:; "
+            "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'")
+    else:                                        # JSON API: nothing to run or embed
+        r.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+    if p.startswith("/api/"):
         r.headers["Cache-Control"] = "no-store"
     return r
 

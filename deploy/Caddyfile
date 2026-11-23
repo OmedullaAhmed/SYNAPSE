@@ -1,11 +1,26 @@
 # HTTPS certificates are obtained and renewed automatically for both names (point their DNS at this server first).
+(web_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		# only who may frame the app; Streamlit needs its own inline scripts, so no script policy here
+		Content-Security-Policy "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		-Server
+	}
+}
 {$DOMAIN} {
 	encode gzip
 	reverse_proxy web:8501
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	import web_headers
 }
 api.{$DOMAIN} {
 	encode gzip
 	reverse_proxy api:8000
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
 }

@@ -16,7 +16,7 @@ jobs:
       - name: Settings for a throwaway test server (from the shipped examples)
         run: |
           cp deploy/.env.example .env
-          sed -i "s/^DOMAIN=.*/DOMAIN=localhost/; s/^DB_PASSWORD=.*/DB_PASSWORD=ci$(openssl rand -hex 12)/; s/^STOCKFLOW_API_SECRET=.*/STOCKFLOW_API_SECRET=$(openssl rand -hex 24)/" .env
+          sed -i "s/^DOMAIN=.*/DOMAIN=stock.localhost/; s/^DB_PASSWORD=.*/DB_PASSWORD=ci$(openssl rand -hex 12)/; s/^STOCKFLOW_API_SECRET=.*/STOCKFLOW_API_SECRET=$(openssl rand -hex 24)/" .env
           cp deploy/secrets.example.toml deploy/secrets.toml
           mkdir -p backups && chmod 777 backups
       - name: Build the image
@@ -25,22 +25,24 @@ jobs:
         run: docker compose up -d
       - name: Wait until the web app answers through the HTTPS proxy
         run: |
-          for i in $(seq 1 60); do curl -fsSk https://localhost/_stcore/health && exit 0; sleep 5; done
+          for i in $(seq 1 60); do curl -fsSk --resolve stock.localhost:443:127.0.0.1 https://stock.localhost/_stcore/health && exit 0; sleep 5; done
           echo "::error title=Stack did not start::$(docker compose logs --tail 30 | tr '\n' ' ' | cut -c1-900)"; exit 1
       - name: End-to-end smoke test
         run: |
           step() { name="$1"; shift; if ! out=$("$@" 2>&1); then echo "::error title=Smoke - $name::$(echo "$out" | tail -6 | tr '\n' ' ' | cut -c1-900)"; exit 1; fi; echo "ok: $name"; }
-          api() { curl -fsSk --resolve api.localhost:443:127.0.0.1 "https://api.localhost$@"; }
+          api() { curl -fsSk --resolve api.stock.localhost:443:127.0.0.1 "https://api.stock.localhost$@"; }
           step "API health through HTTPS" api /api/v1/health
           step "web app uses PostgreSQL" docker compose exec -T web python -c "import db; d = db.describe(); print(d); assert d.startswith('PostgreSQL'), d"
           step "API uses PostgreSQL" docker compose exec -T api python -c "import db; d = db.describe(); print(d); assert d.startswith('PostgreSQL'), d"
           step "create a user" docker compose exec -T api python -c "import auth; auth.create_user('ci-admin', 'Smoke-pass-12345', 'admin', must_change=False)"
-          step "sign in" sh -c "curl -fsSk --resolve api.localhost:443:127.0.0.1 https://api.localhost/api/v1/auth/token -H 'Content-Type: application/json' -d '{\"username\":\"ci-admin\",\"password\":\"Smoke-pass-12345\"}' > token.json"
+          step "sign in" sh -c "curl -fsSk --resolve api.stock.localhost:443:127.0.0.1 https://api.stock.localhost/api/v1/auth/token -H 'Content-Type: application/json' -d '{\"username\":\"ci-admin\",\"password\":\"Smoke-pass-12345\"}' > token.json"
           TOKEN=$(python3 -c 'import json; print(json.load(open("token.json"))["access_token"])')
           step "who am I" api /api/v1/me -H "Authorization: Bearer $TOKEN"
-          step "phone app is served" sh -c "curl -fsSk --resolve api.localhost:443:127.0.0.1 https://api.localhost/app/ | grep -qi '<html'"
-          step "no token -> 401" sh -c "curl -sSk -o /dev/null -w '%{http_code}' --resolve api.localhost:443:127.0.0.1 https://api.localhost/api/v1/me | grep -q 401"
-          echo "::notice title=Smoke test::HTTPS proxy, web app, API sign-in, phone app and PostgreSQL all answered"
+          step "phone app is served" sh -c "curl -fsSk --resolve api.stock.localhost:443:127.0.0.1 https://api.stock.localhost/app/ | grep -qi '<html'"
+          step "no token -> 401" sh -c "curl -sSk -o /dev/null -w '%{http_code}' --resolve api.stock.localhost:443:127.0.0.1 https://api.stock.localhost/api/v1/me | grep -q 401"
+          step "security headers on the web app" sh -c "curl -sSkI --resolve stock.localhost:443:127.0.0.1 https://stock.localhost/ | grep -qi 'x-content-type-options: nosniff'"
+          step "strict policy on the API" sh -c "curl -sSkI --resolve api.stock.localhost:443:127.0.0.1 https://api.stock.localhost/api/v1/health | grep -qi \"default-src 'none'\""
+          echo "::notice title=Smoke test::HTTPS proxy, web app, API sign-in, phone app, security headers and PostgreSQL all answered"
       - name: Check suites inside the running image (PostgreSQL)
         run: |
           set -a; . ./.env; set +a
@@ -59,11 +61,11 @@ jobs:
       - name: Web security scan (OWASP ZAP baseline)
         run: |
           mkdir -p zap && chmod 777 zap
-          NET=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$(docker compose ps -q api)")
-          docker run --rm --network host -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t https://localhost -J web.json -I -m 3 > zap/web.log 2>&1 || true
-          docker run --rm --network "$NET" -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t http://api:8000/api/v1/health -J api.json -I -m 2 > zap/api.log 2>&1 || true
+          H="--add-host stock.localhost:127.0.0.1 --add-host api.stock.localhost:127.0.0.1"
+          docker run --rm --network host $H -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t https://stock.localhost -J web.json -I -m 3 > zap/web.log 2>&1 || true
+          docker run --rm --network host $H -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t https://api.stock.localhost/app/ -J api.json -I -m 2 > zap/api.log 2>&1 || true
           ls -la zap
           python3 - <<'PY'
           import json, os, sys, traceback
