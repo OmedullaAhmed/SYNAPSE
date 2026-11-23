@@ -60,16 +60,18 @@ jobs:
         run: |
           mkdir -p zap && chmod 777 zap
           docker run --rm --network host -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t https://localhost -J web.json -I -m 3 || true
+            zap-baseline.py -t https://localhost -J web.json -I -m 3 > zap/web.log 2>&1 || true
           docker run --rm --network host --add-host api.localhost:127.0.0.1 -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t https://api.localhost/api/v1/health -J api.json -I -m 2 || true
+            zap-baseline.py -t https://api.localhost/api/v1/health -J api.json -I -m 2 > zap/api.log 2>&1 || true
+          tail -20 zap/web.log zap/api.log
           python3 - <<'PY'
           import json, os, sys
           high = 0
           for f in ("web.json", "api.json"):
               p = os.path.join("zap", f)
               if not os.path.exists(p):
-                  print(f"::error title=ZAP::{f} missing (scan did not run)"); sys.exit(1)
+                  log = open(p.replace(".json", ".log")).read() if os.path.exists(p.replace(".json", ".log")) else ""
+                  print(f"::error title=ZAP {f} missing::" + " ".join(log.strip().splitlines()[-8:])[:900]); sys.exit(1)
               alerts = [a for s in json.load(open(p)).get("site", []) for a in s.get("alerts", [])]
               by = {}
               for a in alerts:
