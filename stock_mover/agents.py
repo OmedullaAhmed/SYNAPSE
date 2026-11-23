@@ -17,6 +17,7 @@ from datetime import datetime
 
 import pandas as pd
 
+import ai_budget
 import audit
 import db
 import exceptions_queue as XQ
@@ -24,7 +25,7 @@ import feedback as fb
 import ingest
 import notify
 
-MODEL = os.environ.get("STOCKFLOW_AGENT_MODEL", "claude-sonnet-5-5")
+MODEL = os.environ.get("STOCKFLOW_AGENT_MODEL", "claude-haiku-5-5")   # cheapest; good enough for drafting from facts
 MAX_STEPS = 8
 STATUSES = ("pending", "approved", "rejected", "done", "failed")
 
@@ -182,7 +183,7 @@ def llm_client(key):
     return anthropic.Anthropic(api_key=key)
 
 
-def run_ai(system, prompt, tools=None, key=None, client=None, max_steps=MAX_STEPS, max_tokens=2500):
+def run_ai(system, prompt, tools=None, key=None, client=None, max_steps=MAX_STEPS, max_tokens=2500, model=None, feature="agents"):
     """Claude tool-use loop. tools: {name: (description, input_schema, function(**args) -> json-able)}.
     Returns (final text, trace of tool calls). Tool functions are read-only by design."""
     client = client or llm_client(key)
@@ -191,10 +192,10 @@ def run_ai(system, prompt, tools=None, key=None, client=None, max_steps=MAX_STEP
     msgs = [{"role": "user", "content": prompt}]
     trace = []
     for _ in range(max_steps):
-        kw = dict(model=MODEL, max_tokens=max_tokens, system=system, messages=msgs)
+        kw = dict(model=model or MODEL, max_tokens=max_tokens, system=system, messages=msgs)
         if spec:
             kw["tools"] = spec
-        resp = client.messages.create(**kw)
+        resp = ai_budget.create(client, feature, **kw)
         content = list(resp.content)
         calls = [c for c in content if getattr(c, "type", "") == "tool_use"]
         if not calls:
@@ -214,9 +215,10 @@ def run_ai(system, prompt, tools=None, key=None, client=None, max_steps=MAX_STEP
     return "I stopped after the step limit without a final answer.", trace
 
 
-def ask_json(system, prompt, key=None, client=None):
+def ask_json(system, prompt, key=None, client=None, model=None, feature="agents"):
     """One call that must answer with a JSON object (used to turn free text into a structured request)."""
-    text, _ = run_ai(system + "\nAnswer with one JSON object only, no prose.", prompt, key=key, client=client, max_steps=1, max_tokens=1500)
+    text, _ = run_ai(system + "\nAnswer with one JSON object only, no prose.", prompt, key=key, client=client, max_steps=1, max_tokens=1500,
+                     model=model, feature=feature)
     m = re.search(r"\{.*\}", text, re.S)
     return json.loads(m.group(0)) if m else {}
 

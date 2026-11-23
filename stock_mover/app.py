@@ -2170,6 +2170,21 @@ if "Integrations" in TABS:
                 and st.button("Turn AI agents on", key="aia_on", disabled=not has_key):
             _ag.set_ai(True, USER)
             st.rerun()
+        sec("AI spending cap")
+        import ai_budget as _ab
+        bs_ = _ab.summary()
+        st.progress(min(1.0, bs_["spent_inr"] / bs_["cap_inr"]) if bs_["cap_inr"] else 1.0,
+                    text=f"{bs_['month']}: ₹{bs_['spent_inr']:,.0f} of ₹{bs_['cap_inr']:,.0f} used · {bs_['calls']} AI calls"
+                         + (f" · {bs_['blocked']} skipped at the cap" if bs_["blocked"] else ""))
+        if bs_["by_feature"]:
+            st.caption("By feature: " + ", ".join(f"{k} ₹{v:,.0f}" for k, v in sorted(bs_["by_feature"].items(), key=lambda x: -x[1])))
+        st.caption("Covers every AI feature (agents, Ask, reading photos, growth messages). A call that could go over the cap is not "
+                   "made; the feature uses its rules instead. Counted at list prices: also set a spend limit in the Claude Console.")
+        cap_ = st.number_input("Monthly cap (₹)", 0, 100000, int(bs_["cap_inr"]), step=100, key="ai_cap")
+        if cap_ != int(bs_["cap_inr"]) and st.button("Save cap", key="ai_cap_save"):
+            _ab.set_cap(cap_, USER)
+            log("ai.budget", "", cap_inr=cap_)
+            st.rerun()
         sec("ERP / WMS connection")
         ec = erp.conf(SECRETS)
         st.markdown(f"**Channel:** {html.escape(erp.describe(ec))} · format **{ec.get('format')}** · "

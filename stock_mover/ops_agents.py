@@ -73,7 +73,8 @@ def _write(facts, task, fallback, secrets=None, client=None, tools=None):
         text, _ = A.run_ai(STYLE, f"{task}\n\nFACTS (JSON):\n{json.dumps(facts, default=str)[:30000]}", tools=tools, key=key, client=client)
         return (text or fallback), "ai"
     except Exception as e:  # noqa: BLE001 - AI trouble never blocks the agent
-        return fallback + f"\n\n(AI was not available: {type(e).__name__}. This draft was written from rules.)", "rules"
+        why = str(e) if type(e).__name__ == "BudgetExceeded" else f"AI was not available: {type(e).__name__}."
+        return fallback + f"\n\n({why} This draft was written from rules.)", "rules"
 
 
 def _money(x):

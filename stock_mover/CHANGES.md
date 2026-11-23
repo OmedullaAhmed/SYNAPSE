@@ -77,3 +77,6 @@ change slightly as a result; all 17 rules pass on every dataset, including 100, 
   3-character plan tag taken from the input files and settings (TO-261123-A7F-001): different plans get different
   numbers, rebuilding the same plan gives the same ones. Releasing a number that is already released is skipped and
   reported (web app, API). Old-style numbers (TO-261123-001) are still read.
+
+- AI spending cap shared by all AI features (default ₹500 a month, Integrations tab); calls that could pass it are not made.
+  Agents now default to Claude Haiku 5.5; Ask answers moved from Opus 5.5 to Sonnet 5.5.

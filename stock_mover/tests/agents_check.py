@@ -294,6 +294,32 @@ def t_to_numbers():
     return stable and distinct and skipped == sorted(S["tos"][:2]), f"{a.to_number.iloc[0]} vs {b.to_number.iloc[0]}; re-release skipped {len(skipped)}"
 
 
+@check("AI budget: real cost recorded from token counts; a call that could pass the cap is not made (rules used)")
+def t_budget():
+    import ai_budget as B
+    A.set_ai(True, "boss")
+    os.environ["ANTHROPIC_API_KEY"] = "test-key"
+
+    class Paid(FakeClient):
+        def create(self, **kw):
+            r = super().create(**kw)
+            r.usage = NS(input_tokens=10000, output_tokens=600, cache_creation_input_tokens=0, cache_read_input_tokens=0)
+            return r
+    B.set_cap(500, "boss")
+    before = B.spent()["inr"]
+    O.run_brief("tester", S["pid"], client=Paid(), per_region=False)
+    one = B.spent()["inr"] - before
+    want = (10000 * 0.10 + 600 * 0.50) / 1e6 * 88
+    B.set_cap(B.spent()["inr"] + 0.001, "boss")          # almost no room left
+    ids = O.run_brief("tester", S["pid"], client=Paid(), per_region=False)
+    d = db.read("agent_drafts", {"id": ids[0]}).iloc[0]
+    s = B.summary()
+    A.set_ai(False, "boss")
+    B.set_cap(500, "boss")
+    ok = abs(one - want) < 1e-6 and d.source == "rules" and "budget" in d.body.lower() and s["blocked"] >= 1 and s["spent_inr"] <= s["cap_inr"] + 1e-9
+    return ok, f"one Haiku brief ₹{one:.4f}; at the cap -> {d.source}; blocked {s['blocked']}; model {A.MODEL}"
+
+
 def main():
     t = time.time()
     setup()

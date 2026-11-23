@@ -211,8 +211,17 @@ approve a purchase order, post the brief, save a column mapping), each with a ro
 
 AI is **off by default**: every agent works from rules and templates. An admin turns AI on in Integrations (needs
 `ANTHROPIC_API_KEY` and confirmation that the data-processing agreement covers it); Claude then writes the drafts and can
-call read-only lookups (at most 8 steps per run). Model: `STOCKFLOW_AGENT_MODEL` (default `claude-sonnet-5-5`). Guests
+call read-only lookups (at most 8 steps per run). Model: `STOCKFLOW_AGENT_MODEL` (default `claude-haiku-5-5`, about ₹0.1 a draft). Guests
 never see agents. Tests: `python tests/agents_check.py` (14 checks, no network; a fake model client tests the AI path).
+
+## AI spending cap
+
+Every AI feature (agents, Ask answers, reading photos, growth messages) goes through `ai_budget.py`. Default cap: **₹500 a
+month**, changeable in Integrations, where this month's spend is shown by feature. Before each call the worst case is reserved;
+a call that could pass the cap is not made and the feature uses its rules instead. Costs are counted from the token counts
+Anthropic returns, at list prices (₹88 = $1). Models: agents `claude-haiku-5-5`, Ask `claude-sonnet-5-5`
+(`STOCKFLOW_CHAT_MODEL`), photos `claude-sonnet-5-5` (`STOCKFLOW_VISION_MODEL`), growth `claude-sonnet-5-5`
+(`STOCKFLOW_GROWTH_MODEL`). Also set a spend limit in the Claude Console: the cap cannot see other apps using the same key.
 
 ## Growth: the marketing agent (for the team selling StockFlow)
 

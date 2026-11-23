@@ -125,7 +125,8 @@ def ai_read(im, catalog_hint="", api_key=None):
               "its counted quantity. Reply with JSON only: {\"lines\": [{\"code\": \"item code or barcode if visible, else empty\", "
               "\"name\": \"product name as written\", \"qty\": integer, \"legible\": true|false}]}. Do not guess quantities you "
               "cannot read: set legible false. " + (f"Known item codes look like: {catalog_hint}." if catalog_hint else ""))
-    resp = client.messages.create(model=AI_MODEL, max_tokens=4000, messages=[{"role": "user", "content": [
+    import ai_budget
+    resp = ai_budget.create(client, "photos", model=AI_MODEL, max_tokens=4000, messages=[{"role": "user", "content": [
         {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": base64.b64encode(buf.getvalue()).decode()}},
         {"type": "text", "text": prompt}]}])
     text = "".join(getattr(b, "text", "") for b in resp.content)
@@ -236,7 +237,8 @@ def extract(files, catalog=None, methods=("barcode", "ocr"), api_key=None):
                     cands += lines
                     got += len(lines)
                 except Exception as e:  # noqa: BLE001
-                    notes.append(f"{tag}: AI reading failed ({type(e).__name__}); used offline reading")
+                    notes.append(f"{tag}: " + (str(e) if type(e).__name__ == "BudgetExceeded" else f"AI reading failed ({type(e).__name__})")
+                                 + "; used offline reading")
                     methods = tuple(m for m in methods if m != "ai") + ("ocr",)
             if "ocr" in methods and "ai" not in methods:
                 try:

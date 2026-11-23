@@ -11,7 +11,7 @@ import re
 import engine as E
 import insights as ins
 
-MODEL = "claude-opus-5-5"
+MODEL = os.environ.get("STOCKFLOW_CHAT_MODEL", "claude-sonnet-5-5")
 APOLOGY = "Sorry, I can only answer questions about this stock plan and the data behind it."
 NOT_IN_REPORT = "Sorry, that isn't in this report."
 
@@ -64,12 +64,15 @@ def ask_claude(q, history, context, brand, api_key=None):
     client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
     msgs = [{"role": m["role"], "content": m["content"]} for m in history[-12:]] + [{"role": "user", "content": q}]
     try:
-        resp = client.messages.create(model=MODEL, max_tokens=2000,
+        import ai_budget
+        resp = ai_budget.create(client, "ask", model=MODEL, max_tokens=2000,
                                       system=[{"type": "text", "text": rules(brand)},
                                               {"type": "text", "text": "<report>\n" + context + "\n</report>",
                                                "cache_control": {"type": "ephemeral"}}],
                                       messages=msgs)
     except Exception as e:  # noqa: BLE001
+        if type(e).__name__ == "BudgetExceeded":
+            return f"⚠️ {e} Quick answers still work."
         return f"⚠️ Couldn't get an answer from the AI service ({type(e).__name__}). Quick answers still work."
     if resp.stop_reason == "refusal":
         return APOLOGY

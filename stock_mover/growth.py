@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 import db
 import demo_factory as F
 
+MODEL = os.environ.get("STOCKFLOW_GROWTH_MODEL", "claude-sonnet-5-5")   # sales copy: worth the better writer
 STAGES = ["New", "Contacted", "Replied", "Demo booked", "Demo done", "Pilot", "Won", "Lost", "Not now"]
 PAINS = {
     "stockouts": "best sellers run out in some stores while other stores hold spare stock",
@@ -151,7 +152,7 @@ def ai_pack(L, r, notes="", sender="", key=None, client=None):
               f"expected {money(r['expected'])} a year.\nNotes about them (may be empty): {notes[:4000]}\nSender: {sender}\n"
               'Return {"email": "Subject: ...\\n\\n...", "whatsapp": "...", "linkedin": "max 300 characters", "angle": "one line: why now for them"}')
     try:
-        j = A.ask_json(system, prompt, key=key, client=client)
+        j = A.ask_json(system, prompt, key=key, client=client, model=MODEL, feature="growth")
     except Exception:  # noqa: BLE001
         return None
     out = {k: str(v) for k, v in j.items() if k in ("email", "whatsapp", "linkedin", "angle") and v}
