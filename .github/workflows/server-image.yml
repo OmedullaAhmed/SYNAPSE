@@ -59,27 +59,35 @@ jobs:
       - name: Web security scan (OWASP ZAP baseline)
         run: |
           mkdir -p zap && chmod 777 zap
+          NET=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$(docker compose ps -q api)")
           docker run --rm --network host -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t https://localhost -J web.json -I -m 3 > zap/web.log 2>&1 || true
-          docker run --rm --network host --add-host api.localhost:127.0.0.1 -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t https://api.localhost/api/v1/health -J api.json -I -m 2 > zap/api.log 2>&1 || true
-          tail -20 zap/web.log zap/api.log
+          docker run --rm --network "$NET" -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://api:8000/api/v1/health -J api.json -I -m 2 > zap/api.log 2>&1 || true
+          ls -la zap
           python3 - <<'PY'
-          import json, os, sys
+          import json, os, sys, traceback
           high = 0
-          for f in ("web.json", "api.json"):
-              p = os.path.join("zap", f)
-              if not os.path.exists(p):
-                  log = open(p.replace(".json", ".log")).read() if os.path.exists(p.replace(".json", ".log")) else ""
-                  print(f"::error title=ZAP {f} missing::" + " ".join(log.strip().splitlines()[-8:])[:900]); sys.exit(1)
-              alerts = [a for s in json.load(open(p)).get("site", []) for a in s.get("alerts", [])]
-              by = {}
-              for a in alerts:
-                  by.setdefault(a.get("riskdesc", "").split(" ")[0], []).append(a.get("name"))
-              high += len(by.get("High", []))
-              print(f"::notice title=ZAP {f}::" + "; ".join(f"{k}: {len(v)} ({', '.join(sorted(set(v))[:6])})" for k, v in by.items()) or "no alerts")
-              for n in sorted(set(by.get("Medium", []))):
-                  print(f"::warning title=ZAP medium ({f})::{n}")
+          try:
+              for f in ("web.json", "api.json"):
+                  p = os.path.join("zap", f)
+                  if not os.path.exists(p):
+                      log = open(p[:-5] + ".log").read() if os.path.exists(p[:-5] + ".log") else "(no log)"
+                      print(f"::error title=ZAP {f} missing::" + " ".join(log.strip().splitlines()[-8:])[:900])
+                      high += 1
+                      continue
+                  alerts = [a for s in json.load(open(p)).get("site", []) for a in s.get("alerts", [])]
+                  by = {}
+                  for a in alerts:
+                      by.setdefault(str(a.get("riskdesc", "")).split(" ")[0], []).append(str(a.get("name")))
+                  high += len(by.get("High", []))
+                  summary = "; ".join(f"{k}: {len(v)} ({', '.join(sorted(set(v))[:6])})" for k, v in by.items()) or "no alerts"
+                  print(f"::notice title=ZAP {f}::{summary}")
+                  for n in sorted(set(by.get("Medium", []))):
+                      print(f"::warning title=ZAP medium ({f})::{n}")
+          except Exception:
+              print("::error title=ZAP report parsing::" + traceback.format_exc().replace(chr(10), " ")[:900])
+              sys.exit(1)
           sys.exit(1 if high else 0)
           PY
       - name: Logs when something failed
