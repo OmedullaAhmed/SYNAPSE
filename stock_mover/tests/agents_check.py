@@ -280,6 +280,20 @@ def t_wa():
         f"unsigned {unsigned}, bad {bad}; Meta -> {d.title[:60]}; Twilio -> draft {tw['drafts'][0]}; verify {ver}"
 
 
+@check("Transfer numbers: unique between plans for the same day, stable on rebuild; re-release is skipped")
+def t_to_numbers():
+    import copy
+    cfg2 = copy.deepcopy(S["cfg"])
+    cfg2["planning"]["cover_days"] = cfg2["planning"].get("cover_days", 21) + 3
+    src = pipeline.std_inputs(S["pid"], S["cfg"])
+    a = E.run(src, Path(tempfile.mkdtemp()), S["cfg"]).get("trips")
+    b = E.run(src, Path(tempfile.mkdtemp()), cfg2).get("trips")
+    stable = set(a.to_number) == set(S["R"]["trips"].to_number)
+    distinct = not (set(a.to_number) & set(b.to_number))
+    skipped = fb.release_orders(S["orders"][S["orders"].to_number.isin(S["tos"][:2])], "tester", S["pid"])
+    return stable and distinct and skipped == sorted(S["tos"][:2]), f"{a.to_number.iloc[0]} vs {b.to_number.iloc[0]}; re-release skipped {len(skipped)}"
+
+
 def main():
     t = time.time()
     setup()

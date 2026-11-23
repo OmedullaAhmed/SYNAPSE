@@ -73,5 +73,7 @@ change slightly as a result; all 17 rules pass on every dataset, including 100, 
   job from the web app (Streamlit restores `sys.path` after each run, so first-time imports inside the job failed).
   These modules are now imported up front.
 - Fixed: a PostgreSQL URL using a Unix socket (`?host=/path`) was treated as the example placeholder.
-- Known gap: two plans for the same date reuse transfer numbers (TO-yymmdd-NNN); releasing both mixes their tracking.
-  Release one plan per day, or rebuild instead of releasing twice, until numbers include the plan id.
+- Fixed: two plans for the same date reused transfer numbers, so releasing both mixed their tracking. Numbers now carry a
+  3-character plan tag taken from the input files and settings (TO-261123-A7F-001): different plans get different
+  numbers, rebuilding the same plan gives the same ones. Releasing a number that is already released is skipped and
+  reported (web app, API). Old-style numbers (TO-261123-001) are still read.

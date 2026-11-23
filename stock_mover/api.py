@@ -332,7 +332,10 @@ def release(plan_id: str, body: ReleaseIn, w: Who = Depends(need("release"))):
     o = plans.apply_decisions(o[o.to_number.isin(t.to_number)], plan_id) if len(o) else o
     if o is None or o.empty:
         raise HTTPException(409, "Nothing approved to release.")
-    fb.release_orders(o, w.user, plan_id)
+    skipped = fb.release_orders(o, w.user, plan_id)
+    o = o[~o.to_number.isin(skipped)]
+    if o.empty:
+        raise HTTPException(409, "These transfer orders were already released.")
     audit.log("orders.release", plan_id, {"orders": int(o.to_number.nunique()), "lines": len(o), "pieces": int(o.qty.sum()), "via": w.via},
               w.user, w.role)
     sent = None

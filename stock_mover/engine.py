@@ -16,6 +16,7 @@ Pipeline
 """
 import argparse
 import heapq
+import json
 import math
 from collections import defaultdict
 from pathlib import Path
@@ -1221,7 +1222,7 @@ def trips_table(mv, pl, cfg):
         f, to = t.from_id.iloc[0], t.to_id.iloc[0]
         big = bool((t.value_mrp > pc["approval_value"]).any() or t.value_mrp.sum() > pc["trip_approval_value"])
         rows.append(dict(
-            trip_key=key, to_number=f"TO-{pl.run:%y%m%d}-{i:03d}", from_id=f, to_id=to,
+            trip_key=key, to_number=f"TO-{pl.run:%y%m%d}-{getattr(pl, 'to_tag', '') + '-' if getattr(pl, 'to_tag', '') else ''}{i:03d}", from_id=f, to_id=to,
             dispatch=t.dispatch.iloc[0], arrives=t.arrives.max(), lines=len(t), pieces=int(t.qty.sum()),
             value_mrp=float(t.value_mrp.sum()), benefit=float(t.benefit.sum()), move_cost=float(t.move_cost.sum()),
             net_benefit=float(t.net_benefit.sum()), urgent=int((t.priority == "High").sum()), needs_approval=big,
@@ -1583,10 +1584,27 @@ def write(out_dir, R):
     return xl
 
 
+def plan_tag(source, cfg):
+    """3 characters that make transfer numbers unique between plans for the same day (TO-261123-A7F-001). Taken from
+    the input files and settings, so rebuilding the same plan gives the same numbers."""
+    import hashlib
+    h = hashlib.sha1(json.dumps(cfg, sort_keys=True, default=str).encode())
+    p = Path(source) if source is not None and not isinstance(source, dict) else None
+    if p is not None and p.is_dir():
+        for f in sorted(p.rglob("*")):
+            if f.is_file() and not f.name.startswith("_"):          # skip run reports (they carry timestamps)
+                h.update(f.name.encode())
+                h.update(f.read_bytes())
+    elif p is not None and p.is_file():
+        h.update(p.read_bytes())
+    return h.hexdigest()[:3].upper()
+
+
 def run(source, out_dir=None, cfg=None, progress=None):
     """progress(step, share_done) is called between stages (used by background jobs to show where a run is)."""
     say = progress or (lambda *_: None)
     cfg = cfg or schema.load_config()
+    tag = plan_tag(source, cfg)             # before anything below adds to cfg
     say("Reading and checking the sheets", 0.02)
     D = load(source, cfg)
     say("Preparing stock, lanes and season", 0.12)
@@ -1596,6 +1614,7 @@ def run(source, out_dir=None, cfg=None, progress=None):
     season = Season(D, P)
     say("Planning moves", 0.4)
     pl = Planner(D, P, vel, season)
+    pl.to_tag = tag
     pl.synthetic = P.get("weekly_synthetic", False)
     pl.hits = sold_out_hits(P, weekly) if not pl.synthetic else pd.DataFrame()
     pl.hot = set(pl.hits["style"]) if len(pl.hits) else set()

@@ -123,8 +123,16 @@ def suggested_settings(cfg):
 
 # ---- transfer orders released to the warehouse / ERP, and what was received
 def release_orders(orders, user, run_id):
-    o = orders.assign(released_at=_now().strftime("%Y-%m-%d %H:%M"), released_by=user, run_id=run_id)
-    _append(ORDERS, o.to_dict("records"))
+    """Logs the orders as released. Transfer numbers already released (by any plan) are skipped, so one transfer is
+    never tracked twice. Returns the skipped numbers (empty when everything was released)."""
+    done = released()
+    seen = set(done.to_number) if len(done) else set()
+    skip = sorted(set(orders.to_number) & seen)
+    o = orders[~orders.to_number.isin(skip)]
+    if len(o):
+        o = o.assign(released_at=_now().strftime("%Y-%m-%d %H:%M"), released_by=user, run_id=run_id)
+        _append(ORDERS, o.to_dict("records"))
+    return skip
 
 
 def released():

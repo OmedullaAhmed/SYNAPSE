@@ -1166,7 +1166,11 @@ with T[3]:
                               type="primary", width="stretch",
                               on_click=lambda: log("orders.download", PLAN_ID, orders=int(orders.to_number.nunique()), lines=len(orders)))
             if b.button("📤 Release & send WhatsApp alerts", width="stretch", disabled=orders.empty or not can_do("release")):
-                fb.release_orders(orders, USER, st.session_state.run_id)
+                skipped_ = fb.release_orders(orders, USER, st.session_state.run_id)
+                if skipped_:
+                    st.warning(f"{len(skipped_)} transfer order(s) were already released and were not released again: "
+                               + ", ".join(skipped_[:5]) + ("…" if len(skipped_) > 5 else ""))
+                    orders = orders[~orders.to_number.isin(skipped_)]
                 log("orders.release", PLAN_ID, orders=int(orders.to_number.nunique()), lines=len(orders), pieces=int(orders.qty.sum()),
                     rejected_lines=n_rej, reduced_lines=n_edit, decisions_off=int(len(pack) - sum(1 for k_ in st.session_state
                                                                                                    if str(k_).startswith("ap_") and st.session_state[k_])))
@@ -1807,9 +1811,13 @@ def release_trips(numbers, where):
         o = plans.apply_decisions(o, PLAN_ID)
     if o is None or o.empty:
         return False, "Nothing to release."
-    fb.release_orders(o, USER, PLAN_ID)
+    skipped = fb.release_orders(o, USER, PLAN_ID)
+    o = o[~o.to_number.isin(skipped)]
+    if o.empty:
+        return False, "These transfer orders were already released."
     log("orders.release", PLAN_ID, orders=int(o.to_number.nunique()), lines=len(o), pieces=int(o.qty.sum()), via=where)
-    msg = f"Released {o.to_number.nunique()} transfer orders ({int(o.qty.sum()):,} pieces)."
+    msg = f"Released {o.to_number.nunique()} transfer orders ({int(o.qty.sum()):,} pieces)." + \
+        (f" {len(skipped)} were already released and were skipped." if skipped else "")
     if erp_on():
         ok, m = erp.export_orders(o, PLAN_ID, USER, SECRETS)
         log("erp.export", PLAN_ID, ok=ok, orders=int(o.to_number.nunique()), message=m[:200])

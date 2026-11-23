@@ -293,7 +293,7 @@ def parse_reply(text, to_number=None, location=None):
     Understands: 'sent all', 'sent 12', 'received 10, 2 damaged', 'got SKU1 4 SKU2 3', 'TO-261122-004 received all'."""
     t = str(text or "").strip()
     low = t.lower()
-    m = re.search(r"\bTO-\d{6}-\d{3}\b", t, re.I)
+    m = re.search(r"\bTO-\d{6}-(?:[A-Z0-9]{3}-)?\d{3}\b", t, re.I)
     to_number = (m.group(0).upper() if m else None) or to_number
     tr, lines = fb.tracking()
     if not to_number and location and tr is not None and len(tr):
@@ -323,7 +323,7 @@ def parse_reply(text, to_number=None, location=None):
         return dict(to_number=to_number, event=ev, lines=per, damaged=damaged, note=t[:300])
     if re.search(r"\b(all|everything|full|complete)\b", low) and not damaged:
         return dict(to_number=to_number, event=ev, lines=None, damaged=0, note=t[:300])
-    nums = [int(n) for n in re.findall(r"\b(\d+)\b", re.sub(r"\bTO-\d{6}-\d{3}\b", "", t, flags=re.I))]
+    nums = [int(n) for n in re.findall(r"\b(\d+)\b", re.sub(r"\bTO-\d{6}-(?:[A-Z0-9]{3}-)?\d{3}\b", "", t, flags=re.I))]
     total = int(base.sum()) if len(base) else 0
     got = nums[0] if nums else total
     good = max(0, got - damaged) if ev == "received" else got
