@@ -106,7 +106,8 @@ def main():
     check("store counts its own location by barcode", cnt.status_code == 200 and cnt.json()["saved"] == 2 and cnt.json()["unknown"] == ["0000000000000"], cnt.json())
     other = C.post("/api/v1/counts", headers=S, json={"location_id": "DEL-01", "counted_on": "2026-10-31", "lines": [{"sku_id": "MOB001", "qty": 1}]})
     check("store cannot count another location (403)", other.status_code == 403)
-    img = open("/tmp/vis/count_sheet.png", "rb").read() if Path("/tmp/vis/count_sheet.png").exists() else None
+    fx = Path(__file__).resolve().parent / "fixtures" / "count_sheet.png"
+    img = fx.read_bytes() if fx.exists() else None
     if img:
         ri = C.post("/api/v1/counts/read-images", headers=S, files=[("files", ("sheet.png", img, "image/png"))], data={"methods": "ocr"})
         check("read stock lines from a photo of a count sheet", ri.status_code == 200 and len(ri.json()["lines"]) >= 15, f"{len(ri.json().get('lines', []))} lines")

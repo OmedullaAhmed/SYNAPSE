@@ -11,7 +11,7 @@ import shutil
 import sys
 import tempfile
 import zipfile
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -1687,6 +1687,30 @@ if "Admin" in TABS:
         sec_rows = [("Database URL", _has(["database", "url"]) or _has(["DATABASE_URL"])), ("Users in secrets", bool(USERS)),
                     ("WhatsApp Business API", bool(notify.configured(SECRETS))), ("Anthropic API key", _has(["ANTHROPIC_API_KEY"]))]
         st.markdown("**Secrets** (values are never shown): " + " · ".join(f"{'✅' if v else '—'} {k}" for k, v in sec_rows))
+        sec("Your data")
+        st.caption("Download everything StockFlow holds (one CSV per table plus your uploaded files) at any time, or delete it "
+                   "all when you stop using StockFlow. Password and key hashes are never exported.")
+        dx1_, dx2_ = st.columns(2)
+        if dx1_.button("📦 Prepare full export", key="dx_prep", width="stretch"):
+            st.session_state.dx_zip = db.export_all()
+            log("data.export", "all", bytes=len(st.session_state.dx_zip))
+        if st.session_state.get("dx_zip"):
+            dx1_.download_button("⬇️ Download export (.zip)", st.session_state.dx_zip, f"stockflow_export_{date.today():%Y%m%d}.zip",
+                                 key="dx_dl", width="stretch")
+        with dx2_.expander("🗑️ Delete all data"):
+            st.warning("This deletes every plan, transfer, count, setting, log and draft. It cannot be undone. Download the export first.")
+            keep_ = st.checkbox("Keep the user accounts", value=True, key="dx_keep")
+            phrase_ = st.text_input("Type DELETE ALL DATA", key="dx_phrase")
+            pw_ = st.text_input("Your password", type="password", key="dx_pw")
+            if st.button("Delete everything", type="primary", key="dx_go", disabled=phrase_ != "DELETE ALL DATA" or not pw_):
+                ok_, _r, _m = auth.attempt(USER, pw_, SECRETS)
+                if not ok_:
+                    st.error("Wrong password.")
+                else:
+                    n_ = db.purge_all(USER, keep_users=keep_)
+                    for k_ in ("R", "run_id", "dx_zip"):
+                        st.session_state.pop(k_, None)
+                    st.success(f"Deleted {sum(n_.values()):,} records from {len([v for v in n_.values() if v])} tables.")
         sec("Users")
         everyone = auth.all_users(SECRETS)
         try:
@@ -2472,3 +2496,71 @@ if "Agents" in TABS:
             if len(hd_):
                 st.dataframe(hd_[["id", "created_at", "agent", "title", "status", "decided_by", "decided_at", "result"]].head(200),
                              hide_index=True, width="stretch")
+
+
+# ---- pilot tools: shadow mode (weeks 1-2) and the pilot scorecard (Operations tab)
+if "Operations" in TABS:
+    with TABS["Operations"]:
+        import pilot as PILOT
+        import shadow as SHADOW
+        sec("Shadow mode: compare your own transfers with the plan")
+        st.caption("For the first weeks of a pilot: keep planning transfers as you do today, upload what you actually moved "
+                   "(columns like From, To, Item code, Qty, in any order), and see where StockFlow agrees, what it would have "
+                   "added, and what it would not have done. Nothing is released.")
+        sh_up_ = st.file_uploader("What your team moved (CSV or Excel)", type=["csv", "xlsx", "xls"], key="sh_up")
+        if sh_up_ is not None and PLAN_ID:
+            try:
+                raw_ = pd.read_csv(sh_up_) if sh_up_.name.lower().endswith(".csv") else pd.read_excel(sh_up_)
+                Rx_ = st.session_state.get("R")
+                res_ = SHADOW.compare(raw_, PLAN_ID, skipped=Rx_.get("skipped") if isinstance(Rx_, dict) else None)
+                s_ = res_["summary"]
+                kpis([("Plan matched", f"{s_['agreement']:.0%}" if s_["agreement"] is not None else "—", f"{s_['agreed_pieces']:,} of {s_['plan_pieces']:,} pieces"),
+                      ("Plan only", f"{s_['missed_lines']:,} lines", f"{s_['missed_pieces']:,} pcs · est. {M(s_['missed_value'])}", SAFFRON),
+                      ("Your moves only", f"{s_['planner_only_lines']:,} lines", f"{s_['planner_only_pieces']:,} pieces")])
+                st.markdown(html.escape(SHADOW.text(s_)))
+                st.dataframe(res_["lines"].head(500), hide_index=True, width="stretch",
+                             column_config={"value": st.column_config.NumberColumn("plan's est. value", format="₹%d")})
+                st.download_button("⬇️ Comparison (CSV)", safety.csv(res_["lines"]), f"shadow_{PLAN_ID}.csv", key="sh_dl")
+                if can_do("approve") and st.button("Save this comparison to the pilot record", key="sh_save"):
+                    SHADOW.save(PLAN_ID, s_, USER)
+                    log("pilot.shadow", PLAN_ID, agreement=s_["agreement"])
+                    st.success("Saved.")
+            except Exception as e_:  # noqa: BLE001
+                st.error(f"Couldn't read that file: {e_}")
+        sh_h_ = SHADOW.history()
+        if len(sh_h_):
+            with st.expander(f"Saved comparisons ({len(sh_h_)})"):
+                st.dataframe(sh_h_[[c for c in ("plan_id", "at", "agreement", "missed_lines", "missed_value", "planner_only_lines", "by") if c in sh_h_]],
+                             hide_index=True, width="stretch")
+
+        sec("Pilot scorecard")
+        ps_ = PILOT.setup()
+        all_st_ = sorted(R["pl"].st.index) if isinstance(st.session_state.get("R"), dict) else []
+        with st.expander("Pilot set-up" + (f" · started {ps_['start']}" if ps_.get("start") else ""), expanded=not ps_.get("start")):
+            if not can_do("settings"):
+                st.caption("An admin sets up the pilot.")
+            else:
+                with st.form("pilot_setup"):
+                    a_, b_ = st.columns(2)
+                    start_ = a_.date_input("Pilot start", date.fromisoformat(ps_["start"]) if ps_.get("start") else date.today())
+                    hb_ = b_.number_input("Planner hours a week on transfers before the pilot", 0.0, 500.0, float(ps_.get("hours_before") or 0.0))
+                    pst_ = st.multiselect("Pilot stores", all_st_, default=[s for s in ps_.get("pilot_stores", []) if s in all_st_])
+                    cst_ = st.multiselect("Comparison stores (similar, not in the pilot)", all_st_,
+                                          default=[s for s in ps_.get("comparison_stores", []) if s in all_st_])
+                    if st.form_submit_button("Save pilot set-up", type="primary"):
+                        try:
+                            PILOT.save_setup(start_, pst_, cst_, hb_, ps_.get("hours_now"), USER)
+                            log("pilot.setup", "", pilot=len(pst_), comparison=len(cst_))
+                            st.rerun()
+                        except ValueError as e_:
+                            st.error(str(e_))
+        if ps_.get("start"):
+            hn_ = st.number_input("Planner hours on transfers this week", 0.0, 500.0, float(ps_.get("hours_now") or 0.0), key="pilot_hn")
+            if hn_ != (ps_.get("hours_now") or 0.0) and st.button("Save hours", key="pilot_hn_save"):
+                PILOT.set_hours_now(hn_, USER)
+                st.rerun()
+            sc_ = PILOT.scorecard()
+            st.markdown(f"**{html.escape(PILOT.verdict(sc_))}**")
+            st.dataframe(pd.DataFrame([{"": "✅" if r["passed"] else ("❌" if r["passed"] is False else "…"), "Measure": r["measure"],
+                                        "Pass mark": r["target"], "Pilot": r["pilot"], "Comparison": r["comparison"], "Result": r["result"],
+                                        "Note": r["detail"]} for r in sc_["rows"]]), hide_index=True, width="stretch")

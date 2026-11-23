@@ -1,0 +1,88 @@
+# Every push to main: build the production image, start the full stack (PostgreSQL, web app, API, HTTPS proxy, backups)
+# exactly as deploy/README.md describes, check it end to end, run the suites inside it, take a backup, and run a
+# standard web security scan (OWASP ZAP baseline). Fails on any high-risk finding.
+name: Server image
+on:
+  push: {branches: [main]}
+  workflow_dispatch: {}
+permissions: {contents: read}
+concurrency: {group: "image-${{ github.ref }}", cancel-in-progress: true}
+jobs:
+  stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Settings for a throwaway test server (from the shipped examples)
+        run: |
+          cp deploy/.env.example .env
+          sed -i "s/^DOMAIN=.*/DOMAIN=localhost/; s/^DB_PASSWORD=.*/DB_PASSWORD=ci$(openssl rand -hex 12)/; s/^STOCKFLOW_API_SECRET=.*/STOCKFLOW_API_SECRET=$(openssl rand -hex 24)/" .env
+          cp deploy/secrets.example.toml deploy/secrets.toml
+          mkdir -p backups && chmod 777 backups
+      - name: Build the image
+        run: docker compose build
+      - name: Start the stack
+        run: docker compose up -d
+      - name: Wait until the web app answers through the HTTPS proxy
+        run: |
+          for i in $(seq 1 60); do curl -fsSk https://localhost/_stcore/health && exit 0; sleep 5; done
+          echo "::error title=Stack did not start::$(docker compose logs --tail 30 | tr '\n' ' ' | cut -c1-900)"; exit 1
+      - name: End-to-end smoke test
+        run: |
+          set -e
+          API="curl -fsSk --resolve api.localhost:443:127.0.0.1 https://api.localhost"
+          $API/api/v1/health
+          docker compose exec -T web python -c "import db; d = db.describe(); print(d); assert d.startswith('PostgreSQL'), d"
+          docker compose exec -T api python -c "import auth; auth.create_user('smoke', 'Smoke-pass-12345', 'admin', must_change=False)"
+          TOKEN=$($API/api/v1/auth/token -H 'Content-Type: application/json' -d '{"username":"smoke","password":"Smoke-pass-12345"}' \
+                  | python3 -c 'import sys, json; print(json.load(sys.stdin)["access_token"])')
+          $API/api/v1/me -H "Authorization: Bearer $TOKEN"
+          $API/app/ | grep -qi "<html"
+          curl -sSk -o /dev/null -w "%{http_code}" --resolve api.localhost:443:127.0.0.1 https://api.localhost/api/v1/me | grep -q 401
+          echo "::notice title=Smoke test::HTTPS proxy, web app, API sign-in, phone app and PostgreSQL all answered"
+      - name: Check suites inside the running image (PostgreSQL)
+        run: |
+          set -a; . ./.env; set +a
+          docker compose exec -T -e PG_BASE="postgresql://stockflow:${DB_PASSWORD}@db:5432" -e GITHUB_ACTIONS=true api \
+            python tests/run_all.py check_plan enterprise_check api_check pilot_check
+      - name: Backup and restore
+        run: |
+          set -a; . ./.env; set +a
+          docker compose exec -T backup /scripts/backup.sh postgresql://stockflow@db:5432/stockflow /backups
+          ls -la backups
+          f=$(ls -t backups/* | head -1); test -s "$f"
+          docker compose exec -T db psql -U stockflow -d postgres -c "CREATE DATABASE restore_test"
+          docker compose exec -T backup sh -c 'pg_restore --no-owner -h db -U stockflow -d restore_test "$(ls -t /backups/stockflow_*.dump | head -1)"' 
+          n=$(docker compose exec -T db psql -U stockflow -d restore_test -tAc "select count(*) from users")
+          test "$n" -ge 1 && echo "::notice title=Backup::backup taken and restored into a new database ($n users)"
+      - name: Web security scan (OWASP ZAP baseline)
+        run: |
+          mkdir -p zap && chmod 777 zap
+          docker run --rm --network host -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t https://localhost -J web.json -I -m 3 || true
+          docker run --rm --network host --add-host api.localhost:127.0.0.1 -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t https://api.localhost/api/v1/health -J api.json -I -m 2 || true
+          python3 - <<'PY'
+          import json, os, sys
+          high = 0
+          for f in ("web.json", "api.json"):
+              p = os.path.join("zap", f)
+              if not os.path.exists(p):
+                  print(f"::error title=ZAP::{f} missing (scan did not run)"); sys.exit(1)
+              alerts = [a for s in json.load(open(p)).get("site", []) for a in s.get("alerts", [])]
+              by = {}
+              for a in alerts:
+                  by.setdefault(a.get("riskdesc", "").split(" ")[0], []).append(a.get("name"))
+              high += len(by.get("High", []))
+              print(f"::notice title=ZAP {f}::" + "; ".join(f"{k}: {len(v)} ({', '.join(sorted(set(v))[:6])})" for k, v in by.items()) or "no alerts")
+              for n in sorted(set(by.get("Medium", []))):
+                  print(f"::warning title=ZAP medium ({f})::{n}")
+          sys.exit(1 if high else 0)
+          PY
+      - name: Logs when something failed
+        if: failure()
+        run: |
+          docker compose ps
+          for s in web api db proxy; do echo "::error title=$s logs::$(docker compose logs --tail 15 $s | tr '\n' ' ' | cut -c1-900)"; done
+      - if: always()
+        run: docker compose down -v

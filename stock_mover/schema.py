@@ -74,6 +74,8 @@ DEFAULTS = {
     "season": {
         "peak_label": "peak day",          # what calendar.is_peak_day means for this brand (e.g. "wedding date")
         "event_label": "event week",       # the 7 days up to a calendar event (e.g. "festival week")
+        "named_events": True,              # each named event (Diwali, Eid, a sale) learns its own lift per region from past years
+        "event_shrink_days": 3,            # how far a festival's own history is trusted: weight = days seen / (days seen + this)
     },
     "whatsapp": {
         "default_country_code": "91",      # added to 10-digit numbers

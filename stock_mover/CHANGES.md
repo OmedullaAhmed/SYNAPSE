@@ -80,3 +80,11 @@ change slightly as a result; all 17 rules pass on every dataset, including 100, 
 
 - AI spending cap shared by all AI features (default ₹500 a month, Integrations tab); calls that could pass it are not made.
   Agents now default to Claude Haiku 5.5; Ask answers moved from Opus 5.5 to Sonnet 5.5.
+
+## Pilot readiness (23 Nov 2026)
+
+- Shadow mode, pilot scorecard, per-festival forecast lift, full data export and delete-on-exit (see README).
+- Automated checks on GitHub for every push: all suites on SQLite and PostgreSQL, security scans, the production stack
+  built and tested end to end (HTTPS, sign-in, PostgreSQL, backup and restore, OWASP ZAP), Android build.
+- Fixed: when `deploy/secrets.toml` still had the example database URL, the app ignored the server's `DATABASE_URL` and
+  used a temporary SQLite file. It now falls back to `DATABASE_URL` first.

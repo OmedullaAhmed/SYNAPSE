@@ -1,9 +1,13 @@
-# Builds the StockFlow Android app (debug APK for testing) on GitHub's machines. Started by hand only:
-# Actions -> Build Android app -> Run workflow. The APK appears under the run's Artifacts.
+# Builds the StockFlow Android app (debug APK for testing) on GitHub's machines: on every change to the phone app,
+# or by hand (Actions -> Build Android app -> Run workflow). The APK appears under the run's Artifacts.
 # A signed release (Play Store) needs your keystore as repository secrets; see mobile/README.md.
 name: Build Android app
 on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", ".github/workflows/mobile-build.yml"]
   workflow_dispatch: {}
+permissions: {contents: read}
 jobs:
   android:
     runs-on: ubuntu-latest

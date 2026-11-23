@@ -18,6 +18,7 @@ import argparse
 import heapq
 import json
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -596,7 +597,8 @@ class Season:
     def __init__(self, D, P):
         st, sales, cfg = P["stores"], P["sales"], P["cfg"]["season"]
         self.peak, self.event = cfg["peak_label"], cfg["event_label"]
-        self.today, self.idx, self.lift, self.typ, self.memo = P["today"], {}, {}, {}, {}
+        self.today, self.idx, self.lift, self.typ, self.memo, self.named = P["today"], {}, {}, {}, {}, {}
+        self.shrink_days = cfg.get("event_shrink_days", 3)
         self.base_from = self.today - pd.Timedelta(days=83)
         cal = D.get("calendar")
         self.on = cal is not None and len(cal) > 0
@@ -623,7 +625,32 @@ class Season:
             for t, fb in ((self.event, "normal"), (self.peak, "normal"), (f"{self.peak} + {self.event}", self.peak)):
                 if t in lift and lift[t] != lift[t]:
                     lift[t] = lift.get(fb, 1.0)
-            self.lift[region], self.idx[region], self.typ[region] = lift, typ.map(lift), typ
+            idx = typ.map(lift)
+            gen = lift.get(self.event, 1.0)
+            self.named.setdefault(region, {})
+            # each named event (Diwali, Eid, an end-of-season sale) learns its own lift in this region from its past
+            # occurrences, shrunk towards the generic event lift by the days seen: festivals differ by region and size
+            occ = {}
+            for fd, nm in c.event.fillna("").items():
+                if nm and cfg.get("named_events", True):
+                    occ.setdefault(re.sub(r"[^a-z]+", " ", str(nm).lower()).strip(), []).append(fd)
+            normal = (typ == "normal").values
+            for nm, dates in occ.items():
+                ws, wd = 0.0, 0
+                for fd in dates:                       # past occurrences: lift against the 5 weeks just before each one
+                    win = (days_ >= fd - pd.Timedelta(days=6)) & (days_ <= fd) & hist
+                    pre = (days_ >= fd - pd.Timedelta(days=41)) & (days_ < fd - pd.Timedelta(days=6)) & hist & normal
+                    if win.sum() >= 3 and pre.sum() >= 14 and units[pre].mean() > 0:
+                        ws += units[win].mean() / units[pre].mean() * win.sum()
+                        wd += int(win.sum())
+                if wd:
+                    w = wd / (wd + self.shrink_days)
+                    v = float(np.clip(w * (ws / wd) + (1 - w) * gen, 0.4, 4.0))
+                    self.named[region][nm] = (v, wd)
+                    for fd in dates:
+                        fut = (days_ >= fd - pd.Timedelta(days=6)) & (days_ <= fd) & ~hist
+                        idx[fut] = v
+            self.lift[region], self.idx[region], self.typ[region] = lift, idx, typ
 
     def mult(self, region, start, n):
         if not self.on or region not in self.idx:

@@ -530,6 +530,15 @@ def job(job_id: str, w: Who = Depends(need("view"))):
     return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in s.items() if k not in ("log", "host")}
 
 
+@app.get("/api/v1/admin/export", tags=["admin"])
+def admin_export(w: Who = Depends(need("settings"))):
+    """Everything StockFlow holds for this company, one CSV per table in a zip (password and key hashes left out)."""
+    from fastapi.responses import Response
+    data = db.export_all()
+    audit.log("data.export", "all", {"bytes": len(data), "via": w.via}, w.user, w.role)
+    return Response(data, media_type="application/zip", headers={"Content-Disposition": "attachment; filename=stockflow_export.zip"})
+
+
 # ----------------------------------------------------------------------------- agents (draft only; people approve)
 class AgentRunIn(BaseModel):
     text: str = ""            # what-if question

@@ -173,9 +173,13 @@ def url():
     global PLACEHOLDER
     u = _secret_url()
     if u and not u.startswith("sqlite") and _is_placeholder(u):
-        PLACEHOLDER = "The database URL in secrets is still the example text, so a temporary local database is used. " \
-                      "Paste your real PostgreSQL connection string in Settings → Secrets."
-        u = ""
+        env = os.environ.get("DATABASE_URL", "")      # e.g. docker compose sets it while secrets.toml still has the example
+        if env and not _is_placeholder(env):
+            u = env
+        else:
+            PLACEHOLDER = "The database URL in secrets is still the example text, so a temporary local database is used. " \
+                          "Paste your real PostgreSQL connection string in Settings → Secrets."
+            u = ""
     if u.startswith("postgres://"):
         u = "postgresql+psycopg://" + u[len("postgres://"):]
     elif u.startswith("postgresql://"):
@@ -321,3 +325,54 @@ def _migrate_csv():
 
 def tables():
     return sorted(inspect(engine()).get_table_names())
+
+
+# ---------------------------------------------------------------- your data: full export and delete-on-exit
+SECRET_COLUMNS = {"users": ["password"], "api_keys": ["key_hash", "hash", "secret"]}
+
+
+def export_all():
+    """Every table as CSV in one zip (bytes). Password hashes and API key hashes are left out; uploaded input files
+    are added as files under inputs/. For the customer to keep, or to move to another system."""
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        names = [t for t in T if t in tables()]
+        for t in names:
+            d = read(t)
+            d = d.drop(columns=[c for c in SECRET_COLUMNS.get(t, []) if c in d], errors="ignore")
+            if t == "settings" and len(d):            # webhook signing secrets stay out
+                d["value"] = [[{k: v for k, v in x.items() if k != "secret"} for x in val] if key == "webhooks" and isinstance(val, list)
+                              else val for key, val in zip(d.key, d.value)]
+            if t == "plans" and "input_pack" in d:
+                for _, r in d.iterrows():
+                    if r.input_pack is not None and len(r.input_pack or b""):
+                        z.writestr(f"inputs/{r.plan_id}.zip", bytes(r.input_pack))
+                d = d.drop(columns="input_pack")
+            for c in d.columns:
+                if d[c].map(lambda v: isinstance(v, (dict, list))).any():
+                    d[c] = d[c].map(lambda v: json.dumps(v, default=str, ensure_ascii=False) if isinstance(v, (dict, list)) else v)
+            z.writestr(f"{t}.csv", d.to_csv(index=False))
+        z.writestr("README.txt", f"StockFlow data export, {datetime.now():%Y-%m-%d %H:%M}. One CSV per table; uploaded files under "
+                                 "inputs/. Password and API key hashes are not included.\n")
+    return buf.getvalue()
+
+
+def purge_all(user, keep_users=False):
+    """Deletes every business record (plans, stock, sales-derived data, transfers, counts, logs, settings, drafts, leads).
+    With keep_users the sign-in accounts stay so the admin can confirm it was done; otherwise they go too.
+    Returns {table: rows deleted}. The audit trail is emptied and then gets one entry recording the deletion."""
+    out = {}
+    with engine().begin() as c:
+        for t in reversed(md.sorted_tables):
+            if t.name not in tables() or (keep_users and t.name == "users"):
+                continue
+            n = c.execute(t.delete()).rowcount
+            out[t.name] = int(n or 0)
+    for f in WORK.glob("*"):
+        if f.is_file() and f.suffix in (".csv", ".json", ".xlsx") and f.name != "stockflow.db":
+            f.unlink(missing_ok=True)
+    insert_rows("audit", [dict(at=datetime.now(), user=user, role="admin", action="data.purge", object="all",
+                               details={"rows": sum(out.values()), "kept_users": keep_users})])
+    return out

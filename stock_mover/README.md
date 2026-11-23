@@ -193,6 +193,24 @@ account" button appears. The work email is matched to a StockFlow user for the r
 **Readiness checks.** `python tests/enterprise_check.py` runs 25 checks across data integration, security, reliability,
 auditability and correctness against the configured database (SQLite or PostgreSQL).
 
+## Pilot tools (Nov 2026)
+
+- **Shadow mode** (Operations tab): planners upload what they actually moved (their own sheet: From, To, Item code, Qty);
+  StockFlow shows how much of its plan matches, what it would have added (with its estimated value) and what it would not
+  have done. Nothing is released. Comparisons can be saved to the pilot record.
+- **Pilot scorecard** (Operations tab): pick pilot stores, comparison stores and the start date; the six pass marks
+  (in-stock and old stock against comparison stores, transfers complete and on time, planner hours, trips approved without
+  major edits, serious data errors left open) are computed from what StockFlow already records.
+- **Festival lift**: each named calendar event (Diwali, Eid, a sale) learns its own lift per region from its past
+  occurrences, measured against the five weeks before each one (`season.named_events`, `season.event_shrink_days`).
+  Back-test on the hackathon pack, 7 festivals in 2026 × regions, week-before-festival units: error 21% → 16%.
+- **Your data** (Admin tab, `GET /api/v1/admin/export`): everything in one zip (CSV per table + uploaded files, no password
+  or key hashes); delete everything on exit (typed confirmation + password; the deletion itself is audited).
+- **Checks on every push** (GitHub Actions): `tests/run_all.py` on SQLite and PostgreSQL, Bandit, pip-audit, npm audit;
+  the production image is built and started with the full stack, smoke-tested over HTTPS, the suites run inside it, a
+  backup is taken and restored, and an OWASP ZAP baseline scan runs (fails on high-risk findings). The Android app is
+  built on every change to `mobile/`.
+
 ## Agents (Nov 2026)
 
 Six assistants on the **Agents** tab (and `/api/v1/agents`). They read the plan, transfers and problems and write
